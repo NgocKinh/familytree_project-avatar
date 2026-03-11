@@ -1,328 +1,287 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 
 import { getFamilyTree } from "../api/treeApi";
+import { getAvatarURL, handleAvatarError } from "../utils/avatarEngine";
 import { formatName } from "../utils/formatName";
-import {
-  getAvatarURL,
-  fallbackAvatar,
-  handleAvatarError,
-} from "../utils/avatarEngine";
 
-// --------------------------------------------------
-// Helpers
-// --------------------------------------------------
-
-const sortByBirthYearAsc = (list = []) =>
-  list
-    .slice()
-    .sort((a, b) => {
-      const ay = Number(a?.birth_year) || 9999;
-      const by = Number(b?.birth_year) || 9999;
-      return ay - by;
-    });
-
-const heartIcon = (status) => {
-  switch (status) {
-    case "married":
-      return "❤️";
-    case "cohabitation":
-      return "💛";
-    case "separated":
-      return "💚";
-    case "divorced":
-      return "💔";
-    case "widowed":
-      return "🖤";
-    default:
-      return "➕";
-  }
-};
+/* ================= Avatar ================= */
 
 function Avatar({ person, size = 80, onClick }) {
 
-  const src = useMemo(() => {
-
-    if (!person) return fallbackAvatar();
-
-    // luôn thử avatar theo ID trước
-    if (person.id) {
-      return `http://localhost:8010/static/avatars/${person.id}.jpg`;
-    }
-
-    return fallbackAvatar(person.gender);
-
-  }, [person?.id, person?.gender]);
-
   if (!person) return null;
 
+  const src = getAvatarURL({
+    ...person,
+    person_id: person.person_id
+  });  
+  console.log("TREE PERSON:", person);
   const onError = (e) => {
-    // nếu ảnh thật lỗi thì fallback
-    e.target.onerror = null;
-    e.target.src = fallbackAvatar(person.gender);
+    handleAvatarError(e, person?.gender);
   };
 
   return (
     <img
       src={src}
       onError={onError}
-      className="rounded-full shadow-md cursor-pointer bg-white"
+      onClick={onClick} 
+      loading="lazy"
+      className="rounded-full shadow-md cursor-pointer hover:scale-105 transition bg-white"
       style={{ width: size, height: size, objectFit: "cover" }}
-      onClick={onClick}
       alt=""
     />
   );
 }
 
-// --------------------------------------------------
-// Page
-// --------------------------------------------------
+
+/* ================= Person ================= */
+
+function Person({ person, go, size = 80 }) {
+
+  if (!person) return null;
+
+  const name =
+    person.name ||
+    person.full_name ||
+    formatName(person, "full") ||
+    "Không rõ";
+
+  const onClick = person?.person_id ? () => go(person.person_id) : undefined;
+
+  return (
+    <div className="flex flex-col items-center w-[180px]">
+
+      <Avatar person={person} size={size} onClick={onClick} />
+
+      <p className="mt-2 font-medium text-center">
+        {name}
+      </p>
+
+      <p className="text-sm text-gray-500">
+        {person.birth_year ?? "?"} – {person.death_year ?? ""}
+      </p>
+
+    </div>
+  );
+}
+
+
+/* ================= Helpers ================= */
+
+function ensureTwo(list = []) {
+
+  const fake = { name: "Không rõ", gender: "other" };
+
+  if (list.length === 0) return [fake, fake];
+  if (list.length === 1) return [list[0], fake];
+
+  return list.slice(0, 2);
+}
+
+
+function heartIcon(status) {
+
+  switch (status) {
+    case "married": return "❤️";
+    case "cohabitation": return "💛";
+    case "separated": return "💚";
+    case "divorced": return "💔";
+    case "widowed": return "🖤";
+    default: return "➕";
+  }
+
+}
+
+
+/* ================= Page ================= */
+
 export default function TreePage() {
+
   const { id } = useParams();
   const navigate = useNavigate();
 
   const [tree, setTree] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const go = (pid) => navigate(`/tree/${pid}`);
+
+
+  /* ===== Load tree ===== */
+
   useEffect(() => {
+
     let alive = true;
 
-    (async () => {
-      setLoading(true);
-      try {
-        const data = await getFamilyTree(id);
-        if (!alive) return;
-        setTree(data);
-      } catch (err) {
-        console.error("Failed to load tree:", err);
-        if (alive) setTree({ error: true });
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
+    const load = async () => {
 
-    return () => {
-      alive = false;
+      setLoading(true);
+
+      try {
+
+        const data = await getFamilyTree(id);
+
+        if (!alive) return;
+
+        setTree(data);
+
+      } finally {
+
+        if (alive) setLoading(false);
+
+      }
+
     };
+
+    load();
+
+    return () => { alive = false };
+
   }, [id]);
 
-  const go = (pid) => {
-    if (!pid) return;
-    navigate(`/tree/${pid}`);
-  };
 
-  const renderPerson = (person, size = 80) => {
-    if (!person) return null;
+  /* ===== Extract data safely ===== */
 
-  let displayName = 'Không rõ';
-
-  if (person.name && person.name !== '?') {
-    displayName = person.name;
-  } else if (person.full_name) {
-    displayName = person.full_name;
-  } else {
-    const fn = formatName(person, 'full');
-    if (fn && fn !== '?') displayName = fn;
-  }
-
-  return (
-    <div
-      key={person.id || displayName}
-      className="flex flex-col items-center w-[220px] select-none"
-    >
-      <Avatar
-        person={person}
-        size={size}
-        onClick={!person?.isFake && person?.id ? () => go(person.id) : undefined}
-      />
-
-      <p className="mt-2 font-medium text-center w-full whitespace-normal">
-        {displayName}
-      </p>
-
-      <p className="text-sm text-gray-500 text-center">
-        {person.birth_year ?? '?'} – {person.death_year ?? ''}
-      </p>
-    </div>
-  );
-};
-
-const renderChild = (child) => {
-  if (!child) return null;
-
-  const genderIcon =
-    child.gender === "male"
-      ? "👦"
-      : child.gender === "female"
-      ? "👧"
-      : "🧑";
-
-  const displayName = formatName(child, "full");
-
-  return (
-    <div
-      key={child.id || displayName}
-      className="flex flex-col items-center w-[140px] select-none"
-    >
-      <Avatar
-        person={child}
-        size={80}
-        onClick={child?.id ? () => go(child.id) : undefined}
-      />
-
-      <div className="flex items-center gap-1 mt-2 font-medium text-sm text-center">
-        <span>{genderIcon}</span>
-        <span>{displayName}</span>
-      </div>
-
-      <p className="text-sm text-gray-500 mt-1">
-        {child.birth_year ?? "?"} – {child.death_year ?? ""}
-      </p>
-    </div>
-  );
-};
-
-const getDisplayCouple = (center, spouse) => {
-  if (!center) return null;
-
-  const gender = center.gender || "other";
-  const hasRealSpouse = !!spouse;
-
-  const fakeSpouse = {
-    id: null,
-    gender: "other",
-    name: "Không rõ",
-    birth_year: "?",
-    death_year: "",
-    isFake: true,
-  };
-
-  const displaySpouse = hasRealSpouse ? spouse : fakeSpouse;
-
-  if (gender === "female") {
-    return {
-      left: displaySpouse,
-      right: center,
-    };
-  }
-
-  return {
-    left: center,
-    right: displaySpouse,
-  };
-};
-
-const {
-  center,
-  spouse,
-  marriage_status,
-  father_parents = [],
-  mother_parents = [],
-  children_common = [],
-  children_father_separate = [],
-  children_mother_separate = [],
+  const {
+    center,
+    spouse,
+    marriage_status,
+    father_parents = [],
+    mother_parents = [],
+    children_common = []
   } = tree || {};
 
-const { left: leftPerson, right: rightPerson } =
-  getDisplayCouple(center, spouse) || {};
-const childrenCommonSorted = useMemo(
-  () => sortByBirthYearAsc(children_common),
-  [children_common]
-);
 
-const childrenFatherSorted = useMemo(
-  () => sortByBirthYearAsc(children_father_separate),
-  [children_father_separate]
-);
+  /* ===== Parents ===== */
 
-const childrenMotherSorted = useMemo(
-  () => sortByBirthYearAsc(children_mother_separate),
-  [children_mother_separate]
-);
+  const safeFather = useMemo(
+    () => ensureTwo(father_parents),
+    [father_parents]
+  );
 
-if (loading) return <p className="p-5 text-center">Đang tải dữ liệu…</p>;
-if (!tree || tree.error) return null;
-// FIX 2 – chuẩn hóa hôn nhân & giới tính
+  const safeMother = useMemo(
+    () => ensureTwo(mother_parents),
+    [mother_parents]
+  );
 
-return (
+
+  /* ===== Sort children ===== */
+
+  const childrenSorted = useMemo(() => {
+
+    return [...children_common].sort(
+      (a, b) => (a.birth_year || 9999) - (b.birth_year || 9999)
+    );
+
+  }, [children_common]);
+
+
+  /* ===== Couple position ===== */
+
+  const fake = { name: "Không rõ", gender: "other" };
+
+  const spouseObj = spouse || fake;
+
+  const left =
+    center?.gender === "female"
+      ? spouseObj
+      : center;
+
+  const right =
+    center?.gender === "female"
+      ? center
+      : spouseObj;
+
+
+  /* ===== Loading ===== */
+
+  if (loading || !tree)
+    return (
+      <p className="p-5 text-center">
+        Đang tải dữ liệu…
+      </p>
+    );
+
+
+  /* ================= Render ================= */
+
+  return (
 
     <div className="w-full flex flex-col items-center py-10 select-none">
+
+
+      {/* Parents */}
+
       <div className="flex justify-between w-full px-32">
+
         <div className="flex flex-col items-center w-1/2">
+
           <p className="text-blue-700 font-medium mb-3 text-lg">
             Cha mẹ bên Nam
           </p>
+
           <div className="flex gap-10">
-            {father_parents.map(renderPerson)}
+            {safeFather.map((p, i) => (
+              <Person key={p.person_id || i} person={p} go={go} />
+            ))}
           </div>
+
         </div>
 
+
         <div className="flex flex-col items-center w-1/2">
+
           <p className="text-pink-700 font-medium mb-3 text-lg">
             Cha mẹ bên Nữ
           </p>
+
           <div className="flex gap-10">
-            {mother_parents.map(renderPerson)}
+            {safeMother.map((p, i) => (
+              <Person key={p.person_id || i} person={p} go={go} />
+            ))}
           </div>
+
         </div>
+
       </div>
+
+
+      {/* Couple */}
 
       <div className="flex items-center justify-center mt-14 gap-20">
-        {renderPerson(leftPerson, 140)}
-        <div className="text-6xl">{heartIcon(marriage_status)}</div>
-        {renderPerson(rightPerson, 140)}
+
+        <Person person={left} size={140} go={go} />
+
+        <div className="text-6xl">
+          {heartIcon(marriage_status)}
+        </div>
+
+        <Person person={right} size={140} go={go} />
+
       </div>
 
-      {children_common.length > 0 && (
+
+      {/* Children */}
+
+      {childrenSorted.length > 0 && (
+
         <>
-          <h3 className="mt-16 text-lg font-semibold">Con chung</h3>
+          <h3 className="mt-16 text-lg font-semibold">
+            Con chung
+          </h3>
+
           <div className="flex flex-wrap justify-center gap-10 mt-8">
-            {childrenCommonSorted.map((c) => (
-              <div key={c.id}>{renderChild(c)}</div>
+
+            {childrenSorted.map((c) => (
+              <Person key={c.person_id} person={c} go={go} />
             ))}
 
           </div>
+
         </>
-      )}
 
-      {(children_father_separate.length > 0 ||
-        children_mother_separate.length > 0) && (
-        <>
-          <h3 className="mt-16 text-xl font-semibold">Con riêng</h3>
-
-          <div className="relative w-full mt-10">
-            {/* ĐƯỜNG KẺ CHÍNH GIỮA – LUÔN HIỆN */}
-            <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300" />
-
-            <div className="flex w-full">
-              {/* CON RIÊNG CỦA CHỒNG */}
-              <div className="flex flex-col items-center w-1/2 px-10 min-h-[150px]">
-                <p className="text-gray-700 mb-4 text-lg">
-                  Con riêng của Chồng
-                </p>
-                <div className="flex flex-wrap justify-center gap-10">
-                  {childrenFatherSorted.map((c) => (
-                    <div key={c.id}>{renderChild(c)}</div>
-                  ))}
-                </div>
-              </div>
-
-              {/* CON RIÊNG CỦA VỢ */}
-              <div className="flex flex-col items-center w-1/2 px-10 min-h-[150px]">
-                <p className="text-gray-700 mb-4 text-lg">
-                  Con riêng của Vợ
-                </p>
-                <div className="flex flex-wrap justify-center gap-10">
-                  {childrenMotherSorted.map((c) => (
-                    <div key={c.id}>{renderChild(c)}</div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        </>
       )}
 
     </div>
+
   );
 }

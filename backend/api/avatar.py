@@ -57,8 +57,7 @@ async def upload_avatar(person_id: int, file: UploadFile = File(...)):
 
     # 4️⃣ HASH RENAME (cache busting auto)
     ext = ALLOWED_MIME[file.content_type]
-    unique_id = uuid.uuid4().hex[:8]
-    filename = f"{person_id}_{unique_id}{ext}"
+    filename = f"{person_id}{ext}"
     file_path = os.path.join(AVATAR_DIR, filename)
 
     # 5️⃣ SAVE FILE

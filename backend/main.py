@@ -41,13 +41,15 @@ from backend.api.parent_child_fastapi import router as parent_child_router
 from backend.api.avatar import router as avatar_router
 from backend.api.tree_fastapi import router as tree_router
 from backend.api.clean_parent_api import router as clean_parent_router
+from backend.utils.avatar_cdn import router as avatar_cdn_router
 
 app.include_router(person_basic_router)
 app.include_router(marriage_router)
 app.include_router(parent_child_router)
 app.include_router(avatar_router)
-app.include_router(tree_router)
+app.include_router(tree_router, prefix="/api/tree")
 app.include_router(clean_parent_router)
+app.include_router(avatar_cdn_router, prefix="/cdn")
 
 # ==============================
 # RELATIONSHIP ROUTE

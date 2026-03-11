@@ -2,7 +2,6 @@ from typing import List
 import json
 from fastapi import HTTPException
 from app.database import get_family_path, get_spouse_relationship
-from app.relation_engine import RelationEngine
 from app.relation_engine_v2 import RelationEngineV2
 from app.affinity_repository import (
     is_co_spouse,

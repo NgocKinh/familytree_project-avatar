@@ -20,6 +20,8 @@ import {
   parseVNDate,
   detectPrecision,
 } from "../../utils/formatDate";
+import AvatarUploaderUltraTriple 
+from "../AvatarUploaderUltraTriple"
 
 export default function PersonBasicForm({ role, onSaved }) {
   const { id } = useParams();
@@ -185,11 +187,9 @@ export default function PersonBasicForm({ role, onSaved }) {
 
       {/* AVATAR */}
       <div className="flex justify-center mb-6">
-        <img
-          src={displayAvatar}
-          alt="avatar"
-          className="w-[96px] h-[128px] rounded border object-cover"
-        />
+        {isEdit && (
+          <AvatarUploaderUltraTriple personId={id} />
+        )}
       </div>
 
       {/* FORM */}

@@ -1,41 +1,13 @@
-import maleAvatar from "../assets/male.png";
-import femaleAvatar from "../assets/female.png";
-import otherAvatar from "../assets/other.png";
+import maleAvatar from "../assets/default_male.png";
+import femaleAvatar from "../assets/default_female.png";
+import otherAvatar from "../assets/default_other.png";
 
-const BASE = "http://localhost:8010/static/avatars/";
+const API = "http://localhost:8010";
 
-// ======================================================
-// Chuẩn hóa giới tính
-// ======================================================
-function normalizeGender(gender) {
-  const g = (gender || "").toString().toLowerCase();
-
-  if (g === "male" || g === "m") return "male";
-  if (g === "female" || g === "f") return "female";
-
-  return "other";
-}
-
-// ======================================================
-// Lấy URL avatar theo filename từ DB
-// ======================================================
-export function getAvatarURL(avatar, gender) {
-  if (!avatar || typeof avatar !== "string") {
-    return fallbackAvatar(gender);
-  }
-
-  if (avatar.startsWith("http://") || avatar.startsWith("https://")) {
-    return avatar;
-  }
-
-  return BASE + avatar;
-}
-
-// ======================================================
-// Fallback theo giới tính
-// ======================================================
+/* fallback avatar */
 export function fallbackAvatar(gender) {
-  const g = normalizeGender(gender);
+
+  const g = (gender || "").toLowerCase();
 
   if (g === "male") return maleAvatar;
   if (g === "female") return femaleAvatar;
@@ -43,12 +15,22 @@ export function fallbackAvatar(gender) {
   return otherAvatar;
 }
 
-// ======================================================
-// Nếu ảnh thật lỗi → fallback
-// ======================================================
-export function handleAvatarError(e, avatar, gender) {
-  if (!e || !e.target) return;
+/* avatar url */
+export function getAvatarURL(person) {
+
+  if (!person) return otherAvatar;
+
+  if (person.avatar) {
+    return `${API}/cdn/avatar/${person.person_id}?t=${Date.now()}`;
+  }
+
+  return fallbackAvatar(person.gender);
+}
+
+/* error handler */
+export function handleAvatarError(e, gender) {
 
   e.target.onerror = null;
   e.target.src = fallbackAvatar(gender);
+
 }

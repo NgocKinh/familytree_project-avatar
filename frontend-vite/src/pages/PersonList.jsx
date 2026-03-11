@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { getAvatarURL, handleAvatarError } from "../utils/avatarEngine";
 import {
   getAllPersons,
   softDeletePerson,
@@ -20,10 +20,6 @@ import { formatGender } from "../utils/formatGender";
 import { formatDateVN } from "../utils/formatDate";
 import { formatName } from "../utils/formatName";
 
-import {
-  getAvatarURL,
-  handleAvatarError,
-} from "../utils/avatarEngine";
 
 export default function PersonList({ role }) {
   console.log("🚨 THIS IS THE FRONTEND I AM EDITING 🚨");
@@ -42,6 +38,7 @@ export default function PersonList({ role }) {
   const fetchPersons = async () => {
     try {
       const data = await getAllPersons();
+      console.log("API persons:", data);
       setPersons(data);
     } catch (err) {
       console.error("❌ Lỗi tải danh sách:", err);
@@ -136,10 +133,9 @@ export default function PersonList({ role }) {
               <tr key={p.person_id} className="border-t hover:bg-gray-50">
                 <td className="px-4 py-2 text-center">
                   <img
-                    src={getAvatarURL(p.avatar, p.gender)}
-                    onError={(e) => handleAvatarError(e, p.avatar, p.gender)}
-                    className="w-12 h-12 mx-auto rounded-full object-cover border"
-                    alt="avatar"
+                    src={getAvatarURL(p)}
+                    onError={(e) => handleAvatarError(e, p.gender)}
+                    className="w-10 h-10 rounded-full object-cover"
                   />
                 </td>
 
