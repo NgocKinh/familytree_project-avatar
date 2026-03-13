@@ -266,7 +266,7 @@ export default function TreePage() {
 
         <>
           <h3 className="mt-16 text-lg font-semibold">
-            Con chung
+            Con
           </h3>
 
           <div className="flex flex-wrap justify-center gap-10 mt-8">

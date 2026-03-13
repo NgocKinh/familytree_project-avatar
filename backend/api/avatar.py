@@ -38,7 +38,6 @@ async def upload_avatar(person_id: int, file: UploadFile = File(...)):
     if len(contents) > MAX_FILE_SIZE:
         raise HTTPException(status_code=400, detail="File vượt quá 2MB")
 
-    # reset pointer
     await file.seek(0)
 
     # 3️⃣ CHECK PERSON EXISTS
@@ -46,37 +45,38 @@ async def upload_avatar(person_id: int, file: UploadFile = File(...)):
     try:
         conn = get_connection()
         cursor = conn.cursor()
+
         cursor.execute(
             "SELECT person_id FROM person WHERE person_id=%s AND delete_status=0",
             (person_id,),
         )
+
         if not cursor.fetchone():
             raise HTTPException(status_code=404, detail="Không tìm thấy person")
+
     finally:
         close_connection(conn, cursor)
 
-    # 4️⃣ HASH RENAME (cache busting auto)
+    # 4️⃣ HASH RENAME
     ext = ALLOWED_MIME[file.content_type]
     filename = f"{person_id}{ext}"
     file_path = os.path.join(AVATAR_DIR, filename)
 
-    # 5️⃣ SAVE FILE
-    with open(file_path, "wb") as f:
-        f.write(contents)
-
-    # 6️⃣ REMOVE OLD AVATAR (overwrite safe)
+    # 5️⃣ REMOVE OLD AVATAR + SAVE FILE + UPDATE DB
     conn, cursor = None, None
     try:
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
 
+        # lấy avatar cũ
         cursor.execute(
             "SELECT avatar FROM person WHERE person_id=%s",
             (person_id,),
         )
         row = cursor.fetchone()
 
-        if row and row.get("avatar"):
+        # xóa avatar cũ
+        if row and row.get("avatar") and row["avatar"] != filename:
             old_file = os.path.join(AVATAR_DIR, row["avatar"])
             if os.path.exists(old_file):
                 try:
@@ -84,11 +84,20 @@ async def upload_avatar(person_id: int, file: UploadFile = File(...)):
                 except Exception:
                     pass
 
-        # 7️⃣ UPDATE DB (save filename only)
+        # lưu avatar mới
+        tmp_path = file_path + ".tmp"
+
+        with open(tmp_path, "wb") as f:
+            f.write(contents)
+
+        os.replace(tmp_path, file_path)
+
+        # update database
         cursor.execute(
             "UPDATE person SET avatar=%s, updated_at=NOW() WHERE person_id=%s",
             (filename, person_id),
         )
+
         conn.commit()
 
     finally:

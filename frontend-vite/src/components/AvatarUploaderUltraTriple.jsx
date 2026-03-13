@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useRef, useState, useEffect } from "react"
 
 export default function AvatarUploaderUltraTriple({ personId }) {
 
@@ -11,63 +11,62 @@ export default function AvatarUploaderUltraTriple({ personId }) {
   const [pos,setPos] = useState({x:0,y:0})
   const [dragging,setDragging] = useState(false)
   const [start,setStart] = useState({x:0,y:0})
+  const [reload,setReload] = useState(0)
 
   const uploadLock = useRef(false)
 
   const avatarUrl =
-    `http://localhost:8010/cdn/avatar/${personId}?t=${Date.now()}`
+    `http://localhost:8010/cdn/avatar/${personId}?v=${reload}`
 
   const fallback="/default-avatar.png"
 
-  // --------------------------------------------------
-  // LOAD IMAGE
-  // --------------------------------------------------
 
-  const loadImage=(file)=>{
+  // ===============================
+  // LOAD CURRENT AVATAR
+  // ===============================
 
-    const reader=new FileReader()
+  useEffect(()=>{
 
-    reader.onload=e=>{
+    const image = new Image()
 
-      const image=new Image()
-      image.src=e.target.result
+    image.src = avatarUrl
 
-      image.onload=()=>{
+    image.onload = ()=>{
 
-        const autoPos = autoFaceCenter(image)
+      const fitZoom =
+        Math.min(
+          400/image.width,
+          400/image.height
+        )
 
-        setImg(image)
-        setPos(autoPos)
+      setZoom(fitZoom)
+      setRotation(0)
+      setPos({x:0,y:0})
+      setImg(image)
 
-        draw(image,zoom,rotation,autoPos)
-      }
     }
 
-    reader.readAsDataURL(file)
-  }
+  },[avatarUrl])
 
-  // --------------------------------------------------
-  // FACE CENTER
-  // --------------------------------------------------
 
-  const autoFaceCenter=(image)=>{
+  // ===============================
+  // DRAW ENGINE
+  // ===============================
 
-    const cx=image.width/2
-    const cy=image.height*0.35
+  useEffect(()=>{
 
-    return {
-      x:cx/4,
-      y:cy/4
-    }
-  }
+    if(!img) return
 
-  // --------------------------------------------------
-  // DRAW
-  // --------------------------------------------------
+    draw(img,zoom,rotation,pos)
+
+  },[img,zoom,rotation,pos])
+
 
   const draw=(image,z,rot,p)=>{
 
     const canvas=canvasRef.current
+    if(!canvas) return
+
     const ctx=canvas.getContext("2d")
 
     canvas.width=400
@@ -80,66 +79,85 @@ export default function AvatarUploaderUltraTriple({ personId }) {
     ctx.translate(200,200)
     ctx.rotate(rot*Math.PI/180)
 
-    const size=Math.min(image.width,image.height)
+    const w=image.width*z
+    const h=image.height*z
 
     ctx.drawImage(
       image,
-      -size*z/2 - p.x,
-      -size*z/2 - p.y,
-      size*z,
-      size*z
+      -w/2 - p.x,
+      -h/2 - p.y,
+      w,
+      h
     )
 
     ctx.restore()
 
+    // circle border
+
     ctx.beginPath()
     ctx.arc(200,200,190,0,Math.PI*2)
-    ctx.strokeStyle="#ddd"
+    ctx.strokeStyle="#ffffff"
     ctx.lineWidth=3
     ctx.stroke()
+
   }
 
-  // --------------------------------------------------
-  // ZOOM
-  // --------------------------------------------------
 
-  const handleZoom=(v)=>{
 
-    const z=parseFloat(v)
+  // ===============================
+  // LOAD IMAGE
+  // ===============================
 
-    setZoom(z)
+  const loadImage=(file)=>{
 
-    if(img) draw(img,z,rotation,pos)
+    const reader=new FileReader()
+
+    reader.onload=e=>{
+
+      const image=new Image()
+
+      image.src=e.target.result
+
+      image.onload=()=>{
+
+        const fitZoom =
+          Math.min(
+            400/image.width,
+            400/image.height
+          )
+
+        setZoom(fitZoom)
+        setRotation(0)
+        setPos({x:0,y:0})
+        setImg(image)
+
+      }
+    }
+
+    reader.readAsDataURL(file)
+
   }
 
-  // --------------------------------------------------
-  // ROTATE
-  // --------------------------------------------------
 
-  const handleRotate=(deg)=>{
 
-    const r=rotation+deg
-
-    setRotation(r)
-
-    if(img) draw(img,zoom,r,pos)
-  }
-
-  // --------------------------------------------------
+  // ===============================
   // DRAG
-  // --------------------------------------------------
+  // ===============================
 
   const mouseDown=(e)=>{
+
     setDragging(true)
     setStart({x:e.clientX,y:e.clientY})
+
   }
+
 
   const mouseMove=(e)=>{
 
     if(!dragging) return
 
-    const dx=e.clientX-start.x
-    const dy=e.clientY-start.y
+    const dx=(e.clientX-start.x)/zoom
+    const dy=(e.clientY-start.y)/zoom
 
     const newPos={
       x:pos.x-dx,
@@ -147,25 +165,54 @@ export default function AvatarUploaderUltraTriple({ personId }) {
     }
 
     setPos(newPos)
+
     setStart({x:e.clientX,y:e.clientY})
 
-    if(img) draw(img,zoom,rotation,newPos)
   }
+
 
   const mouseUp=()=>setDragging(false)
 
-  // --------------------------------------------------
+
+
+  // ===============================
+  // ZOOM
+  // ===============================
+
+  const handleZoom=(v)=>{
+
+    setZoom(parseFloat(v))
+
+  }
+
+
+
+  // ===============================
+  // ROTATE
+  // ===============================
+
+  const handleRotate=(deg)=>{
+
+    setRotation(rotation+deg)
+
+  }
+
+
+
+  // ===============================
   // COMPRESS
-  // --------------------------------------------------
+  // ===============================
 
   const compressBlob=(canvas)=>
     new Promise(resolve=>{
       canvas.toBlob(resolve,"image/jpeg",0.82)
     })
 
-  // --------------------------------------------------
+
+
+  // ===============================
   // UPLOAD
-  // --------------------------------------------------
+  // ===============================
 
   const upload=async()=>{
 
@@ -181,38 +228,53 @@ export default function AvatarUploaderUltraTriple({ personId }) {
 
     form.append("file",blob,"avatar.jpg")
 
-    await fetch(
-        `http://localhost:8010/api/tree/avatar/${personId}`,
-        {method:"POST",body:form}
+    const res = await fetch(
+      `http://localhost:8010/api/person/${personId}/avatar`,
+      {method:"POST",body:form}
     )
 
     uploadLock.current=false
 
-    // force reload avatar everywhere
+    if(!res.ok){
+
+      alert("Upload failed")
+      return
+
+    }
+
+    setReload(Date.now())
+
+    setImg(null)
 
     window.dispatchEvent(new Event("avatarUpdated"))
 
     alert("Avatar updated")
+
   }
 
-  // --------------------------------------------------
+
+
+  // ===============================
   // DROP
-  // --------------------------------------------------
+  // ===============================
 
   const handleDrop=(e)=>{
 
     e.preventDefault()
 
-    const file=e.dataTransfer.files[0]
+    const file=e.dataTransfer.files?.[0]
 
     if(file) loadImage(file)
+
   }
 
-  // --------------------------------------------------
-  // RENDER
-  // --------------------------------------------------
 
-  return (
+
+  // ===============================
+  // RENDER
+  // ===============================
+
+  return(
 
     <div
       className="flex flex-col items-center gap-3"
@@ -221,15 +283,19 @@ export default function AvatarUploaderUltraTriple({ personId }) {
     >
 
       {!img && (
+
         <img
           src={avatarUrl}
           onError={(e)=>e.target.src=fallback}
           className="w-32 h-32 rounded-full border object-cover cursor-pointer"
           onClick={()=>inputRef.current.click()}
         />
+
       )}
 
+
       {img && (
+
         <canvas
           ref={canvasRef}
           className="border rounded-lg cursor-move"
@@ -238,7 +304,9 @@ export default function AvatarUploaderUltraTriple({ personId }) {
           onMouseUp={mouseUp}
           onMouseLeave={mouseUp}
         />
+
       )}
+
 
       <input
         type="file"
@@ -247,6 +315,7 @@ export default function AvatarUploaderUltraTriple({ personId }) {
         accept="image/*"
         onChange={(e)=>loadImage(e.target.files[0])}
       />
+
 
       {img && (
 
@@ -270,14 +339,16 @@ export default function AvatarUploaderUltraTriple({ personId }) {
 
           </div>
 
+
           <input
             type="range"
-            min="1"
-            max="2"
+            min="0.1"
+            max="3"
             step="0.01"
             value={zoom}
             onChange={(e)=>handleZoom(e.target.value)}
           />
+
 
           <button
             onClick={upload}
@@ -287,6 +358,7 @@ export default function AvatarUploaderUltraTriple({ personId }) {
           </button>
 
         </>
+
       )}
 
       <p className="text-xs text-gray-500">
@@ -294,5 +366,7 @@ export default function AvatarUploaderUltraTriple({ personId }) {
       </p>
 
     </div>
+
   )
+
 }
