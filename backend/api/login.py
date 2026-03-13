@@ -3,7 +3,6 @@ from flask import Blueprint, request, jsonify
 import jwt
 import datetime
 import mysql.connector
-from backend.config import JWT_SECRET, JWT_ALGORITHM, JWT_EXPIRE_SECONDS
 from backend.permissions import ROLE_KEYS
 
 login_bp = Blueprint("login", __name__)
