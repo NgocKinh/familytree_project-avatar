@@ -1,7 +1,7 @@
 import os
 import hashlib
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Request
 from fastapi.responses import FileResponse
 
 from backend.db_helper import get_connection, close_connection
