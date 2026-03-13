@@ -6,7 +6,6 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from backend.db_helper import get_connection, close_connection
 import os
-import uuid
 
 router = APIRouter()
 
