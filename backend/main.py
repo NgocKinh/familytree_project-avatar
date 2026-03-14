@@ -53,10 +53,6 @@ app.include_router(clean_parent_router)
 app.include_router(avatar_cdn_router, prefix="/cdn")
 app.include_router(relationship_router)
 
-# ==============================
-# RELATIONSHIP ROUTE
-# ==============================
-
 @app.get("/")
 def root():
     return {"message": "FastAPI running"}
