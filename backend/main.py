@@ -42,6 +42,7 @@ from backend.api.avatar import router as avatar_router
 from backend.api.tree_fastapi import router as tree_router
 from backend.api.clean_parent_api import router as clean_parent_router
 from backend.utils.avatar_cdn import router as avatar_cdn_router
+from backend.api.relationship_fastapi import router as relationship_router
 
 app.include_router(person_basic_router)
 app.include_router(marriage_router)
@@ -50,17 +51,12 @@ app.include_router(avatar_router)
 app.include_router(tree_router, prefix="/api/tree")
 app.include_router(clean_parent_router)
 app.include_router(avatar_cdn_router, prefix="/cdn")
+app.include_router(relationship_router)
 
 # ==============================
 # RELATIONSHIP ROUTE
 # ==============================
-from app.core.relationship_resolver import RelationshipResolver
 
-resolver = RelationshipResolver()
-
-@app.get("/api/relationship")
-def get_relationship(source_id: int, target_id: int):
-    return resolver.resolve(source_id, target_id)
 @app.get("/")
 def root():
     return {"message": "FastAPI running"}
