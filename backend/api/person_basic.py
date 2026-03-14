@@ -10,9 +10,6 @@
 from fastapi import APIRouter, HTTPException, Body
 from fastapi.responses import JSONResponse
 from fastapi import Request
-from fastapi import UploadFile, File, Depends
-import secrets
-import shutil
 from backend.schemas.person_basic import (
     PersonBasicCreate,
     PersonBasicUpdate,

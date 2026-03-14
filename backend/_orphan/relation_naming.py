@@ -1,7 +1,7 @@
 def present_relation(
     info: dict,
     gender: str | None = None,
-    is_spouse_side: bool = False
+    _is_spouse_side: bool = False
 ) -> str:
     """
     PRESENTATION — EDGE-BASED (Y4)

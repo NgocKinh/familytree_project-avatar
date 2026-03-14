@@ -178,6 +178,3 @@ def relation_sentence(A, B):
         return f"{A} và {B} không có quan hệ trực tiếp"
 
     return f"{A} là {r} của {B}"
-
-    
-    return None
