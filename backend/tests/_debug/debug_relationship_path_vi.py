@@ -10,7 +10,7 @@ if BASE_DIR not in sys.path:
 import sys
 from backend.db import get_connection
 from src.relations.relationship_finder import find_relationship_bidirectional
-from services.person_service import get_person_gender
+from backend.services.person_service import get_person_gender
 
 
 # =====================================================

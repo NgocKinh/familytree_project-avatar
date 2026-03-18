@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services.family_tree_service import create_child_from_marriage
+from backend.services.family_tree_service import create_child_from_marriage
 from backend.db import get_connection
 
 clean_family_bp = Blueprint("clean_family", __name__, url_prefix="/api/clean")

@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException
 from backend.db_helper import get_connection, close_connection
 from fastapi.responses import JSONResponse
 from fastapi import status
-from backend.schemas.marriage import MarriageCreate
+from backend.schemas.marriage_schema import MarriageCreate
 from backend.services.consanguinity import are_related
 router = APIRouter()
 

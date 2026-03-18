@@ -12,4 +12,4 @@ Toàn bộ logic PATH đã được chuyển sang:
     backend/core/relation_path_utils.py
 """
 
-from core.relation_path_utils import *
+from backend.core.relation_path_utils import *

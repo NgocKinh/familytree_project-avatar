@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services.family_tree_service import create_child_from_marriage
+from backend.services.family_tree_service import create_child_from_marriage
 from backend.db import get_db
 
 family_bp = Blueprint("family", __name__)
