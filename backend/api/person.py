@@ -1,262 +1,138 @@
-# ============================================================
-# NOTE:
-#   File này CHỈ xử lý CRUD + query cho bảng person.
-#   - Không chứa logic suy luận quan hệ gia đình.
-#   - Mọi quan hệ cha/con, anh/em được xử lý ở layer khác.
-# ============================================================
-
-from flask import Blueprint, request, jsonify
+# ==========================================================
+#   file backend/api/person.py (ORM)
+# ==========================================================
+from backend.services import person_service
+from backend.core.exceptions import NotFoundError
+from fastapi import APIRouter, HTTPException, Body
+from fastapi.responses import JSONResponse
+from fastapi import Request
 from mysql.connector import Error
-from backend.db import get_connection
+from backend.db_helper import get_connection, close_connection
+import os
+from datetime import datetime
+# ===== ORM =====
+from sqlalchemy.orm import Session
+from fastapi import Depends
+from backend.db import get_db
+from backend.models.person_model import Person
+from backend.schemas.person_schema import (
+    PersonBasicResponse,
+    PersonDetailResponse,
+    PersonCreate
+)
+router = APIRouter()
+# ==========================================================
+# 🔧 CHUYỂN NGÀY MYSQL → ISO yyyy-mm-dd
+# ==========================================================
+def to_iso(date_value):
+    """
+    MySQL trả về kiểu datetime hoặc chuỗi GMT như:
+        'Sat, 19 May 1956 00:00:00 GMT'
+    Hàm này chuyển thành '1956-05-19'
+    """
+    if not date_value:
+        return None
 
-person_bp = Blueprint("person_bp", __name__)
-
-# ======================================================================
-# 🔹 GET ALL PERSONS — hỗ trợ lọc bằng query param
-#    /api/person?status=active | hidden | all
-# ======================================================================
-@person_bp.route("/api/person/", methods=["GET"])
-def get_all_persons():
-    conn = None
-    cur = None
-    try:
-        conn = get_connection()
-        cur = conn.cursor(dictionary=True)
-
-        status = request.args.get("status", "all")
-
-        where_clause = ""
-        if status == "active":
-            where_clause = "WHERE delete_status = 0"
-        elif status == "hidden":
-            where_clause = "WHERE delete_status = 1"
-
-        sql = f"""
-            SELECT 
-                person_id,
-                sur_name,
-                last_name,
-                middle_name,
-                first_name,
-                gender,
-                birth_date,
-                death_date,
-                delete_status,
-                full_name_vn
-            FROM person
-            {where_clause}
-            ORDER BY 
-                CASE WHEN birth_date IS NULL THEN 1 ELSE 0 END ASC,
-                birth_date DESC,
-                first_name ASC
-        """
-
-        cur.execute(sql)
-        rows = cur.fetchall()
-        return jsonify(rows), 200
-
-    except Exception as e:
-        print("🔥 ERROR /api/person:", e)
-        return jsonify({"error": str(e)}), 500
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-# ============================================================
-# 🔹 GET PERSONS FOR CHILD DROPDOWN
-#     - chỉ ACTIVE (delete_status = 0)
-#     - sort đúng nghiệp vụ chọn CON
-# ============================================================
-@person_bp.route("/api/person/for-person-dropdown", methods=["GET"])
-def get_persons_for_person_dropdown():
-    conn = None
-    cur = None
-    try:
-        conn = get_connection()
-        cur = conn.cursor(dictionary=True)
-
-        sql = """
-            SELECT
-                person_id,
-                full_name_vn,
-                gender,
-                birth_date,
-                first_name
-            FROM person
-            WHERE delete_status = 0
-            ORDER BY
-                CASE WHEN birth_date IS NULL THEN 1 ELSE 0 END,
-                birth_date DESC,
-                first_name ASC
-        """
-
-        cur.execute(sql)
-        rows = cur.fetchall()
-        return jsonify(rows), 200
-
-    except Exception as e:
-        print("🔥 ERROR /api/person/for-person-dropdown:", e)
-        return jsonify({"error": str(e)}), 500
-
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
-
-# ============================================================
-# GET ONE PERSON — giữ nguyên
-# ============================================================
-@person_bp.route("/api/person/<int:person_id>", methods=["GET"])
-def get_person(person_id):
-    conn, cursor = None, None
-    try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM person WHERE person_id = %s", (person_id,))
-        row = cursor.fetchone()
-
-        if row:
-            return jsonify(row), 200
-        return jsonify({"error": "Person not found"}), 404
-
-    except Error as e:
-        print("❌ Lỗi SQL:", e)
-        return jsonify({"error": str(e)}), 500
-
-    finally:
-        if cursor: cursor.close()
-        if conn: conn.close()
-
-
-# ============================================================
-# POST create person — giữ nguyên
-# ============================================================
-@person_bp.route("/api/person/", methods=["POST"])
-def create_person():
-    conn, cursor = None, None
-    data = request.json
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        sql = """
-            INSERT INTO person (
-                sur_name, last_name, middle_name, first_name, gender,
-                birth_date, birth_date_precision,
-                death_date, death_date_precision,
-                delete_status
-            )
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 0)
-        """
-
-        vals = (
-            data.get("sur_name"),
-            data.get("last_name"),
-            data.get("middle_name"),
-            data.get("first_name"),
-            data.get("gender"),
-            data.get("birth_date"),
-            data.get("birth_date_precision"),
-            data.get("death_date"),
-            data.get("death_date_precision"),
-        )
-
-        cursor.execute(sql, vals)
-        conn.commit()
-
-        return jsonify({
-            "message": "Person created",
-            "person_id": cursor.lastrowid
-        }), 201
-
-    except Error as e:
-        print("❌ Lỗi SQL:", e)
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
-
-    finally:
-        if cursor: cursor.close()
-        if conn: conn.close()
-
-
-# ============================================================
-# PUT update person — giữ nguyên
-# ============================================================
-@person_bp.route("/api/person/<int:person_id>", methods=["PUT"])
-def update_person(person_id):
-    conn, cursor = None, None
-    data = request.json
+    # Nếu đã là yyyy-mm-dd → OK
+    if (
+        isinstance(date_value, str)
+        and date_value[:4].isdigit()
+        and date_value[4] == "-"
+    ):
+        return date_value[:10]
 
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
-
-        sql = """
-            UPDATE person
-            SET sur_name=%s, last_name=%s, middle_name=%s, first_name=%s,
-                gender=%s, birth_date=%s, birth_date_precision=%s,
-                death_date=%s, death_date_precision=%s,
-                updated_at=NOW()
-            WHERE person_id=%s
-        """
-
-        vals = (
-            data.get("sur_name"),
-            data.get("last_name"),
-            data.get("middle_name"),
-            data.get("first_name"),
-            data.get("gender"),
-            data.get("birth_date"),
-            data.get("birth_date_precision"),
-            person_id,
-        )
-
-        cursor.execute(sql, vals)
-        conn.commit()
-
-        return jsonify({"message": "Person updated"}), 200
-
-    except Error as e:
-        print("❌ Lỗi SQL:", e)
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
-
-    finally:
-        if cursor: cursor.close()
-        if conn: conn.close()
-
-
-# ============================================================
-# DELETE soft — giữ nguyên
-# ============================================================
-@person_bp.route("/api/person/<int:person_id>", methods=["DELETE"])
-def delete_person(person_id):
-    conn, cursor = None, None
+        # Parse chuỗi ngày GMT
+        dt = datetime.strptime(str(date_value), "%a, %d %b %Y %H:%M:%S GMT")
+        return dt.strftime("%Y-%m-%d")
+    except:
+        pass
 
     try:
-        conn = get_connection()
-        cursor = conn.cursor()
+        # datetime object
+        return date_value.strftime("%Y-%m-%d")
+    except:
+        return None
 
-        sql = """
-            UPDATE person
-            SET delete_status = 1, deleted_at = NOW()
-            WHERE person_id = %s
-        """
 
-        cursor.execute(sql, (person_id,))
-        conn.commit()
+# ==========================================================
+# 🔧 AVATAR PATH SAFE (CHỈ TRẢ VỀ FILENAME)
+# ==========================================================
+def safe_avatar_file(gender, avatar_value, person_id=None):
+    """
+    Trả về ONLY filename:
+        '5.jpg'
+        hoặc 'default_male.png'
+    """
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    static_dir = os.path.join(BASE_DIR, "static", "avatars")
+    default_map = {
+        "male": "default_male.png",
+        "female": "default_female.png",
+        "other": "default_other.png",
+    }
 
-        return jsonify({"message": "Person deleted"}), 200
+    gen = (gender or "other").lower()
+    val = str(avatar_value or "").strip()
 
-    except Error as e:
-        print("❌ Lỗi SQL:", e)
-        conn.rollback()
-        return jsonify({"error": str(e)}), 500
+    candidates = []
 
-    finally:
-        if cursor: cursor.close()
-        if conn: conn.close()
+    if val:
+        base = os.path.basename(val)
+        candidates.append(base)
+
+    if person_id:
+        candidates.append(f"{person_id}.jpg")
+        candidates.append(f"{person_id}.png")
+
+    candidates.append(default_map.get(gen, "default_other.png"))
+
+    for c in candidates:
+        if os.path.exists(os.path.join(static_dir, c)):
+            return c
+
+    return default_map.get(gen, "default_other.png")
+
+# ==========================================================
+# 🆕 ORM - GET ALL PERSON
+# ==========================================================
+@router.get("/person", response_model=list[PersonBasicResponse])
+def get_all_persons(db: Session = Depends(get_db)):
+    return person_service.get_all_persons(db)
+
+# ==========================================================
+# 🆕 ORM - GET ONE PERSON
+# ==========================================================
+@router.get("/person/{pid}", response_model=PersonDetailResponse)
+def get_person_orm(pid: int, db: Session = Depends(get_db)):
+    person = db.query(Person).filter(
+        Person.id == pid,
+        Person.delete_status == 0
+    ).first()
+
+    if not person:
+        raise HTTPException(status_code=404, detail="Person not found")
+
+    return person
+
+# ==========================================================
+# 🆕 ORM - CREATE PERSON
+# ==========================================================
+@router.post("/person", response_model=PersonDetailResponse)
+def create_person(data: PersonCreate, db: Session = Depends(get_db)):
+    return person_service.create_person(db, data)
+
+@router.put("/person/{person_id}", response_model=PersonDetailResponse)
+def update_person(person_id: int, payload: dict = Body(...), db: Session = Depends(get_db)):
+    try:
+        return person_service.update_person(db, person_id, payload)
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=e.message)
+
+@router.delete("/person/{person_id}")
+def delete_person(person_id: int, db: Session = Depends(get_db)):
+    try:
+        person_service.delete_person(db, person_id)
+        return {"message": "Deleted"}
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=e.message)        

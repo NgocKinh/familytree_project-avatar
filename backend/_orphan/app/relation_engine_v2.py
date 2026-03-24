@@ -89,8 +89,8 @@ class RelationEngineV2:
     def _parse_inputs(direction_path, gender_path, lineage_path, depth):
         try:
             direction_list = json.loads(direction_path)
-            gender_list = json.loads(gender_path)
-            lineage_list = json.loads(lineage_path)
+            gender_list = json.loads(gender_path) if gender_path else []
+            lineage_list = json.loads(lineage_path) if lineage_path else []
             depth = int(depth)
             return direction_list, gender_list, lineage_list, depth
         except Exception:
@@ -121,10 +121,10 @@ class RelationEngineV2:
         if depth == 2:
             side = lineage_list[0] if lineage_list else None
 
-            if gender == "M":
-                return "ông nội" if side == "P" else "ông ngoại"
-            else:
+            if gender == "F":
                 return "bà nội" if side == "P" else "bà ngoại"
+            else:
+                return "ông nội" if side == "P" else "ông ngoại"
 
         # CỐ
         if depth == 3:

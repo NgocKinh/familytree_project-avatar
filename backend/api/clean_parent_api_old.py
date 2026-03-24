@@ -6,7 +6,7 @@ router = APIRouter()
 
 @router.post("/api/clean/parent")
 def add_parent(data: dict):
-
+    print("🔥 DATA RECEIVED:", data)
     child_id = data.get("child_id")
     parent_id = data.get("parent_id")
     relation_type = data.get("type")        # FATHER | MOTHER
@@ -77,7 +77,7 @@ def add_parent(data: dict):
         # -------------------------
         if marriage_id:
             cur.execute(
-                "SELECT id FROM marriage WHERE id=%s",
+                "SELECT id FROM marriages WHERE id=%s",
                 (marriage_id,)
             )
 

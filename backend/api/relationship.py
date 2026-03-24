@@ -1,9 +1,9 @@
 from fastapi import APIRouter
-from app.core.relationship_resolver import RelationshipResolver
+# from app.core.relationship_resolver import RelationshipResolver
 
 router = APIRouter()
 
-resolver = RelationshipResolver()
+# resolver = RelationshipResolver()
 
 @router.get("/api/relationship")
 def get_relationship(source_id: int, target_id: int):

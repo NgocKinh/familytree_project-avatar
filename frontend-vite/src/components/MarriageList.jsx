@@ -69,6 +69,7 @@ export default function MarriageList({ onEdit }) {
   const handleDelete = async (id) => {
     try {
       await axios.delete(`${API_BASE}/marriage/${id}`);
+      await fetchMarriages(); // 🔥 THÊM DÒNG NÀY
       setMessage("🗑️ Đã xóa quan hệ hôn nhân!");
       setDeleteConfirmId(null);
       fetchMarriages();

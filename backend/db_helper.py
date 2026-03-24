@@ -1,7 +1,6 @@
 # ============================================
 # db_helper.py
 # Mô-đun quản lý kết nối MySQL trung tâm
-# Dùng chung cho toàn bộ backend Flask
 # ============================================
 
 import mysql.connector
@@ -20,7 +19,7 @@ def get_connection():
             host="localhost",
             user="root",
             password="Msand@167",   # ⚠️ thay bằng mật khẩu thật của bạn
-            database = "familytreedb",
+            database = "family_test",    # familytreedb
             autocommit=True
         )
         return conn
@@ -32,19 +31,14 @@ def get_connection():
 # ============================================
 # 🔸 Hàm an toàn để đóng connection
 # ============================================
-def close_connection(conn, cursor=None):
-    """
-    Đóng cursor & connection an toàn, không gây lỗi khi None.
-    """
+def close_connection(conn, cur):
     try:
-        if cursor:
-            cursor.close()
+        if cur:
+            cur.close()
         if conn:
             conn.close()
-    except Error as e:
-        print("⚠️ Lỗi khi đóng connection:", e)
-
-
+    except:
+        pass
 # ============================================
 # 🔸 Hàm thực thi truy vấn có rollback an toàn
 # ============================================

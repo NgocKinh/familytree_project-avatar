@@ -52,7 +52,7 @@ def export_db_overview():
                 pb.gender AS gender_b,
                 CONCAT_WS(' ', pb.sur_name, pb.last_name, pb.middle_name, pb.first_name) AS name_b,
                 m.status
-            FROM marriage m
+            FROM marriages m
             JOIN person pa ON pa.person_id = m.spouse_a_id
             JOIN person pb ON pb.person_id = m.spouse_b_id
             ORDER BY m.id

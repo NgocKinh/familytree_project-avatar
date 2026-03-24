@@ -29,11 +29,11 @@ function ParentChildList({ onEdit }) {
     const data = await getParentChildList();
     setRelations(data);
   };
-
+  
   const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc muốn xóa mối quan hệ này không?")) {
       await deleteParentChild(id);
-      loadData();
+      await loadData();
     }
   };
 

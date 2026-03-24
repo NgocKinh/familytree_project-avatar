@@ -24,6 +24,7 @@ import { formatName } from "../utils/formatName";
 export default function PersonList({ role }) {
   console.log("🚨 THIS IS THE FRONTEND I AM EDITING 🚨");
   const [persons, setPersons] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("active"); 
   const navigate = useNavigate();
 
@@ -37,11 +38,17 @@ export default function PersonList({ role }) {
 
   const fetchPersons = async () => {
     try {
+      setLoading(true);
+      console.log("🚀 CALL API...");
       const data = await getAllPersons();
-      console.log("API persons:", data);
-      setPersons(data);
+      console.log("🔥 DATA:", data);
+      setPersons(data.persons || data.data || data || []);  
     } catch (err) {
       console.error("❌ Lỗi tải danh sách:", err);
+      console.error("❌ RESPONSE:", err?.response);
+      console.error("❌ DATA:", err?.response?.data);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -84,6 +91,7 @@ export default function PersonList({ role }) {
   // ======================================================
   return (
     <div className="p-4">
+    {loading && <div className="mb-2 text-blue-500">⏳ Đang tải dữ liệu...</div>}
       {/* TAB */}
       <div className="flex gap-4 mb-4">
         <button
@@ -122,7 +130,13 @@ export default function PersonList({ role }) {
         </thead>
 
         <tbody>
-          {sortedPersons.length === 0 ? (
+          {loading ? (
+            <tr>
+              <td colSpan="5" className="py-4 text-center text-blue-500">
+                ⏳ Đang tải...
+              </td>
+            </tr>
+          ) : sortedPersons.length === 0 ? (
             <tr>
               <td colSpan="5" className="py-4 text-center italic text-gray-500">
                 Không có dữ liệu

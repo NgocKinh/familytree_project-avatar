@@ -83,11 +83,10 @@ function AssignParentForm() {
           return;
         }
 
-        await axios.post(`${API_BASE_URL}/clean/parent`, {
+        await axios.post(`${API_BASE_URL}/parent_child/assign`, {
           child_id: Number(childId),
           parent_id: Number(parentId),
-          type,
-          marriage_id: null
+          type: type
         });
       }
 
@@ -100,24 +99,25 @@ function AssignParentForm() {
           setError("❌ Không tìm thấy hôn nhân.");
           return;
         }
-
+        try {  
         // CHA
-        await axios.post(`${API_BASE_URL}/clean/parent`, {
+        await axios.post(`${API_BASE_URL}/parent_child/assign`, {
           child_id: Number(childId),
           parent_id: m.spouse_a_id,
-          type: "FATHER",
-          marriage_id: m.id
+          type: "FATHER"
         });
-
         // MẸ
-        await axios.post(`${API_BASE_URL}/clean/parent`, {
+        await axios.post(`${API_BASE_URL}/parent_child/assign`, {
           child_id: Number(childId),
           parent_id: m.spouse_b_id,
-          type: "MOTHER",
-          marriage_id: m.id
+          type: "MOTHER"
         });
+      } catch (err) {
+          console.error("❌ BACKEND ERROR:", err.response?.data);
+          setError(err.response?.data?.detail || "Lỗi hệ thống");
+          return;
+        }
       }
-
       setSuccess("✅ Đã bổ sung cha/mẹ thành công.");
       // 🔄 Reset form về trạng thái ban đầu sau khi lưu thành công
       setChildId('');

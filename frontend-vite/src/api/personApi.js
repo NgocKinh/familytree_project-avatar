@@ -1,7 +1,6 @@
 // =======================================================
 // File: src/api/personApi.js (v6.5-PRO-DONG-BO-AVATAR-FINAL)
 // Mô tả:
-//   - Đồng bộ tuyệt đối với backend (person_api.py + avatar_api.py)
 //   - Giữ nguyên 100% các route đang dùng trong dự án
 //   - Thêm comment rõ ràng, format sạch, không đổi logic
 // =======================================================
@@ -21,11 +20,26 @@ const AVATAR_URL = `${API_FASTAPI}/avatar/upload`;
 // ============================================
 export const getPersonList = async () => {
   try {
-    const res = await axios.get(PERSON_URL);
-    return res.data; // luôn là array []
+    console.log("📡 CALL URL:", PERSON_URL);
+
+    const res = await axios.get(PERSON_URL, { timeout: 5000 });
+
+    console.log("✅ RESPONSE:", res);
+
+    return res.data.persons || res.data.data || res.data || [];
+
   } catch (err) {
-    console.error("❌ Lỗi khi lấy danh sách:", err);
-    throw err;
+    console.error("❌ API ERROR:", err);
+
+    // 🔁 retry 1 lần
+    try {
+      console.log("🔁 RETRY...");
+      const res = await axios.get(PERSON_URL, { timeout: 5000 });
+      return res.data.persons || res.data.data || res.data || [];
+    } catch (err2) {
+      console.error("💥 RETRY FAIL:", err2);
+      return []; // không crash UI
+    }
   }
 };
 

@@ -1,16 +1,12 @@
-from backend.db import get_connection
 
-def get_person_gender(person_id: int):
-    conn = get_connection()
-    cur = conn.cursor()
+from sqlalchemy.orm import Session
+from backend.models.person_model import Person
 
-    cur.execute(
-        "SELECT gender FROM person WHERE person_id = %s",
-        (person_id,)
-    )
-    row = cur.fetchone()
 
-    cur.close()
-    conn.close()
+def get_person_gender(db: Session, person_id: int) -> str | None:
+    person = db.query(Person).filter(
+        Person.id == person_id,
+        Person.delete_status == 0
+    ).first()
 
-    return row[0] if row else None
+    return person.gender if person else None

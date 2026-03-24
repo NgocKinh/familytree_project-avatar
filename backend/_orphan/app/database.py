@@ -48,7 +48,7 @@ def get_spouse_relationship(source_id: int, target_id: int):
 
     cursor.execute("""
         SELECT p.gender
-        FROM marriage m
+        FROM marriages m
         JOIN person p ON (
             (m.spouse_a_id = %s AND m.spouse_b_id = p.person_id)
             OR
@@ -70,3 +70,23 @@ def get_spouse_relationship(source_id: int, target_id: int):
         return "chồng"
     else:
         return "vợ"
+
+def get_person_by_id(person_id: int):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT person_id, gender FROM person WHERE person_id = %s",
+        (person_id,)
+    )
+
+    row = cursor.fetchone()
+    conn.close()
+
+    if not row:
+        return None
+
+    return {
+        "person_id": row[0],
+        "gender": row[1]
+    }

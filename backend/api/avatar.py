@@ -3,8 +3,10 @@
 # Avatar V5 — Production Hardened
 # ==========================================================
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
-from backend.db_helper import get_connection, close_connection
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
+from sqlalchemy.orm import Session
+from backend.db import get_db
+from backend.models.person_model import Person
 import os
 
 router = APIRouter()
@@ -26,7 +28,11 @@ os.makedirs(AVATAR_DIR, exist_ok=True)
 # 📌 UPLOAD AVATAR
 # ==========================================================
 @router.post("/api/person/{person_id}/avatar")
-async def upload_avatar(person_id: int, file: UploadFile = File(...)):
+async def upload_avatar(
+    person_id: int,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db)
+):
 
     # 1️⃣ MIME CHECK
     if file.content_type not in ALLOWED_MIME:
@@ -40,67 +46,42 @@ async def upload_avatar(person_id: int, file: UploadFile = File(...)):
     await file.seek(0)
 
     # 3️⃣ CHECK PERSON EXISTS
-    conn, cursor = None, None
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
+    person = db.query(Person).filter(
+        Person.id == person_id,
+        Person.delete_status == 0
+    ).first()
 
-        cursor.execute(
-            "SELECT person_id FROM person WHERE person_id=%s AND delete_status=0",
-            (person_id,),
-        )
-
-        if not cursor.fetchone():
-            raise HTTPException(status_code=404, detail="Không tìm thấy person")
-
-    finally:
-        close_connection(conn, cursor)
+    if not person:
+        raise HTTPException(status_code=404, detail="Không tìm thấy person")
 
     # 4️⃣ HASH RENAME
     ext = ALLOWED_MIME[file.content_type]
     filename = f"{person_id}{ext}"
     file_path = os.path.join(AVATAR_DIR, filename)
 
-    # 5️⃣ REMOVE OLD AVATAR + SAVE FILE + UPDATE DB
-    conn, cursor = None, None
-    try:
-        conn = get_connection()
-        cursor = conn.cursor(dictionary=True)
+    # 5️⃣ REMOVE OLD AVATAR
+    if person.avatar and person.avatar != filename:
+        old_file = os.path.join(AVATAR_DIR, person.avatar)
+        if os.path.exists(old_file):
+            try:
+                os.remove(old_file)
+            except Exception:
+                pass
 
-        # lấy avatar cũ
-        cursor.execute(
-            "SELECT avatar FROM person WHERE person_id=%s",
-            (person_id,),
-        )
-        row = cursor.fetchone()
+    # 6️⃣ SAVE FILE
+    tmp_path = file_path + ".tmp"
 
-        # xóa avatar cũ
-        if row and row.get("avatar") and row["avatar"] != filename:
-            old_file = os.path.join(AVATAR_DIR, row["avatar"])
-            if os.path.exists(old_file):
-                try:
-                    os.remove(old_file)
-                except Exception:
-                    pass
+    with open(tmp_path, "wb") as f:
+        f.write(contents)
 
-        # lưu avatar mới
-        tmp_path = file_path + ".tmp"
+    os.replace(tmp_path, file_path)
 
-        with open(tmp_path, "wb") as f:
-            f.write(contents)
+    # 7️⃣ UPDATE DB (ORM)
+    from sqlalchemy.sql import func
 
-        os.replace(tmp_path, file_path)
-
-        # update database
-        cursor.execute(
-            "UPDATE person SET avatar=%s, updated_at=NOW() WHERE person_id=%s",
-            (filename, person_id),
-        )
-
-        conn.commit()
-
-    finally:
-        close_connection(conn, cursor)
+    person.avatar = filename
+    person.updated_at = func.now()
+    db.commit()
 
     return {
         "message": "Avatar uploaded successfully",

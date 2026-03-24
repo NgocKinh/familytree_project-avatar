@@ -14,7 +14,7 @@ app.mount(
 )
     
 # CORS
-ENV = os.environ.get("FLASK_ENV", "development")
+ENV = os.environ.get("ENV", "development")
 
 if ENV == "development":
     origins = [
@@ -35,21 +35,21 @@ app.add_middleware(
 # ==============================
 # REGISTER ROUTERS
 # ==============================
-from backend.api.person_basic import router as person_basic_router
-from backend.api.marriage_fastapi import router as marriage_router
-from backend.api.parent_child_fastapi import router as parent_child_router
+from backend.api.person import router as person_router
+from backend.api.marriage import router as marriage_router
+from backend.api.parent_child import router as parent_child_router
 from backend.api.avatar import router as avatar_router
-from backend.api.tree_fastapi import router as tree_router
-from backend.api.clean_parent_api import router as clean_parent_router
-from backend.utils.avatar_cdn import router as avatar_cdn_router
-from backend.api.relationship_fastapi import router as relationship_router
+from backend.api.tree import router as tree_router
+# from backend.api.clean_parent_api import router as clean_parent_router
+from backend.api.avatar_cdn import router as avatar_cdn_router
+from backend.api.relationship import router as relationship_router
 
-app.include_router(person_basic_router)
+app.include_router(person_router)
 app.include_router(marriage_router)
 app.include_router(parent_child_router)
 app.include_router(avatar_router)
 app.include_router(tree_router, prefix="/api/tree")
-app.include_router(clean_parent_router)
+# app.include_router(clean_parent_router)
 app.include_router(avatar_cdn_router, prefix="/cdn")
 app.include_router(relationship_router)
 
