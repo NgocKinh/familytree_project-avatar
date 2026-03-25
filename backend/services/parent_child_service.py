@@ -4,6 +4,7 @@ from backend.models.person_model import Person
 
 from backend.api.gene_propagate import safe_propagate
 from backend.utils.blood_utils import update_blood_code
+from backend.core.exceptions import NotFoundException, BadRequestException
 
 
 # ==========================================================
@@ -86,10 +87,10 @@ def get_child_parents_status(db: Session, child_id: int):
 def assign_parent_clean(db: Session, child_id: int, parent_id: int, ptype: str):
 
     if ptype not in ("FATHER", "MOTHER"):
-        raise ValueError("Invalid parent type")
+        raise BadRequestException("Invalid parent type")
 
     if child_id == parent_id:
-        raise ValueError("Parent and child cannot be the same")
+        raise BadRequestException("Parent and child cannot be the same")
 
     # 1️⃣ Check child
     child = db.query(Person).filter(
@@ -98,7 +99,7 @@ def assign_parent_clean(db: Session, child_id: int, parent_id: int, ptype: str):
     ).first()
 
     if not child:
-        raise ValueError("Child not found")
+        raise NotFoundException("Child not found")
 
     # 2️⃣ Check parent + gender
     parent = db.query(Person).filter(
@@ -107,50 +108,65 @@ def assign_parent_clean(db: Session, child_id: int, parent_id: int, ptype: str):
     ).first()
 
     if not parent:
-        raise ValueError("Parent not found")
+        raise NotFoundException("Parent not found")
 
     gender = (parent.gender or "").lower()
 
     if ptype == "FATHER" and gender != "male":
-        raise ValueError("Father must be male")
+        raise BadRequestException("Father must be male")
 
     if ptype == "MOTHER" and gender != "female":
-        raise ValueError("Mother must be female")
+        raise BadRequestException("Mother must be female")
 
-    # 3️⃣ Check duplicate
+    # 3️⃣ Check duplicate (business rule: 1 father / 1 mother)
     exists = db.query(ParentChild).filter(
         ParentChild.child_id == child_id,
         ParentChild.type == ptype
     ).first()
 
     if exists:
-        raise ValueError(f"Child already has a {ptype.lower()}")
+        raise BadRequestException(f"Child already has a {ptype.lower()}")
 
-    # 4️⃣ Insert
-    pc = ParentChild(
-        parent_id=parent_id,
-        child_id=child_id,
-        type=ptype
-    )
+    # 🔥 Extra duplicate check (same relation)
+    dup = db.query(ParentChild).filter(
+        ParentChild.parent_id == parent_id,
+        ParentChild.child_id == child_id,
+        ParentChild.type == ptype
+    ).first()
 
-    db.add(pc)
-    db.flush()  # để lấy id nếu cần
+    if dup:
+        raise BadRequestException("Relationship already exists")
 
-    # 5️⃣ Propagate (giữ logic cũ)
-    safe_propagate(
-        conn=db.connection(),
-        old_id=None,
-        new_id=parent_id,
-        side=ptype,
-        executor="system"
-    )
+    # 4️⃣ Insert + transaction safety
+    try:
+        pc = ParentChild(
+            parent_id=parent_id,
+            child_id=child_id,
+            type=ptype
+        )
 
-    update_blood_code(
-        conn=db.connection(),
-        child_id=child_id
-    )
+        db.add(pc)
+        db.flush()
 
-    db.commit()
+        # 5️⃣ Propagate (giữ nguyên logic domain)
+        safe_propagate(
+            conn=db.connection().connection,
+            old_id=None,
+            new_id=parent_id,
+            side=ptype,
+            executor="system"
+        )
+
+        update_blood_code(
+            conn=db.connection().connection,
+            child_id=child_id
+        )
+
+        db.commit()
+
+    except Exception:
+        db.rollback()
+        raise
 
     return pc
 
@@ -162,7 +178,7 @@ def delete_parent_child(db: Session, rid: int):
     pc = db.query(ParentChild).filter(ParentChild.id == rid).first()
 
     if not pc:
-        return False
+        raise NotFoundException("Relationship not found")
 
     db.delete(pc)
     db.commit()

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from backend.db import Base
 
@@ -14,7 +14,6 @@ class ParentChild(Base):
     type = Column(String, nullable=False)  # FATHER / MOTHER
     notes = Column(String, nullable=True)
 
-    # 🔁 Relationship
     parent = relationship(
         "Person",
         foreign_keys=[parent_id],
@@ -25,4 +24,8 @@ class ParentChild(Base):
         "Person",
         foreign_keys=[child_id],
         backref="parent_relations"
+    )
+
+    __table_args__ = (
+        UniqueConstraint("parent_id", "child_id", "type", name="uq_parent_child"),
     )

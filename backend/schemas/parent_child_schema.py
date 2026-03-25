@@ -1,12 +1,12 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Literal
 
 
-# 🔹 Base (dữ liệu chính)
+# 🔹 Base
 class ParentChildBase(BaseModel):
     parent_id: int
     child_id: int
-    type: str  # FATHER / MOTHER
+    type: Literal["FATHER", "MOTHER"]
     notes: Optional[str] = None
 
 
@@ -17,11 +17,11 @@ class ParentChildCreate(ParentChildBase):
 
 # 🔹 Update
 class ParentChildUpdate(BaseModel):
-    type: Optional[str] = None
+    type: Optional[Literal["FATHER", "MOTHER"]] = None
     notes: Optional[str] = None
 
 
-# 🔹 Response (KHÔNG loop)
+# 🔹 Response
 class ParentChildResponse(BaseModel):
     id: int
 
@@ -31,7 +31,7 @@ class ParentChildResponse(BaseModel):
     child_id: int
     child_name: Optional[str] = None
 
-    type: str
+    type: Literal["FATHER", "MOTHER"]
     notes: Optional[str] = None
 
     class Config:
