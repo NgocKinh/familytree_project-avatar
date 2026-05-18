@@ -45,49 +45,49 @@ def family_layer1(db):
     # ===== QUAN HỆ ÔNG BÀ → CHA / CÔ =====
     cursor.execute(
         "INSERT INTO parent_child (parent_id, child_id, type) VALUES (%s, %s, %s)",
-        (ong_a, cha, "FATHER")
+        (ong_a, cha, "father")
     )
     cursor.execute(
         "INSERT INTO parent_child (parent_id, child_id, type) VALUES (%s, %s, %s)",
-        (ba_a, cha, "MOTHER")
+        (ba_a, cha, "mother")
     )
 
     cursor.execute(
         "INSERT INTO parent_child (parent_id, child_id, type) VALUES (%s, %s, %s)",
-        (ong_a, co, "FATHER")
+        (ong_a, co, "father")
     )
     cursor.execute(
         "INSERT INTO parent_child (parent_id, child_id, type) VALUES (%s, %s, %s)",
-        (ba_a, co, "MOTHER")
+        (ba_a, co, "mother")
     )
 
     # ===== QUAN HỆ ÔNG BÀ → MẸ =====
     cursor.execute(
         "INSERT INTO parent_child (parent_id, child_id, type) VALUES (%s, %s, %s)",
-        (ong_b, me, "FATHER")
+        (ong_b, me, "father")
     )
     cursor.execute(
         "INSERT INTO parent_child (parent_id, child_id, type) VALUES (%s, %s, %s)",
-        (ba_b, me, "MOTHER")
+        (ba_b, me, "mother")
     )
 
     # ===== CHA + MẸ → CON =====
     cursor.execute(
         "INSERT INTO parent_child (parent_id, child_id, type) VALUES (%s, %s, %s)",
-        (cha, con, "FATHER")
+        (cha, con, "father")
     )
     cursor.execute(
         "INSERT INTO parent_child (parent_id, child_id, type) VALUES (%s, %s, %s)",
-        (me, con, "MOTHER")
+        (me, con, "mother")
     )
 
     cursor.execute(
         "INSERT INTO parent_child (parent_id, child_id, type) VALUES (%s, %s, %s)",
-        (cha, con2, "FATHER")
+        (cha, con2, "father")
     )
     cursor.execute(
         "INSERT INTO parent_child (parent_id, child_id, type) VALUES (%s, %s, %s)",
-        (me, con2, "MOTHER")
+        (me, con2, "mother")
     )
 
     db.commit()

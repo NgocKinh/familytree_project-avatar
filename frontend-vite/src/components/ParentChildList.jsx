@@ -1,20 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getParentChildList, deleteParentChild } from "../api/parentChildApi";
-
-// Hàm rút gọn hiển thị tên
-function formatDisplayName(name, mode = "full") {
-  if (!name) return "";
-  name = name.trim();
-  if (mode === "short") {
-    const parts = name.split(" ");
-    if (parts.length > 1) {
-      const first = parts.pop();
-      const initials = parts.map((p) => p[0].toUpperCase() + ".").join(" ");
-      return `${initials} ${first}`;
-    }
-  }
-  return name;
-}
+import { formatName } from "../utils/formatName";
 
 function ParentChildList({ onEdit }) {
   const [relations, setRelations] = useState([]);
@@ -27,6 +13,7 @@ function ParentChildList({ onEdit }) {
 
   const loadData = async () => {
     const data = await getParentChildList();
+    console.log("🔥 PARENT_CHILD DATA:", data);
     setRelations(data);
   };
   
@@ -36,7 +23,17 @@ function ParentChildList({ onEdit }) {
       await loadData();
     }
   };
+  // ✅ [CHANGE 1]: Dùng formatName chuẩn toàn project
+  const renderPersonName = (person, fallbackName = "") => {
+    if (person && typeof person === "object") {
+      return formatName(person, {
+        mode,
+        showAlias: showSurName,
+      });
+    }
 
+    return fallbackName || "";
+  };
   return (
     <div className="bg-white shadow-md rounded-lg p-4">
       <h3 className="text-xl font-bold text-gray-700 mb-4">
@@ -87,18 +84,18 @@ function ParentChildList({ onEdit }) {
                 <td className="border px-4 py-2 text-center">{index + 1}</td>
 
                 {/* Cột Cha/Mẹ */}
-                <td className="border px-4 py-2">
-                  {formatDisplayName(r.parent_name, mode)}
-                </td>
+                  <td className="border px-4 py-2">
+                    {renderPersonName(r.parent, r.parent_name)}
+                  </td>
 
-                {/* Cột Con */}
-                <td className="border px-4 py-2">
-                  {formatDisplayName(r.child_name, mode)}
-                </td>
+                  {/* Cột Con */}
+                  <td className="border px-4 py-2">
+                    {renderPersonName(r.child, r.child_name)}
+                  </td>
 
                 {/* Loại */}
                 <td className="border px-4 py-2 text-center">
-                  {r.relation_label}
+                  {r.type === "father" ? "Cha" : r.type === "mother" ? "Mẹ" : r.type}
                 </td>
 
                 {/* Ghi chú */}

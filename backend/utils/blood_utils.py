@@ -18,8 +18,8 @@ def update_blood_code(conn, child_id):
     # 🔹 Lấy cha và mẹ từ bảng parent_child
     cur.execute("""
         SELECT 
-            MAX(CASE WHEN type='FATHER' THEN parent_id END) AS father_id,
-            MAX(CASE WHEN type='MOTHER' THEN parent_id END) AS mother_id
+            MAX(CASE WHEN type='father' THEN parent_id END) AS father_id,
+            MAX(CASE WHEN type='mother' THEN parent_id END) AS mother_id
         FROM parent_child
         WHERE child_id = %s;
     """, (child_id,))
@@ -37,16 +37,16 @@ def update_blood_code(conn, child_id):
 
     # 🔹 Cập nhật vào bảng person
     cur.execute("""
-        UPDATE person
+        UPDATE persons
         SET blood_code = %s
         WHERE person_id = %s;
     """, (blood_code, child_id))
 
-    # 🔹 Sao lưu
-    cur.execute("""
-        INSERT INTO person_gene_backup (person_id, blood_code, backup_time)
-        VALUES (%s, %s, NOW());
-    """, (child_id, blood_code))
+    # # 🔹 Sao lưu
+    # cur.execute("""
+    #     INSERT INTO person_gene_backup (person_id, blood_code, backup_time)
+    #     VALUES (%s, %s, NOW());
+    # """, (child_id, blood_code))
 
     print(f"✅ Blood_code updated for ID={child_id}: {blood_code}")
 

@@ -3,9 +3,9 @@
 // ======================================================
 
 import axios from "axios";
-import { API_FASTAPI } from "./apiConfig";
+import { API_BASE_URL } from "./apiConfig";
 
-const API_BASE = `${API_FASTAPI}/tree/family`;
+const API_BASE = "http://localhost:8000/api/tree";
 
 export async function getFamilyTree(id) {
   if (!id) {

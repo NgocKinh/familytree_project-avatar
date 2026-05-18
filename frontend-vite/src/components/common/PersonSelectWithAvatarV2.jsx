@@ -7,10 +7,9 @@
 //   - Người dùng vẫn có thể tắt để xem toàn bộ
 //   - Tương thích avatarEngine (JPG → PNG → default)
 // ======================================================================
-
 import React, { useState, useRef, useEffect } from "react";
+import { formatName } from "../../utils/formatName";
 import { getAvatarURL, handleAvatarError } from "../../utils/avatarEngine";
-
 export default function PersonSelectWithAvatarV2({
   label = "",
   value = "",
@@ -47,7 +46,10 @@ export default function PersonSelectWithAvatarV2({
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const selected = persons.find((p) => String(p.person_id) === String(value));
+  const selected = persons.find((p) => {
+    const id = p.person_id ?? p.id;
+    return String(id) === String(value);
+  });  
 
   // ==========================================
   // AUTO BẬT FILTER NẾU NGƯỜI ĐƯỢC CHỌN TRÙNG GIỚI TÍNH
@@ -70,17 +72,15 @@ export default function PersonSelectWithAvatarV2({
     }
     return true;
   });
-  console.log("TOTAL PERSONS:", persons.length);
-  console.log("FILTERED COUNT:", filteredPersons.length);
-  console.log("EFFECTIVE GENDER:", effectiveGender);
-  console.log("FILTER ON:", filterOn);
+  
   // ==========================================
   // Format tên: Fullname + lifespan
   // ==========================================
   const formatPersonName = (p) => {
-    const fullname =
-      p.full_name_vn ||
-      [p.last_name, p.middle_name, p.first_name].filter(Boolean).join(" ");
+    const fullname = formatName(p, {
+      mode: "full",
+      showAlias: false,
+    });
 
     const birth = p.birth_date ? p.birth_date.slice(0, 4) : "";
     const death = p.death_date ? p.death_date.slice(0, 4) : "";
@@ -124,12 +124,13 @@ export default function PersonSelectWithAvatarV2({
         {selected ? (
           <>
             <img
-              src={getAvatarURL(selected.avatar, selected.gender)}
-              onError={(e) =>
-                handleAvatarError(e, selected.person_id, selected.gender)
-              }
+              src={getAvatarURL({
+                ...selected,
+                id: selected.person_id ?? selected.id
+              })}
+              onError={(e) => handleAvatarError(e, selected.gender)}
               className="w-7 h-7 rounded-full object-cover"
-            />
+            />  
             <span>{formatPersonName(selected)}</span>
           </>
         ) : (
@@ -143,16 +144,19 @@ export default function PersonSelectWithAvatarV2({
 
           {filteredPersons.map((p) => (
             <div
-              key={p.person_id}
+            key={p.person_id ?? p.id}
               onClick={() => {
-                onChange(String(p.person_id));
+                onChange(String(p.person_id ?? p.id));
                 setOpen(false);
               }}
               className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-gray-100"
             >
               <img
-                src={getAvatarURL(p.avatar, p.gender)}
-                onError={(e) => handleAvatarError(e, p.person_id, p.gender)}
+                src={getAvatarURL({
+                  ...p,
+                  id: p.person_id ?? p.id
+                })}  
+                onError={(e) => handleAvatarError(e, p.gender)}
                 className="w-7 h-7 rounded-full object-cover"
               />
               <span>{formatPersonName(p)}</span>

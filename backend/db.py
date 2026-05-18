@@ -1,9 +1,17 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = "mysql+mysqlconnector://root:Msand%40167@localhost/family_test"
+DATABASE_URL = "mysql+mysqlconnector://root:Msand%40167@127.0.0.1:3306/familytreedb"
 
 engine = create_engine(DATABASE_URL)
+
+from sqlalchemy import text
+
+with engine.connect() as conn:
+    result = conn.execute(text("SELECT DATABASE(), @@hostname, @@port"))
+    
+
+    # result = conn.execute(text("SELECT COUNT(*) FROM family_relationships"))
 
 SessionLocal = sessionmaker(
     autocommit=False,
@@ -25,8 +33,9 @@ import mysql.connector
 
 def get_connection():
     return mysql.connector.connect(
-        host="localhost",
+        host="127.0.0.1",   # 🔥 đổi dòng này
+        port=3306,          # 🔥 thêm dòng này
         user="root",
         password="Msand@167",
-        database="family_test"
+        database="familytreedb"
     )

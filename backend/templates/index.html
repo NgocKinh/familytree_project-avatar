@@ -255,7 +255,7 @@
         .then(()=>{loadData();setForm(emptyForm);});};
       const handleUpdate=()=>{if(!selectedId)return;fetch(`/api/parent_child/${selectedId}`,{method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify(form)})
         .then(()=>{loadData();setForm(emptyForm);setSelectedId(null);});};
-      const handleEdit=r=>{setForm({parent_id:r.parent_id??"",child_id:r.child_id??"",type:r.type||"FATHER",notes:r.notes||""});setSelectedId(r.id);};
+      const handleEdit=r=>{setForm({parent_id:r.parent_id??"",child_id:r.child_id??"",type:r.type||"father",notes:r.notes||""});setSelectedId(r.id);};
       const handleDelete=id=>{fetch(`/api/parent_child/${id}`,{method:"DELETE"}).then(loadData);};
       return(<div><h2>Parent_Child</h2>
         <div>
@@ -272,8 +272,8 @@
             </option>)}
           </select>
           <select name="type" value={form.type} onChange={handleChange}>
-            <option value="FATHER">father</option>
-            <option value="MOTHER">mother</option>
+            <option value="father">Cha</option>
+            <option value="mother">Mẹ</option>
           </select>
           <input name="notes" placeholder="notes" value={form.notes} onChange={handleChange}/>
           <button onClick={handleAdd}>Add</button><button onClick={handleUpdate}>Update</button>

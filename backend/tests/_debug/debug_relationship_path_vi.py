@@ -142,24 +142,14 @@ def print_path_vi(path: list[int]):
 # DEBUG TỔNG HỢP
 # =====================================================
 def debug_relationship_path_vi(from_id: int, to_id: int):
-    print("\n========================================")
-    print("DEBUG RELATIONSHIP PATH (TIẾNG VIỆT)")
-    print(f"A = {from_id}, B = {to_id}")
-    print("========================================")
-
+    
     result = find_relationship_bidirectional(from_id, to_id)
 
-    print("\n=== ENGINE RESULT ===")
-    print("A_to_B:", result.get("A_to_B"))
-    print("B_to_A:", result.get("B_to_A"))
 
     path = result.get("path")
     if not path:
         print("\n⚠ Engine không expose path")
         return
-
-    print("\nPATH (ID):", " -> ".join(str(x) for x in path))
-    print_path_vi(path)
 
 
 # =====================================================

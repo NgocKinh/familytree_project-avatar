@@ -1,5 +1,5 @@
 from backend.db import get_connection
-from backend.core.family_graph import FamilyGraph
+from backend.domain.family_graph import FamilyGraph
 
 def build_family_graph():
 

@@ -1,7 +1,7 @@
 const MAP = {
   married: "❤️",
   separated: "💙",
-  cohabitation: "💛",
+  cohabiting: "💛",
   divorced: "💔",
   widowed: "🖤",
   null: "➕",

@@ -2,8 +2,10 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../api/apiConfig";
 import PersonDropdown from "../common/PersonDropdown";
-
+import { formatName } from "../../utils/formatName";
+import { useNavigate } from "react-router-dom";
 function AssignParentForm() {
+  const navigate = useNavigate();
   // -----------------------------
   // DATA LISTS
   // -----------------------------
@@ -31,10 +33,20 @@ function AssignParentForm() {
   const [hasMother, setHasMother] = useState(false);
   const [lockForm, setLockForm] = useState(false);
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/person/for-person-dropdown`)
-      .then(res => setPersons(res.data || []))
+    axios.get(`${API_BASE_URL}/person`)
+      .then(res => {
+        const data = res.data || [];
+  
+        // ✅ [CHANGE 1]: chuẩn hóa name để dropdown không bị undefined
+        const normalized = data.map(p => ({
+          ...p,
+          name: formatName(p)
+        }));
+  
+        setPersons(normalized);
+      })
       .catch(() => setPersons([]));
-
+  
     axios.get(`${API_BASE_URL}/marriage`)
       .then(res => setMarriages(res.data || []))
       .catch(() => setMarriages([]));
@@ -42,7 +54,7 @@ function AssignParentForm() {
 
   const checkParentStatus = async (id) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/child/${id}/parents-status`);
+      const res = await axios.get(`${API_BASE_URL}/parent_child/child/${id}/parents-status`);
       const { has_father, has_mother } = res.data;
 
       setHasFather(has_father);
@@ -104,13 +116,13 @@ function AssignParentForm() {
         await axios.post(`${API_BASE_URL}/parent_child/assign`, {
           child_id: Number(childId),
           parent_id: m.spouse_a_id,
-          type: "FATHER"
+          type: "father"
         });
         // MẸ
         await axios.post(`${API_BASE_URL}/parent_child/assign`, {
           child_id: Number(childId),
           parent_id: m.spouse_b_id,
-          type: "MOTHER"
+          type: "mother"
         });
       } catch (err) {
           console.error("❌ BACKEND ERROR:", err.response?.data);
@@ -120,17 +132,23 @@ function AssignParentForm() {
       }
       setSuccess("✅ Đã bổ sung cha/mẹ thành công.");
       // 🔄 Reset form về trạng thái ban đầu sau khi lưu thành công
-      setChildId('');
+
       setParentId('');
       setType('');
       setMarriageId('');
       setNoMarriage(true);
       setHasFather(false);
       setHasMother(false);
-      setLockForm(false);
+      setLockForm(true);
 
     } catch (err) {
-      setError(err.response?.data?.error || "❌ Lỗi hệ thống.");
+      console.error("❌ ASSIGN ERROR:", err.response?.data || err);
+    
+      setError(
+        err.response?.data?.detail ||
+        err.response?.data?.error ||
+        "❌ Lỗi hệ thống."
+      );
     }
   };
 
@@ -239,10 +257,10 @@ function AssignParentForm() {
                 <label>
                   <input
                     type="radio"
-                    value="FATHER"
-                    checked={type === "FATHER"}
+                    value="father"
+                    checked={type === "father"}
                     onChange={() => {
-                      setType("FATHER");
+                      setType("father");
                       setParentId("");   // reset chọn Cha/Mẹ khi đổi vai trò
                     }}
                     disabled={lockForm || hasFather}
@@ -254,10 +272,10 @@ function AssignParentForm() {
                 <label>
                   <input
                     type="radio"
-                    value="MOTHER"
-                    checked={type === "MOTHER"}
+                    value="mother"
+                    checked={type === "mother"}
                     onChange={() => {
-                      setType("MOTHER");
+                      setType("mother");
                       setParentId("");   // reset cho đồng bộ
                     }}
                     disabled={lockForm || hasMother}
@@ -286,8 +304,11 @@ function AssignParentForm() {
                 persons={persons}
                 disabled={lockForm}
                 filterFn={(p) => {
-                  if (type === "FATHER") return p.gender === "male";
-                  if (type === "MOTHER") return p.gender === "female";
+                  const t = (type || "").toLowerCase();
+                
+                  if (t === "father") return p.gender === "male";
+                  if (t === "mother") return p.gender === "female";
+                
                   return false;
                 }}
                 placeholder="-- chọn --"
@@ -305,7 +326,6 @@ function AssignParentForm() {
             type="button"
             className="px-4 py-2 bg-gray-400 text-white rounded"
             onClick={() => {
-              setChildId('');
               setParentId('');
               setType('');
               setMarriageId('');
@@ -320,14 +340,24 @@ function AssignParentForm() {
             ❌ Hủy
           </button>
 
-          {/* NÚT LƯU */}
+        {/* 🔵 [CHANGE]: Ẩn Lưu khi đã lockForm (đã lưu xong) */}
+        {!lockForm && (
           <button
             type="submit"
-            disabled={lockForm}
-            className="px-4 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
+            className="px-4 py-2 bg-blue-600 text-white rounded"
           >
             💾 Lưu
           </button>
+        )}
+          {lockForm && (
+          <button
+            type="button"
+            onClick={() => navigate("/")}
+            className="px-4 py-2 bg-gray-600 text-white rounded"
+          >
+            ⬅ Quay về Home
+          </button>
+        )}
         </div>
       </form >
     </div >

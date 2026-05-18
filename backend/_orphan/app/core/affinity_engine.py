@@ -12,7 +12,6 @@ from app.affinity_repository import (
     is_sibling_in_law_reverse,
 )
 
-
 class AffinityResolverEngine:
 
     def resolve(self, source_id: int, target_id: int) -> List[RelationshipCandidate]:

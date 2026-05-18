@@ -32,12 +32,12 @@ DEFAULT_OTHER = os.path.join(AVATAR_DIR, "default_other.png")
 # ==========================================================
 
 def find_avatar(pid: int):
-    for ext in ("png", "jpg"):
+    # ✅ [CHANGE 1]: Ưu tiên jpg trước, sau đó mới png để đồng bộ frontend
+    for ext in ("jpg", "png"):
         path = os.path.join(AVATAR_DIR, f"{pid}.{ext}")
         if os.path.exists(path):
             return path
     return None
-
 
 # ==========================================================
 # DEFAULT AVATAR (ORM)

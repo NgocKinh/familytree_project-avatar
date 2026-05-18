@@ -1,44 +1,62 @@
 // =======================================================
-// File: src/api/personApi.js (v6.5-PRO-DONG-BO-AVATAR-FINAL)
+// File: src/api/personApi.js (v7.0-FINAL-STABLE-FASTAPI)
 // Mô tả:
-//   - Giữ nguyên 100% các route đang dùng trong dự án
-//   - Thêm comment rõ ràng, format sạch, không đổi logic
+//   - Đồng bộ hoàn toàn với FastAPI
+//   - Giữ nguyên cấu trúc file cũ
+//   - Không phá UI hiện tại
 // =======================================================
 
 import axios from "axios";
-import { API_FASTAPI } from "./apiConfig";
-console.log("API_FASTAPI =", API_FASTAPI);
+
 // ============================================
-// BASE URL (KHÔNG ĐƯỢC ĐỔI nếu backend giữ nguyên)
+// BASE URL
 // ============================================
-const PERSON_URL = `${API_FASTAPI}/person/basic`;
-const API_URL    = `${API_FASTAPI}/person`;
-const AVATAR_URL = `${API_FASTAPI}/avatar/upload`;
+// ❌ Flask (không dùng nữa)
+// const PERSON_URL = "http://127.0.0.1:5000/api/person";
+
+// ✅ FastAPI
+const API_URL = "http://localhost:8000/api/person";
+const AVATAR_URL = "http://localhost:8000/api/avatar/upload";
 
 // ============================================
 // LẤY DANH SÁCH PERSON
 // ============================================
 export const getPersonList = async () => {
   try {
-    console.log("📡 CALL URL:", PERSON_URL);
+    console.log("📡 CALL URL:", `${API_URL}/`);
 
-    const res = await axios.get(PERSON_URL, { timeout: 5000 });
+    const res = await axios.get(`${API_URL}/`, {
+      timeout: 5000,
+      params: { include_hidden: true },
+    });
 
-    console.log("✅ RESPONSE:", res);
+    console.log("✅ RESPONSE:", res.data);
 
-    return res.data.persons || res.data.data || res.data || [];
+    // ✅ tương thích cả format cũ và mới
+    if (Array.isArray(res.data)) return res.data;
+    if (res.data?.persons) return res.data.persons;
+    if (res.data?.data) return res.data.data;
 
+    return [];
   } catch (err) {
     console.error("❌ API ERROR:", err);
 
     // 🔁 retry 1 lần
     try {
       console.log("🔁 RETRY...");
-      const res = await axios.get(PERSON_URL, { timeout: 5000 });
-      return res.data.persons || res.data.data || res.data || [];
+      const res = await axios.get(`${API_URL}/`, {
+        timeout: 5000,
+        params: { include_hidden: true },
+      });
+
+      if (Array.isArray(res.data)) return res.data;
+      if (res.data?.persons) return res.data.persons;
+      if (res.data?.data) return res.data.data;
+
+      return [];
     } catch (err2) {
       console.error("💥 RETRY FAIL:", err2);
-      return []; // không crash UI
+      return [];
     }
   }
 };
@@ -47,29 +65,29 @@ export const getPersonList = async () => {
 export const getAllPersons = getPersonList;
 
 // ============================================
-// SOFT DELETE (ẨN TẠM)
+// SOFT DELETE (tạm giữ nếu backend chưa đổi)
 // ============================================
 export const softDeletePerson = (id) =>
   axios.put(`${API_URL}/delete_soft/${id}`);
 
 // ============================================
-// RESTORE (PHỤC HỒI)
+// RESTORE
 // ============================================
 export const restorePerson = (id) =>
   axios.put(`${API_URL}/restore/${id}`);
 
 // ============================================
-// HARD DELETE (XÓA VĨNH VIỄN – ADMIN)
+// HARD DELETE
 // ============================================
 export const hardDeletePerson = (id) =>
   axios.delete(`${API_URL}/delete_permanent/${id}`);
 
 // ============================================
-// GET: LẤY CHI TIẾT PERSON (FORM BASIC / FORM DETAIL)
+// GET DETAIL
 // ============================================
 export const getPersonById = async (id) => {
   try {
-    const res = await axios.get(`${API_URL}/basic/${id}`);
+    const res = await axios.get(`${API_URL}/${id}`);
     return res.data;
   } catch (err) {
     console.error(`❌ Lỗi khi lấy chi tiết ID=${id}:`, err);
@@ -78,11 +96,11 @@ export const getPersonById = async (id) => {
 };
 
 // ============================================
-// POST: THÊM PERSON (FORM BASIC)
+// CREATE PERSON
 // ============================================
 export const addPerson = async (data) => {
   try {
-    const res = await axios.post(`${API_URL}/basic`, data, {
+    const res = await axios.post(`${API_URL}`, data, {
       headers: { "Content-Type": "application/json" },
     });
     return res.data;
@@ -93,11 +111,11 @@ export const addPerson = async (data) => {
 };
 
 // ============================================
-// PUT: CẬP NHẬT PERSON
+// UPDATE PERSON
 // ============================================
 export const updatePerson = async (id, data) => {
   try {
-    const res = await axios.put(`${API_URL}/basic/${id}`, data, {
+    const res = await axios.put(`${API_URL}/${id}`, data, {
       headers: { "Content-Type": "application/json" },
     });
     return res.data;
@@ -115,9 +133,9 @@ export const checkDuplicatePerson = async (data) => {
   return res.data;
 };
 
-// ======================================================================
-// 🔵 UPLOAD AVATAR
-// ======================================================================
+// ============================================
+// UPLOAD AVATAR
+// ============================================
 export const uploadAvatar = async (personId, file) => {
   const formData = new FormData();
   formData.append("file", file);
@@ -127,9 +145,22 @@ export const uploadAvatar = async (personId, file) => {
       headers: { "Content-Type": "multipart/form-data" },
     });
 
-    return res.data; // filename + message
+    return res.data;
   } catch (err) {
     console.error("❌ Lỗi upload avatar:", err);
     throw err;
   }
+};
+
+// ============================================
+// GET AVATAR URL (ANTI CACHE)
+// ============================================
+export const getAvatarURL = (person) => {
+  if (!person) return "";
+
+  const id = person.id || person.person_id;
+  const gender = person.gender || "other";
+
+  // ưu tiên avatar thật
+  return `http://localhost:8000/static/avatars/${id}.jpg?t=${Date.now()}`;
 };

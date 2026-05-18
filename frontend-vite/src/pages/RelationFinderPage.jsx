@@ -20,7 +20,7 @@ function RelationFinderPage() {
     async function fetchPersons() {
       try {
         const res = await axios.get(
-          makeApiUrl("/person/for-person-dropdown")
+          makeApiUrl("/person")
         )
         console.log("PERSON API RESPONSE", res.data);
         console.log("PERSON CÓ NĂM SINH", res.data.find(p => p.birth_date !== null));

@@ -6,7 +6,7 @@ from typing import Optional, Literal
 class ParentChildBase(BaseModel):
     parent_id: int
     child_id: int
-    type: Literal["FATHER", "MOTHER"]
+    type: Literal["father", "mother"]
     notes: Optional[str] = None
 
 
@@ -17,7 +17,7 @@ class ParentChildCreate(ParentChildBase):
 
 # 🔹 Update
 class ParentChildUpdate(BaseModel):
-    type: Optional[Literal["FATHER", "MOTHER"]] = None
+    type: Optional[Literal["father", "mother"]] = None
     notes: Optional[str] = None
 
 
@@ -31,7 +31,7 @@ class ParentChildResponse(BaseModel):
     child_id: int
     child_name: Optional[str] = None
 
-    type: Literal["FATHER", "MOTHER"]
+    type: Literal["father", "mother"]
     notes: Optional[str] = None
 
     class Config:

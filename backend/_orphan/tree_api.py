@@ -9,7 +9,20 @@ import os
 tree_bp = Blueprint("tree_bp", __name__)
 
 AVATAR_PATH = os.path.join("backend", "static", "avatars")
-
+# ==========================================================
+# ✅ [ADDED]: fallback chuẩn cho person
+# ==========================================================
+def safe_person(p):
+    if not p:
+        return {
+            "person_id": None,
+            "name": "Không rõ",
+            "gender": None,
+            "birth_year": None,
+            "death_year": None,
+            "avatar": "/static/avatars/default_other.png"
+        }
+    return p
 
 # ----------------------------------------------------------
 # Avatar
@@ -135,7 +148,7 @@ def get_parents(pid):
         FROM parent_child pc
         JOIN person p ON p.person_id = pc.parent_id
         WHERE pc.child_id = %s
-        AND pc.type IN ('FATHER','MOTHER')
+        AND pc.type IN ('father','mother')
     """, (pid,))
 
     rows = cur.fetchall()
@@ -235,8 +248,8 @@ def get_family(pid):
 
     return jsonify({
 
-        "center": center,
-        "spouse": spouse,
+        "center": safe_person(center),
+        "spouse": safe_person(spouse),
         "marriage_status": status,
 
         "father_parents": father_parents,

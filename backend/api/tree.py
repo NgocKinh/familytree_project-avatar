@@ -1,24 +1,34 @@
-from fastapi import APIRouter, HTTPException
+# ==========================================================
+# FILE: backend/api/tree.py (FastAPI - CONVERT FROM FLASK)
+# GIỮ NGUYÊN LOGIC CŨ (CACHE + SQL + AVATAR)
+# ==========================================================
+
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from backend.db import get_connection
+
 import os
 import time
 
-router = APIRouter(tags=["Tree"])
+router = APIRouter()
+
+# ==========================================================
+# PATH
+# ==========================================================
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 AVATAR_PATH = os.path.join(BASE_DIR, "static", "avatars")
 
-# ----------------------------------------------------------
-# SIMPLE MEMORY CACHE (tree cực nhanh)
-# ----------------------------------------------------------
+# ==========================================================
+# CACHE
+# ==========================================================
 
 TREE_CACHE = {}
-CACHE_TTL = 30   # seconds
+CACHE_TTL = 30  # seconds
 
-
-# ----------------------------------------------------------
-# Avatar
-# ----------------------------------------------------------
+# ==========================================================
+# AVATAR
+# ==========================================================
 
 def resolve_avatar(pid, gender):
 
@@ -36,35 +46,40 @@ def resolve_avatar(pid, gender):
     return "/static/avatars/default_other.png"
 
 
-# ----------------------------------------------------------
-# Helper
-# ----------------------------------------------------------
+# ==========================================================
+# HELPER
+# ==========================================================
 
 def build_person(row):
 
+    # ✅ [CHANGE 1]: fallback khi không có người
     if not row:
-        return None
+        return {
+            "person_id": None,
+            "name": "Không rõ",
+            "gender": None,
+            "birth_year": None,
+            "death_year": None,
+            "avatar": "/static/avatars/default_other.png"
+        }
 
     p = dict(row)
 
-    p["avatar"] = resolve_avatar(p["person_id"], p["gender"])
+    p["avatar"] = resolve_avatar(p["person_id"], p.get("gender"))
 
     return p
 
 
-# ----------------------------------------------------------
+# ==========================================================
 # MAIN API
-# ----------------------------------------------------------
+# ==========================================================
 
-@router.get("/family/{pid}")
+@router.get("/{pid}")
 def get_family(pid: int):
-
-    # ----------------------------------------------------------
-    # CACHE
-    # ----------------------------------------------------------
-
+    
     now = time.time()
 
+    # ================= CACHE =================
     cached = TREE_CACHE.get(pid)
 
     if cached and now - cached["time"] < CACHE_TTL:
@@ -73,106 +88,164 @@ def get_family(pid: int):
     conn = get_connection()
     cur = conn.cursor(dictionary=True)
 
-    # ----------------------------------------------------------
-    # CENTER
-    # ----------------------------------------------------------
+    # ================= CENTER =================
 
-    cur.execute(
-        """
+    cur.execute("""
         SELECT
-            person_id AS person_id,
+            person_id,
             full_name_vn AS name,
+            sur_name,
+            last_name,
+            middle_name,
+            first_name,
             gender,
             YEAR(birth_date) AS birth_year,
             YEAR(death_date) AS death_year
-        FROM person
+        FROM persons
         WHERE person_id = %s
-        """,
-        (pid,),
-    )
+    """, (pid,))
 
     center = build_person(cur.fetchone())
 
     if not center:
-        raise HTTPException(status_code=404)
+        return JSONResponse({"error": "not_found"}, status_code=404)
 
-    # ----------------------------------------------------------
-    # SPOUSE
-    # ----------------------------------------------------------
+    # ================= SPOUSE =================
 
-    cur.execute(
-        """
+    # 🔵 STEP 1: tìm tất cả marriages chứa person này
+    cur.execute("""
         SELECT
-            CASE
-                WHEN spouse_a_id = %s THEN spouse_b_id
-                ELSE spouse_a_id
-            END AS spouse_id,
-            status
-        FROM marriage
-        WHERE spouse_a_id = %s OR spouse_b_id = %s
-        ORDER BY
-            CASE status
-                WHEN 'married' THEN 1
-                WHEN 'cohabitation' THEN 2
-                WHEN 'separated' THEN 3
-                WHEN 'divorced' THEN 4
-                ELSE 5
-            END
-        LIMIT 1
-        """,
-        (pid, pid, pid),
-    )
+            m.id,
+            m.spouse_a_id,
+            m.spouse_b_id,
+            m.status,
+            m.priority
 
-    row = cur.fetchone()
+        FROM marriages m
+
+        WHERE
+            m.spouse_a_id = %s
+            OR m.spouse_b_id = %s
+        ORDER BY m.id ASC    
+    """, (pid, pid))
+
+    marriage_rows = cur.fetchall()
 
     spouse = None
     marriage_status = None
 
-    if row:
+    # =========================================================
+    # CASE 1: KHÔNG có marriage
+    # =========================================================
+    if len(marriage_rows) == 0:
+        spouse = None
+
+    # =========================================================
+    # CASE 2: CHỈ có 1 marriage
+    # =========================================================
+    elif len(marriage_rows) == 1:
+
+        row = marriage_rows[0]
 
         marriage_status = row["status"]
 
-        cur.execute(
-            """
+        spouse_id = (
+            row["spouse_b_id"]
+            if row["spouse_a_id"] == pid
+            else row["spouse_a_id"]
+        )
+
+        cur.execute("""
             SELECT
-                person_id AS person_id,
+                person_id,
                 full_name_vn AS name,
+                sur_name,
+                last_name,
+                middle_name,
+                first_name,
                 gender,
                 YEAR(birth_date) AS birth_year,
                 YEAR(death_date) AS death_year
-            FROM person
+            FROM persons
             WHERE person_id = %s
-            """,
-            (row["spouse_id"],),
-        )
+        """, (spouse_id,))
 
         spouse = build_person(cur.fetchone())
 
-    # ----------------------------------------------------------
-    # PARENTS
-    # ----------------------------------------------------------
+    # =========================================================
+    # CASE 3: NHIỀU marriages
+    # =========================================================
+    else:
+
+        best_row = None
+        best_priority = -1
+
+        for row in marriage_rows:
+
+            marriage_id = row["id"]
+
+            priority = row["priority"] or 0
+
+            if priority > best_priority:
+                best_priority = priority
+                best_row = row
+
+        if best_row:
+
+            marriage_status = best_row["status"]
+
+            spouse_id = (
+                best_row["spouse_b_id"]
+                if best_row["spouse_a_id"] == pid
+                else best_row["spouse_a_id"]
+            )
+
+            cur.execute("""
+                SELECT
+                    person_id,
+                    full_name_vn AS name,
+                    sur_name,
+                    last_name,
+                    middle_name,
+                    first_name,
+                    gender,
+                    YEAR(birth_date) AS birth_year,
+                    YEAR(death_date) AS death_year
+                FROM persons
+                WHERE person_id = %s
+            """, (spouse_id,))
+
+            spouse = build_person(cur.fetchone())
+
+    # 🔵 [ADDED]: Auto widowed nếu 1 trong 2 đã mất
+    if spouse and (
+        center.get("death_year")
+        or spouse.get("death_year")
+    ):
+        marriage_status = "widowed"
+    # ================= PARENTS =================
 
     def get_parents(person_id):
 
-        cur.execute(
-            """
+        cur.execute("""
             SELECT
-                person_id AS person_id,
+                p.person_id,
                 p.full_name_vn AS name,
+                p.sur_name,
+                p.last_name,
+                p.middle_name,
+                p.first_name,
                 p.gender,
                 YEAR(p.birth_date) AS birth_year,
                 YEAR(p.death_date) AS death_year
             FROM parent_child pc
-            JOIN person p ON pc.parent_id = p.person_id
+            JOIN persons p ON pc.parent_id = p.person_id
             WHERE pc.child_id = %s
-            """,
-            (person_id,),
-        )
+        """, (person_id,))
 
         rows = cur.fetchall()
 
         return [build_person(r) for r in rows]
-
 
     father_parents = []
     mother_parents = []
@@ -192,38 +265,36 @@ def get_family(pid: int):
 
     if female:
         mother_parents = get_parents(female["person_id"])
-    # ----------------------------------------------------------
-    # CHILDREN
-    # ----------------------------------------------------------
+
+    # ================= CHILDREN =================
 
     children_common = []
 
     if spouse:
 
-        cur.execute(
-            """
+        cur.execute("""
             SELECT
-                c.person_id AS person_id,
+                c.person_id,
                 c.full_name_vn AS name,
+                c.sur_name,
+                c.last_name,
+                c.middle_name,
+                c.first_name,
                 c.gender,
                 YEAR(c.birth_date) AS birth_year,
                 YEAR(c.death_date) AS death_year
             FROM parent_child pc1
-            JOIN parent_child pc2
-              ON pc1.child_id = pc2.child_id
-            JOIN person c
-              ON c.person_id = pc1.child_id
+            JOIN parent_child pc2 ON pc1.child_id = pc2.child_id
+            JOIN persons c ON c.person_id = pc1.child_id
             WHERE pc1.parent_id = %s
               AND pc2.parent_id = %s
-            """,
-            (center["person_id"], spouse["person_id"]),
-        )
+        """, (center["person_id"], spouse["person_id"]))
 
         rows = cur.fetchall()
 
         children_common = sorted(
             [build_person(r) for r in rows],
-            key=lambda x: x["birth_year"] or 9999
+            key=lambda x: x.get("birth_year") or 9999
         )
 
     cur.close()
@@ -241,13 +312,10 @@ def get_family(pid: int):
         "children_social": [],
     }
 
-    # ----------------------------------------------------------
-    # SAVE CACHE
-    # ----------------------------------------------------------
-
+    # ================= SAVE CACHE =================
     TREE_CACHE[pid] = {
         "time": now,
-        "data": result,
+        "data": result
     }
 
     return result

@@ -18,7 +18,7 @@ def create_child_from_marriage(db, marriage_id: int, child_data: dict) -> int:
         cursor.execute(
             """
             SELECT person_id, gender
-            FROM person
+            FROM persons
             WHERE person_id IN (%s, %s)
             """,
             (spouse_a_id, spouse_b_id),
@@ -54,12 +54,12 @@ def create_child_from_marriage(db, marriage_id: int, child_data: dict) -> int:
         # 4. Insert parent_child
         cursor.execute(
             "INSERT INTO parent_child (parent_id, child_id, marriage_id, type) VALUES (%s, %s, %s, %s)",
-            (father_id, child_id, marriage_id, "FATHER"),
+            (father_id, child_id, marriage_id, "father"),
         )
 
         cursor.execute(
             "INSERT INTO parent_child (parent_id, child_id, marriage_id, type) VALUES (%s, %s, %s, %s)",
-            (mother_id, child_id, marriage_id, "MOTHER"),
+            (mother_id, child_id, marriage_id, "mother"),
         )
 
         db.commit()
@@ -149,7 +149,7 @@ def get_relationship_theorem(
                 FROM parent_child
                 WHERE parent_id = %s
                     AND child_id = %s
-                    AND type IN ('FATHER','MOTHER')
+                    AND type IN ('father','mother')
             """, (sibling_id, person_b_id))
 
             if cursor.fetchone():
@@ -223,7 +223,7 @@ def get_grandparent_relationship(db, grandparent_id: int, grandchild_id: int) ->
         FROM parent_child
         WHERE parent_id IN ({placeholders})
           AND child_id = %s
-          AND type IN ('FATHER', 'MOTHER')
+          AND type IN ('father','mother')
     """
     cursor.execute(sql, (*parent_ids, grandchild_id))
     row = cursor.fetchone()
@@ -256,7 +256,7 @@ def get_sibling_relationship(db, person_a_id: int, person_b_id: int) -> dict:
         SELECT parent_id
         FROM parent_child
         WHERE child_id = %s
-          AND type IN ('FATHER', 'MOTHER')
+          AND type IN ('father','mother')
         """,
         (person_a_id,),
     )
@@ -271,7 +271,7 @@ def get_sibling_relationship(db, person_a_id: int, person_b_id: int) -> dict:
         SELECT parent_id
         FROM parent_child
         WHERE child_id = %s
-          AND type IN ('FATHER', 'MOTHER')
+          AND type IN ('father','mother')
         """,
         (person_b_id,),
     )
@@ -300,7 +300,7 @@ def get_uncle_aunt_cousin_relationship(db, person_a_id: int, person_b_id: int) -
         SELECT parent_id
         FROM parent_child
         WHERE child_id = %s
-          AND type IN ('FATHER', 'MOTHER')
+          AND type IN ('father','mother')
     """, (person_a_id,))
     parents_a = [row["parent_id"] for row in cursor.fetchall()]
 
@@ -312,7 +312,7 @@ def get_uncle_aunt_cousin_relationship(db, person_a_id: int, person_b_id: int) -
         SELECT parent_id, type
         FROM parent_child
         WHERE child_id = %s
-          AND type IN ('FATHER', 'MOTHER')
+          AND type IN ('father','mother')
     """, (person_b_id,))
     parents_b = cursor.fetchall()
 
@@ -328,7 +328,7 @@ def get_uncle_aunt_cousin_relationship(db, person_a_id: int, person_b_id: int) -
             SELECT parent_id
             FROM parent_child
             WHERE child_id = %s
-              AND type IN ('FATHER', 'MOTHER')
+              AND type IN ('father','mother')
         """, (parent_b_id,))
         grandparents_b = {row["parent_id"] for row in cursor.fetchall()}
 
@@ -338,14 +338,14 @@ def get_uncle_aunt_cousin_relationship(db, person_a_id: int, person_b_id: int) -
                 SELECT parent_id
                 FROM parent_child
                 WHERE child_id = %s
-                  AND type IN ('FATHER', 'MOTHER')
+                  AND type IN ('father','mother')
             """, (pa,))
             grandparents_a = {row["parent_id"] for row in cursor.fetchall()}
 
             if grandparents_a.intersection(grandparents_b):
                 cursor.execute("""
                     SELECT gender
-                    FROM person
+                    FROM persons
                     WHERE person_id = %s
                 """, (person_a_id,))
                 row = cursor.fetchone()
@@ -354,7 +354,9 @@ def get_uncle_aunt_cousin_relationship(db, person_a_id: int, person_b_id: int) -
 
                 gender = row["gender"]
 
-                if parent_type == "FATHER":
+                ptype = (parent_type or "").strip().lower()
+
+                if parent_type == "father":
                     label = "Chú/Bác họ" if gender == "male" else "Cô họ"
                 else:
                     label = "Cậu họ" if gender == "male" else "Dì họ"
@@ -406,14 +408,14 @@ def get_uncle_aunt_cousin_relationship(db, person_a_id: int, person_b_id: int) -
           FROM parent_child pc_b
           JOIN parent_child pc_p
             ON pc_b.parent_id = pc_p.child_id
-           AND pc_b.type IN ('FATHER','MOTHER')
-           AND pc_p.type IN ('FATHER','MOTHER')
+           AND pc_b.type IN ('father','mother')
+           AND pc_p.type IN ('father','mother')
           JOIN parent_child pc_sib
             ON pc_p.parent_id = pc_sib.parent_id
-           AND pc_sib.type IN ('FATHER','MOTHER')
+           AND pc_sib.type IN ('father','mother')
           JOIN parent_child pc_a_parent
             ON pc_sib.child_id = pc_a_parent.parent_id
-           AND pc_a_parent.type IN ('FATHER','MOTHER')
+           AND pc_a_parent.type IN ('father','mother')
           WHERE pc_b.child_id = %s
             AND pc_a_parent.child_id = %s
           LIMIT 1
@@ -423,7 +425,7 @@ def get_uncle_aunt_cousin_relationship(db, person_a_id: int, person_b_id: int) -
     if cursor.fetchone():
         cursor.execute("""
             SELECT gender
-            FROM person
+            FROM persons
             WHERE person_id = %s
         """, (person_a_id,))
         row = cursor.fetchone()
@@ -443,7 +445,7 @@ def get_uncle_aunt_cousin_relationship(db, person_a_id: int, person_b_id: int) -
         SELECT parent_id, type
         FROM parent_child
         WHERE child_id = %s
-          AND type IN ('FATHER', 'MOTHER')
+          AND type IN ('father','mother')
     """, (person_b_id,))
     parents = cursor.fetchall()
     if not parents:
@@ -470,7 +472,7 @@ def get_uncle_aunt_cousin_relationship(db, person_a_id: int, person_b_id: int) -
 
         cursor.execute("""
             SELECT gender
-            FROM person
+            FROM persons
             WHERE person_id = %s
         """, (person_a_id,))
         row = cursor.fetchone()
@@ -479,7 +481,10 @@ def get_uncle_aunt_cousin_relationship(db, person_a_id: int, person_b_id: int) -
 
         gender = row["gender"]
 
-        if parent_type == "FATHER":
+        # ✅ [CHANGE]: Chuẩn hóa parent_type để tránh lỗi hoa/thường
+        ptype = (parent_type or "").strip().lower()
+
+        if ptype == "father":
             label = "Chú/Bác họ" if gender == "male" else "Cô họ"
             offset = -1
         else:

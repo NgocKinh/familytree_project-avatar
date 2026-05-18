@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from "react"
 
-export default function AvatarUploaderUltraTriple({ personId }) {
+export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated }) {
 
   const inputRef = useRef(null)
   const canvasRef = useRef(null)
@@ -11,16 +11,16 @@ export default function AvatarUploaderUltraTriple({ personId }) {
   const [pos,setPos] = useState({x:0,y:0})
   const [dragging,setDragging] = useState(false)
   const [start,setStart] = useState({x:0,y:0})
-  const [reload,setReload] = useState(0)
-
+  // ✅ [CHANGE 7]: Luôn tạo cache-buster khi mở form
+  const [reload,setReload] = useState(Date.now())
   const uploadLock = useRef(false)
 
+  // ✅ [CHANGE 1]: Đồng bộ FastAPI port 8000
   const avatarUrl =
-    `http://localhost:8010/cdn/avatar/${personId}?v=${reload}`
+    `http://localhost:8000/static/avatars/${personId}.jpg?t=${reload}`
 
-  const fallback="/default-avatar.png"
-
-
+  // ✅ [CHANGE 3]: fallback theo hệ thống hiện tại
+  const fallback = "http://localhost:8000/static/avatars/default_other.png"
   // ===============================
   // LOAD CURRENT AVATAR
   // ===============================
@@ -28,9 +28,11 @@ export default function AvatarUploaderUltraTriple({ personId }) {
   useEffect(()=>{
 
     const image = new Image()
-
+    image.crossOrigin = "anonymous";
     image.src = avatarUrl
-
+    image.onerror = () => {
+      image.src = fallback;
+    }
     image.onload = ()=>{
 
       const fitZoom =
@@ -48,7 +50,6 @@ export default function AvatarUploaderUltraTriple({ personId }) {
 
   },[avatarUrl])
 
-
   // ===============================
   // DRAW ENGINE
   // ===============================
@@ -60,7 +61,6 @@ export default function AvatarUploaderUltraTriple({ personId }) {
     draw(img,zoom,rotation,pos)
 
   },[img,zoom,rotation,pos])
-
 
   const draw=(image,z,rot,p)=>{
 
@@ -102,8 +102,6 @@ export default function AvatarUploaderUltraTriple({ personId }) {
 
   }
 
-
-
   // ===============================
   // LOAD IMAGE
   // ===============================
@@ -115,7 +113,7 @@ export default function AvatarUploaderUltraTriple({ personId }) {
     reader.onload=e=>{
 
       const image=new Image()
-
+      image.crossOrigin = "anonymous"; 
       image.src=e.target.result
 
       image.onload=()=>{
@@ -138,8 +136,6 @@ export default function AvatarUploaderUltraTriple({ personId }) {
 
   }
 
-
-
   // ===============================
   // DRAG
   // ===============================
@@ -150,7 +146,6 @@ export default function AvatarUploaderUltraTriple({ personId }) {
     setStart({x:e.clientX,y:e.clientY})
 
   }
-
 
   const mouseMove=(e)=>{
 
@@ -170,10 +165,13 @@ export default function AvatarUploaderUltraTriple({ personId }) {
 
   }
 
-
   const mouseUp=()=>setDragging(false)
-
-
+  // ✅ [CHANGE 6]: Cho phép chọn lại ảnh khác khi avatar hiện tại bị sai
+  const openFilePicker = () => {
+    if (!inputRef.current) return;
+    inputRef.current.value = "";
+    inputRef.current.click();
+  }
 
   // ===============================
   // ZOOM
@@ -185,8 +183,6 @@ export default function AvatarUploaderUltraTriple({ personId }) {
 
   }
 
-
-
   // ===============================
   // ROTATE
   // ===============================
@@ -197,8 +193,6 @@ export default function AvatarUploaderUltraTriple({ personId }) {
 
   }
 
-
-
   // ===============================
   // COMPRESS
   // ===============================
@@ -208,51 +202,52 @@ export default function AvatarUploaderUltraTriple({ personId }) {
       canvas.toBlob(resolve,"image/jpeg",0.82)
     })
 
-
-
   // ===============================
   // UPLOAD
   // ===============================
 
-  const upload=async()=>{
+  const upload = async () => {
 
-    if(uploadLock.current) return
-
-    uploadLock.current=true
-
-    const canvas=canvasRef.current
-
-    const blob=await compressBlob(canvas)
-
-    const form=new FormData()
-
-    form.append("file",blob,"avatar.jpg")
-
-    const res = await fetch(
-      `http://localhost:8010/api/person/${personId}/avatar`,
-      {method:"POST",body:form}
-    )
-
-    uploadLock.current=false
-
-    if(!res.ok){
-
-      alert("Upload failed")
-      return
-
+    console.log("🚀 UPLOAD START", personId);
+  
+    if (uploadLock.current) return;
+  
+    uploadLock.current = true;
+  
+    const canvas = canvasRef.current;
+  
+    if (!canvas) {
+      alert("Canvas null");
+      uploadLock.current = false;
+      return;
     }
-
-    setReload(Date.now())
-
-    setImg(null)
-
-    window.dispatchEvent(new Event("avatarUpdated"))
-
-    alert("Avatar updated")
-
-  }
-
-
+  
+    const blob = await compressBlob(canvas);
+  
+    const form = new FormData();
+    form.append("file", blob, "avatar.jpg");
+  
+    const res = await fetch(
+      `http://localhost:8000/api/avatar/upload/${personId}`,
+      { method: "POST", body: form }
+    );
+  
+    console.log("UPLOAD RESPONSE", res.status);
+  
+    uploadLock.current = false;
+  
+    if (!res.ok) {
+      alert("Upload failed");
+      return;
+    }
+  
+    setReload(Date.now());
+    setImg(null);
+  
+    if (onAvatarUpdated) onAvatarUpdated();
+  
+    alert("Avatar updated");
+  };
 
   // ===============================
   // DROP
@@ -268,8 +263,6 @@ export default function AvatarUploaderUltraTriple({ personId }) {
 
   }
 
-
-
   // ===============================
   // RENDER
   // ===============================
@@ -281,18 +274,6 @@ export default function AvatarUploaderUltraTriple({ personId }) {
       onDrop={handleDrop}
       onDragOver={(e)=>e.preventDefault()}
     >
-
-      {!img && (
-
-        <img
-          src={avatarUrl}
-          onError={(e)=>e.target.src=fallback}
-          className="w-32 h-32 rounded-full border object-cover cursor-pointer"
-          onClick={()=>inputRef.current.click()}
-        />
-
-      )}
-
 
       {img && (
 
@@ -307,15 +288,16 @@ export default function AvatarUploaderUltraTriple({ personId }) {
 
       )}
 
-
       <input
-        type="file"
-        hidden
-        ref={inputRef}
-        accept="image/*"
-        onChange={(e)=>loadImage(e.target.files[0])}
+      type="file"
+      hidden
+      ref={inputRef}
+      accept="image/*"
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) loadImage(file);
+      }}
       />
-
 
       {img && (
 
@@ -339,7 +321,6 @@ export default function AvatarUploaderUltraTriple({ personId }) {
 
           </div>
 
-
           <input
             type="range"
             min="0.1"
@@ -348,10 +329,18 @@ export default function AvatarUploaderUltraTriple({ personId }) {
             value={zoom}
             onChange={(e)=>handleZoom(e.target.value)}
           />
-
+          <button
+            onClick={openFilePicker}
+            className="px-4 py-1 bg-blue-600 text-white rounded"
+          >
+            Chọn ảnh khác
+          </button>
 
           <button
-            onClick={upload}
+            onClick={() => {
+              console.log("CLICK BUTTON");
+              upload();
+            }}
             className="px-4 py-1 bg-green-600 text-white rounded"
           >
             Upload Avatar

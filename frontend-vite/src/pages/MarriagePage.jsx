@@ -30,7 +30,7 @@ export default function MarriagePage() {
   return (
     <div className="max-w-6xl mx-auto p-4 bg-white shadow-md rounded-lg">
       <h2 className="text-2xl font-bold text-center text-blue-600 mb-4">
-        💍 Quản Lý Quan Hệ Hôn Nhân
+      👨‍👩 Quản Lý Quan Hệ Hôn Nhân
       </h2>
 
       {/* Tabs */}

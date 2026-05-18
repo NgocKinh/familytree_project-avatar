@@ -12,13 +12,13 @@ from backend.services.parent_child_service import (
 
 from backend.schemas.parent_child_schema import ParentChildCreate
 
-router = APIRouter(prefix="/parent_child", tags=["ParentChild"])
-
+# ✅ [CHANGE 1]: Bỏ prefix nội bộ vì main.py đã gắn prefix="/api/parent_child"
+router = APIRouter(tags=["ParentChild"])
 
 # ==========================================================
 # 🔹 GET ALL
 # ==========================================================
-@router.get("")
+@router.get("/")
 def get_all(db: Session = Depends(get_db)):
     return get_all_parent_child(db)
 

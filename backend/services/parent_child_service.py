@@ -26,10 +26,33 @@ def get_all_parent_child(db: Session):
         if pc.parent and pc.child:
             result.append({
                 "id": pc.id,
+
                 "parent_id": pc.parent_id,
-                "parent_name": pc.parent.full_name_vn,
+                "parent_name": pc.parent.full_name if pc.parent else None,
+
+                # ✅ [ADDED]: object chuẩn cho frontend
+                "parent": {
+                    "id": pc.parent.id,
+                    "sur_name": pc.parent.sur_name,
+                    "last_name": pc.parent.last_name,
+                    "middle_name": pc.parent.middle_name,
+                    "first_name": pc.parent.first_name,
+                    "gender": pc.parent.gender.value if pc.parent.gender else None
+                } if pc.parent else None,
+
                 "child_id": pc.child_id,
-                "child_name": pc.child.full_name_vn,
+                "child_name": pc.child.full_name if pc.child else None,
+
+                # ✅ [ADDED]
+                "child": {
+                    "id": pc.child.id,
+                    "sur_name": pc.child.sur_name,
+                    "last_name": pc.child.last_name,
+                    "middle_name": pc.child.middle_name,
+                    "first_name": pc.child.first_name,
+                    "gender": pc.child.gender.value if pc.child.gender else None
+                } if pc.child else None,
+
                 "type": pc.type,
                 "notes": pc.notes
             })
@@ -55,38 +78,75 @@ def get_one_parent_child(db: Session, rid: int):
         return None
 
     return {
-        "id": pc.id,
-        "parent_id": pc.parent_id,
-        "parent_name": pc.parent.full_name_vn if pc.parent else None,
-        "child_id": pc.child_id,
-        "child_name": pc.child.full_name_vn if pc.child else None,
-        "type": pc.type,
-        "notes": pc.notes
-    }
+    "id": pc.id,
 
+    "parent_id": pc.parent_id,
+    "parent_name": pc.parent.full_name if pc.parent else None,
+    "parent": {
+        "id": pc.parent.id,
+        "sur_name": pc.parent.sur_name,
+        "last_name": pc.parent.last_name,
+        "middle_name": pc.parent.middle_name,
+        "first_name": pc.parent.first_name,
+        "gender": pc.parent.gender.value if pc.parent.gender else None
+    } if pc.parent else None,
+
+    "child_id": pc.child_id,
+    "child_name": pc.child.full_name if pc.child else None,
+    "child": {
+        "id": pc.child.id,
+        "sur_name": pc.child.sur_name,
+        "last_name": pc.child.last_name,
+        "middle_name": pc.child.middle_name,
+        "first_name": pc.child.first_name,
+        "gender": pc.child.gender.value if pc.child.gender else None
+    } if pc.child else None,
+
+    "type": pc.type,
+    "notes": pc.notes
+}
 
 # ==========================================================
 # 🔹 GET CHILD PARENTS STATUS
 # ==========================================================
 def get_child_parents_status(db: Session, child_id: int):
-    rows = db.query(ParentChild.type).filter(
-        ParentChild.child_id == child_id
-    ).all()
 
-    types = [r[0] for r in rows]
+    records = (
+        db.query(ParentChild)
+        .options(joinedload(ParentChild.parent))   # 📌 load parent
+        .filter(ParentChild.child_id == child_id)
+        .all()
+    )
+
+    father = None
+    mother = None
+
+    for pc in records:
+        ptype = (pc.type or "").strip().lower()
+
+        if ptype == "father" and not father:   # 📌 chống duplicate
+            father = {
+                "id": pc.parent_id,
+                "name": pc.parent.full_name if pc.parent else None
+            }
+
+        elif ptype == "mother" and not mother:
+            mother = {
+                "id": pc.parent_id,
+                "name": pc.parent.full_name if pc.parent else None
+            }
 
     return {
-        "has_father": "FATHER" in types,
-        "has_mother": "MOTHER" in types
+        "father": father,
+        "mother": mother
     }
-
 
 # ==========================================================
 # 🔹 ASSIGN PARENT
 # ==========================================================
 def assign_parent_clean(db: Session, child_id: int, parent_id: int, ptype: str):
 
-    if ptype not in ("FATHER", "MOTHER"):
+    if ptype not in ("father", "mother"):
         raise BadRequestException("Invalid parent type")
 
     if child_id == parent_id:
@@ -112,10 +172,12 @@ def assign_parent_clean(db: Session, child_id: int, parent_id: int, ptype: str):
 
     gender = (parent.gender or "").lower()
 
-    if ptype == "FATHER" and gender != "male":
+    ptype = (ptype or "").strip().lower()
+
+    if ptype == "father" and gender != "male":
         raise BadRequestException("Father must be male")
 
-    if ptype == "MOTHER" and gender != "female":
+    if ptype == "mother" and gender != "female":
         raise BadRequestException("Mother must be female")
 
     # 3️⃣ Check duplicate (business rule: 1 father / 1 mother)

@@ -59,14 +59,16 @@ def bfs_kinship_path(graph, start_id, target_id, max_depth=10):
     - Không thay thế bfs_blood_path (giữ backward compatibility)
     """
 
-    # (node, path, used_spouse)
-    queue = deque([(start_id, [], False)])
+    import heapq
 
-    # Quan trọng: visited phải gồm state
-    visited = set([(start_id, False)])
+    # (cost, node, path, used_spouse)
+    queue = []
+    heapq.heappush(queue, (0, start_id, [], False))
+
+    visited = set([start_id])
 
     while queue:
-        current, path, used_spouse = queue.popleft()
+        cost, current, path, used_spouse = heapq.heappop(queue)
 
         if current == target_id:
             return path
@@ -76,24 +78,24 @@ def bfs_kinship_path(graph, start_id, target_id, max_depth=10):
 
         for relation_type, neighbor_id in graph.get(current, []):
 
-            # --- RULE 3: spouse only once ---
-            if relation_type == "spouse":
-                if used_spouse:
-                    continue
-                next_used_spouse = True
-            else:
-                next_used_spouse = used_spouse
+            next_used_spouse = used_spouse
 
-            state = (neighbor_id, next_used_spouse)
-
-            if state in visited:
+            if neighbor_id in visited:
                 continue
 
-            visited.add(state)
+            step = (current, relation_type, neighbor_id)
+            new_path = path + [step]
 
-            queue.append((
+            visited.add(neighbor_id)
+
+            # 🔥 COST: ưu tiên SPOUSE
+            extra_cost = 0 if relation_type == "spouse" else 1
+            new_cost = cost + 1 + extra_cost
+
+            heapq.heappush(queue, (
+                new_cost,
                 neighbor_id,
-                path + [(current, relation_type, neighbor_id)],
+                new_path,
                 next_used_spouse
             ))
 

@@ -19,7 +19,7 @@ def get_connection():
             host="localhost",
             user="root",
             password="Msand@167",   # ⚠️ thay bằng mật khẩu thật của bạn
-            database = "family_test",    # familytreedb
+            database = "familytreedb",    # familytreedb
             autocommit=True
         )
         return conn

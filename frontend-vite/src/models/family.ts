@@ -12,7 +12,7 @@ export type Marriage = {
   id: number
   husbandId?: number
   wifeId?: number
-  status: 'married' | 'divorced' | 'widowed' | 'separated' | 'cohabitation'
+  status: 'married' | 'divorced' | 'widowed' | 'separated' | 'cohabiting'
 }
 
 // Child (gắn với marriage)

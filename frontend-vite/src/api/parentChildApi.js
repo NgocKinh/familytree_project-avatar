@@ -1,7 +1,7 @@
 import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
 
-const PARENT_CHILD_URL = `${API_BASE_URL}/parent_child`;
+const PARENT_CHILD_URL = `${API_BASE_URL}/parent_child/`;
 
 // ===============================
 // 🔹 GET ALL: Lấy toàn bộ quan hệ cha–con

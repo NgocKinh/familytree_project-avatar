@@ -9,7 +9,7 @@ from enum import Enum
 # ==========================================================
 class MarriageStatus(str, Enum):
     married = "married"
-    cohabitation = "cohabitation"
+    cohabiting = "cohabiting"
     separated = "separated"
     divorced = "divorced"
     widowed = "widowed"
@@ -27,28 +27,17 @@ class MarriageCreate(BaseModel):
 
     # ✅ FIX: không nên optional
     status: MarriageStatus = MarriageStatus.married
+    priority: int = 0
 
     ceremony_type: Optional[str] = None
     location: Optional[str] = None
     notes: Optional[str] = None
 
     consanguineous: bool = False
-
+    allow_underage: bool = False 
+    
     @model_validator(mode="after")
     def validate_all(self):
-        # ❌ Không cho cưới chính mình
-        if self.spouse_a_id == self.spouse_b_id:
-            raise ValueError("Hai spouse không được trùng nhau")
-
-        # ❌ Không cho set widowed bằng tay
-        if self.status == MarriageStatus.widowed:
-            raise ValueError("Không được set status = widowed trực tiếp")
-
-        # ⚠️ OPTIONAL: validate timeline
-        if self.start_date and self.end_date:
-            if self.end_date < self.start_date:
-                raise ValueError("end_date phải >= start_date")
-
         return self
 
 
@@ -56,27 +45,16 @@ class MarriageCreate(BaseModel):
 # UPDATE
 # ==========================================================
 class MarriageUpdate(BaseModel):
-    start_date: Optional[date] = None
-    end_date: Optional[date] = None
-
     status: Optional[MarriageStatus] = None
-    ceremony_type: Optional[str] = None
-    location: Optional[str] = None
-    notes: Optional[str] = None
-
-    consanguineous: Optional[bool] = None
+    priority: Optional[int] = 0
+    end_date: Optional[date] = None
 
     @model_validator(mode="after")
     def validate_status(self):
-        if self.status == MarriageStatus.widowed:
-            raise ValueError("Không được set status = widowed trực tiếp")
-
-        if self.start_date and self.end_date:
-            if self.end_date < self.start_date:
-                raise ValueError("end_date phải >= start_date")
+        # if self.status == MarriageStatus.widowed:
+        #     raise ValueError("Không được set status = widowed trực tiếp")
 
         return self
-
 
 # ==========================================================
 # RESPONSE (OPTIONAL — dùng cho GET)
@@ -90,7 +68,8 @@ class MarriageResponse(BaseModel):
     start_date: Optional[date]
     end_date: Optional[date]
 
-    status: Optional[MarriageStatus]  # status gốc DB
+    status: Optional[str]
+    computed_status: Optional[str]
 
     ceremony_type: Optional[str]
     location: Optional[str]
@@ -98,5 +77,6 @@ class MarriageResponse(BaseModel):
 
     consanguineous: bool
 
+    allow_underage: bool = False
 class Config:
     from_attributes = True

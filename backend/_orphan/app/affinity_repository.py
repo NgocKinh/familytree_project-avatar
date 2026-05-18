@@ -55,7 +55,7 @@ def is_co_spouse(source_id: int, target_id: int):
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT 
             CASE 
                 WHEN spouse_a_id = %s THEN spouse_b_id
@@ -63,8 +63,8 @@ def is_co_spouse(source_id: int, target_id: int):
             END AS spouse_id
         FROM marriage
         WHERE (spouse_a_id = %s OR spouse_b_id = %s)
-          AND status = 'married'
-    """, (source_id, source_id, source_id))
+          AND status IN ({",".join(["%s"] * len(ACTIVE_MARRIAGE_STATUSES))})
+    """, (source_id, source_id, source_id, *ACTIVE_MARRIAGE_STATUSES))
 
     source_spouses = {row["spouse_id"] for row in cursor.fetchall()}
 
@@ -73,7 +73,7 @@ def is_co_spouse(source_id: int, target_id: int):
         conn.close()
         return None
 
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT 
             CASE 
                 WHEN spouse_a_id = %s THEN spouse_b_id
@@ -81,8 +81,8 @@ def is_co_spouse(source_id: int, target_id: int):
             END AS spouse_id
         FROM marriage
         WHERE (spouse_a_id = %s OR spouse_b_id = %s)
-          AND status = 'married'
-    """, (target_id, target_id, target_id))
+          AND status IN ({",".join(["%s"] * len(ACTIVE_MARRIAGE_STATUSES))})
+    """, (target_id, target_id, target_id, *ACTIVE_MARRIAGE_STATUSES))
 
     target_spouses = {row["spouse_id"] for row in cursor.fetchall()}
 
@@ -134,7 +134,7 @@ def is_parallel_sibling_in_law(source_id: int, target_id: int):
     target_gender = people[target_id]
 
     # Lấy spouse của source
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT 
             CASE 
                 WHEN spouse_a_id = %s THEN spouse_b_id
@@ -142,13 +142,13 @@ def is_parallel_sibling_in_law(source_id: int, target_id: int):
             END AS spouse_id
         FROM marriage
         WHERE (spouse_a_id = %s OR spouse_b_id = %s)
-          AND status = 'married'
-    """, (source_id, source_id, source_id))
+          AND status IN ({",".join(["%s"] * len(ACTIVE_MARRIAGE_STATUSES))})
+    """, (source_id, source_id, source_id, *ACTIVE_MARRIAGE_STATUSES))
 
     source_spouses = [row["spouse_id"] for row in cursor.fetchall()]
 
     # Lấy spouse của target
-    cursor.execute("""
+    cursor.execute(f"""
         SELECT 
             CASE 
                 WHEN spouse_a_id = %s THEN spouse_b_id
@@ -156,8 +156,8 @@ def is_parallel_sibling_in_law(source_id: int, target_id: int):
             END AS spouse_id
         FROM marriage
         WHERE (spouse_a_id = %s OR spouse_b_id = %s)
-          AND status = 'married'
-    """, (target_id, target_id, target_id))
+          AND status IN ({",".join(["%s"] * len(ACTIVE_MARRIAGE_STATUSES))})
+    """, (target_id, target_id, target_id, *ACTIVE_MARRIAGE_STATUSES))
 
     target_spouses = [row["spouse_id"] for row in cursor.fetchall()]
 

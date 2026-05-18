@@ -16,8 +16,8 @@ function AnnouncementPage() {
     const fetchData = async () => {
       try {
         const [todayRes, upcomingRes] = await Promise.all([
-          fetch("http://127.0.0.1:8010/api/announcement/today"),
-          fetch("http://127.0.0.1:8010/api/announcement/upcoming?days=7"),
+          fetch("http://localhost:5000/api/announcement/today"),
+          fetch("http://localhost:5000/api/announcement/upcoming?days=7"),
         ]);
         const todayJson = await todayRes.json();
         const upcomingJson = await upcomingRes.json();

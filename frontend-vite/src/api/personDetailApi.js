@@ -7,7 +7,7 @@
 //   - Có alias getPersonDetail để PersonDetailForm dùng
 // =============================================================
 
-const BASE_URL = "http://127.0.0.1:5000/api/person/detail";
+const BASE_URL = "http://localhost:8000/api/person";
 
 // -------------------------------------------------------------
 // 🔹 Lấy chi tiết 1 person theo ID
@@ -27,7 +27,7 @@ export const getPersonDetail = getPersonDetailById;
 // 🔹 Thêm mới chi tiết (ADD)
 // -------------------------------------------------------------
 export async function addPersonDetail(payload) {
-  const res = await fetch(BASE_URL, {
+  const res = await fetch(`${BASE_URL}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),

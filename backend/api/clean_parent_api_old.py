@@ -6,7 +6,6 @@ router = APIRouter()
 
 @router.post("/api/clean/parent")
 def add_parent(data: dict):
-    print("🔥 DATA RECEIVED:", data)
     child_id = data.get("child_id")
     parent_id = data.get("parent_id")
     relation_type = data.get("type")        # FATHER | MOTHER
@@ -18,7 +17,7 @@ def add_parent(data: dict):
     if not child_id or not parent_id or not relation_type:
         raise HTTPException(status_code=400, detail="Thiếu dữ liệu bắt buộc")
 
-    if relation_type not in ("FATHER", "MOTHER"):
+    if relation_type not in ("father", "mother"):
         raise HTTPException(status_code=400, detail="Loại quan hệ không hợp lệ")
 
     if child_id == parent_id:
@@ -35,7 +34,7 @@ def add_parent(data: dict):
         # Kiểm tra child tồn tại
         # -------------------------
         cur.execute(
-            "SELECT person_id FROM person WHERE person_id=%s AND delete_status=0",
+            "SELECT person_id FROM persons WHERE person_id=%s AND delete_status=0",
             (child_id,)
         )
 
@@ -46,7 +45,7 @@ def add_parent(data: dict):
         # Kiểm tra parent tồn tại + giới tính
         # -------------------------
         cur.execute(
-            "SELECT person_id, gender FROM person WHERE person_id=%s AND delete_status=0",
+            "SELECT person_id, gender FROM persons WHERE person_id=%s AND delete_status=0",
             (parent_id,)
         )
 
@@ -55,14 +54,17 @@ def add_parent(data: dict):
         if not parent:
             raise HTTPException(status_code=404, detail="Không tìm thấy cha/mẹ")
 
-        if relation_type == "FATHER" and parent["gender"] != "male":
-            raise HTTPException(status_code=400, detail="Giới tính không phù hợp (FATHER phải là male)")
+        # ✅ [CHANGE]: Chuẩn hóa relation_type để tránh lỗi hoa/thường
+        rtype = (relation_type or "").strip().lower()
 
-        if relation_type == "MOTHER" and parent["gender"] != "female":
-            raise HTTPException(status_code=400, detail="Giới tính không phù hợp (MOTHER phải là female)")
+        if rtype == "father" and parent["gender"] != "male":
+            raise HTTPException(status_code=400, detail="Giới tính không phù hợp (Cha phải là nam)")
+
+        if rtype == "mother" and parent["gender"] != "female":
+            raise HTTPException(status_code=400, detail="Giới tính không phù hợp (Mẹ phải là nữ)")
 
         # -------------------------
-        # Kiểm tra đã có FATHER / MOTHER chưa
+        # Kiểm tra đã có father / mother chưa
         # -------------------------
         cur.execute("""
             SELECT id FROM parent_child

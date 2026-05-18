@@ -6,7 +6,9 @@ COUSIN V2 – Ground Truth Only
 - Chỉ dựa trên dữ liệu SQL ground truth
 - Viết song song, KHÔNG ảnh hưởng COUSIN V1
 """
-
+from backend.domain.engine_v2.relationship_engine import (
+    resolve_relationship
+)
 
 # ==============================
 # Public API (V2)
@@ -18,7 +20,17 @@ def get_relationship_v2(db, person_a_id: int, person_b_id: int) -> dict:
     - Chỉ xử lý quan hệ ground truth
     - Không fallback sang theorem
     """
+    # =====================================
+    # 🔥 ENGINE V2 ORCHESTRATOR TEST
+    # =====================================
 
+    semantic_result = resolve_relationship(
+        person_a_id,
+        person_b_id
+    )
+
+    if semantic_result:
+        return semantic_result
        
     # B4.1 – Parent / Child (ground truth)
     result = _gt_parent_child(db, person_a_id, person_b_id)
@@ -72,7 +84,7 @@ def _gt_parent_child(db, person_a_id: int, person_b_id: int) -> dict | None:
         FROM parent_child
         WHERE parent_id = %s
           AND child_id = %s
-          AND type IN ('FATHER', 'MOTHER')
+          AND type IN ('father', 'mother')
         """,
         (person_a_id, person_b_id),
     )
@@ -81,7 +93,7 @@ def _gt_parent_child(db, person_a_id: int, person_b_id: int) -> dict | None:
         return {
             "relationship": row["type"],
             "confidence": "HIGH",
-            "label": "Cha" if row["type"] == "FATHER" else "Mẹ",
+            "label": "Cha" if row["type"] == "father" else "Mẹ",
         }
 
     # A là con của B
@@ -91,7 +103,7 @@ def _gt_parent_child(db, person_a_id: int, person_b_id: int) -> dict | None:
         FROM parent_child
         WHERE parent_id = %s
           AND child_id = %s
-          AND type IN ('FATHER', 'MOTHER')
+          AND type IN ('father', 'mother')
         """,
         (person_b_id, person_a_id),
     )
@@ -122,7 +134,7 @@ def _gt_sibling(db, person_a_id: int, person_b_id: int) -> dict | None:
         SELECT parent_id
         FROM parent_child
         WHERE child_id = %s
-          AND type IN ('FATHER', 'MOTHER')
+          AND type IN ('father', 'mother')
         """,
         (person_a_id,),
     )
@@ -136,7 +148,7 @@ def _gt_sibling(db, person_a_id: int, person_b_id: int) -> dict | None:
         SELECT parent_id
         FROM parent_child
         WHERE child_id = %s
-          AND type IN ('FATHER', 'MOTHER')
+          AND type IN ('father', 'mother')
         """,
         (person_b_id,),
     )
@@ -169,8 +181,8 @@ def _gt_grandparent(db, person_a_id: int, person_b_id: int) -> dict | None:
         FROM parent_child pc1
         JOIN parent_child pc2
           ON pc1.parent_id = pc2.child_id
-         AND pc1.type IN ('FATHER','MOTHER')
-         AND pc2.type IN ('FATHER','MOTHER')
+         AND pc1.type IN ('father', 'mother')
+         AND pc2.type IN ('father', 'mother')
         WHERE pc1.parent_id = %s
           AND pc1.child_id = %s
         LIMIT 1
@@ -191,8 +203,8 @@ def _gt_grandparent(db, person_a_id: int, person_b_id: int) -> dict | None:
         FROM parent_child pc1
         JOIN parent_child pc2
           ON pc1.parent_id = pc2.child_id
-         AND pc1.type IN ('FATHER','MOTHER')
-         AND pc2.type IN ('FATHER','MOTHER')
+         AND pc1.type IN ('father', 'mother')
+         AND pc2.type IN ('father', 'mother')
         WHERE pc1.parent_id = %s
           AND pc1.child_id = %s
         LIMIT 1
@@ -221,7 +233,7 @@ def _gt_uncle_aunt(db, person_a_id: int, person_b_id: int) -> dict | None:
         SELECT parent_id, type
         FROM parent_child
         WHERE child_id = %s
-          AND type IN ('FATHER', 'MOTHER')
+          AND type IN ('father', 'mother')
         """,
         (person_b_id,),
     )
@@ -246,7 +258,7 @@ def _gt_uncle_aunt(db, person_a_id: int, person_b_id: int) -> dict | None:
         cursor.execute(
             """
             SELECT gender
-            FROM person
+            FROM persons
             WHERE person_id = %s
             """,
             (person_a_id,),
@@ -258,7 +270,7 @@ def _gt_uncle_aunt(db, person_a_id: int, person_b_id: int) -> dict | None:
         gender = row["gender"]
 
         # 4) Gán nhãn theo quy ước VN
-        if parent_type == "FATHER":
+        if parent_type == "father":
             label = "Chú/Bác" if gender == "male" else "Cô"
         else:  # MOTHER
             label = "Cậu" if gender == "male" else "Dì"

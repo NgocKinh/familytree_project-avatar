@@ -49,8 +49,11 @@ export default function PersonDetailForm({ personId, role }) {
   //  LOAD DETAIL
   // ============================================================
   useEffect(() => {
-    loadDetail();
-  }, [personId]);
+    if (!personId) return;
+  
+    loadDetail(personId);
+  
+  }, []);   // ✅ CHỈ 1 LẦN
 
   const loadDetail = async () => {
     try {

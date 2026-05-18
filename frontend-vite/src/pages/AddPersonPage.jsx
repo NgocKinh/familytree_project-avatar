@@ -8,14 +8,13 @@
 // ======================================================================
 
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-
+import { useParams, useNavigate } from "react-router-dom";
 import PersonBasicForm from "../components/person/PersonBasicForm";
 import PersonDetailForm from "../components/person/PersonDetailForm";
 
 export default function AddPersonPage({ role }) {
   const { id } = useParams();
-
+  const navigate = useNavigate();
   const isEditMode = Boolean(id);
 
   // ==============================================
@@ -23,7 +22,7 @@ export default function AddPersonPage({ role }) {
   // ==============================================
   const [personId, setPersonId] = useState(id || null);
   const [showDetailForm, setShowDetailForm] = useState(false);
-
+  const [hasNavigated, setHasNavigated] = useState(false);
   // Ai được phép xem Form Chi Tiết?
   const canShowDetail =
     role === "member_close" ||
@@ -35,10 +34,17 @@ export default function AddPersonPage({ role }) {
   // ======================================================================
   useEffect(() => {
     if (isEditMode && canShowDetail) {
-      // ✅ [CHANGE 1]: Luôn set lại personId khi mở trang edit
       setPersonId(id);
       setShowDetailForm(true);
     }
+  
+    if (!isEditMode) {
+      setPersonId(null);
+      setShowDetailForm(false);
+    }
+  
+    // 🔵 reset guard khi vào trang mới
+    setHasNavigated(false);
   }, [isEditMode, id, canShowDetail]);
 
   // ======================================================================
@@ -55,9 +61,11 @@ export default function AddPersonPage({ role }) {
       result?.person_id ||
       id; // fallback khi đang edit
 
-    // Nếu không lấy được ID → không thể render Form Detail
-    if (!savedId) return;
-
+    // Guard: không có ID thì dừng
+    if (!savedId) {
+      console.warn("❌ Không lấy được ID sau khi lưu");
+      return;
+    }
     // Lưu ID vào state
     setPersonId(savedId);
 
@@ -67,11 +75,20 @@ export default function AddPersonPage({ role }) {
     // - member_basic → không hiển thị
     // ==================================================================
     if (canShowDetail) {
-      // ✅ [CHANGE 2]: Hiển thị form chi tiết NGAY SAU KHI LƯU
       setShowDetailForm(true);
     }
-  };
-
+    
+    // ✅ Guard navigate tránh chạy nhiều lần
+    if (!hasNavigated) {
+      setHasNavigated(true);
+    
+      if (isEditMode) {
+        navigate("/person-list");
+      } else {
+        navigate("/");
+      }
+    }
+  };  
   // ======================================================================
   // GIAO DIỆN CHÍNH
   // ======================================================================
@@ -82,7 +99,12 @@ export default function AddPersonPage({ role }) {
       </h2>
 
       {/* FORM CƠ BẢN */}
-      <PersonBasicForm role={role} onSaved={handleSavedBasic} />
+      
+      <PersonBasicForm
+        role={role}
+        personId={personId}
+        onSaved={handleSavedBasic}
+      />
 
       {/* FORM CHI TIẾT */}
       {canShowDetail && showDetailForm && personId && (

@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from backend.models.person_model import Person
 from backend.schemas.person_schema import PersonCreate, PersonUpdate
-from backend.core.exceptions import NotFoundError
+from backend.core.exceptions import NotFoundException
 
 
 def get_person_or_404(db: Session, person_id: int) -> Person:
@@ -11,7 +11,7 @@ def get_person_or_404(db: Session, person_id: int) -> Person:
     ).first()
 
     if not person:
-        raise NotFoundError("Person not found")
+        raise NotFoundException("Person not found")
 
     return person
 
@@ -53,10 +53,9 @@ def get_person(db: Session, person_id: int) -> Person:
 from sqlalchemy import asc, desc
 
 def get_all_persons(db: Session):
-    return db.query(Person).filter(
-        Person.delete_status == 0
-    ).order_by(
+    # ✅ [CHANGE 1]: Lấy cả người hoạt động và đã ẩn để frontend tự chia tab
+    return db.query(Person).order_by(
         Person.birth_date.is_(None),
         desc(Person.birth_date),
         asc(Person.first_name)
-    ).all()   
+    ).all()

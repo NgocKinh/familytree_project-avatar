@@ -1,5 +1,5 @@
 import React from "react";
-
+import { formatName } from "../../utils/formatName";
 export default function PersonDropdown({
     label,
     value,
@@ -12,22 +12,22 @@ export default function PersonDropdown({
     const list = filterFn ? persons.filter(filterFn) : persons;
 
     const sortedPersons = [...list].sort((a, b) => {
-    const nameA = (a.full_name_vn || "").toString();
-    const nameB = (b.full_name_vn || "").toString();
-
-    if (!a.birth_date && !b.birth_date) {
+        const nameA = formatName(a).toString();
+        const nameB = formatName(b).toString();
+    
+        if (!a.birth_date && !b.birth_date) {
+            return nameA.localeCompare(nameB, "vi");
+        }
+    
+        if (!a.birth_date) return 1;
+        if (!b.birth_date) return -1;
+    
+        if (a.birth_date !== b.birth_date) {
+            return new Date(b.birth_date) - new Date(a.birth_date);
+        }
+    
         return nameA.localeCompare(nameB, "vi");
-    }
-
-    if (!a.birth_date) return 1;
-    if (!b.birth_date) return -1;
-
-    if (a.birth_date !== b.birth_date) {
-        return new Date(b.birth_date) - new Date(a.birth_date);
-    }
-
-    return nameA.localeCompare(nameB, "vi");
-});
+    });
 
     return (
         <div>
@@ -46,24 +46,17 @@ export default function PersonDropdown({
                 <option value="">{placeholder}</option>
 
                 {sortedPersons.map((p) => {
+                    const personId = p.person_id ?? p.id;
                     const birthYear = p.birth_date
                         ? new Date(p.birth_date).getFullYear()
                         : "";
 
-                    const genderLabel =
-                        p.gender === "male"
-                            ? "Nam"
-                            : p.gender === "female"
-                                ? "Nữ"
-                                : "Khác";
-
-                    const display =
-                        `${p.full_name_vn || ""} — ${genderLabel} (${birthYear})`;
+                    const display = `${formatName(p)}${birthYear ? ` (${birthYear})` : ""}`;
 
                     return (
                         <option
-                            key={`${p.person_id}-${p.full_name_vn || "noname"}`}
-                            value={p.person_id}
+                            key={`${personId}-${formatName(p) || "noname"}`}
+                            value={personId}
                         >
                             {display}
                         </option>

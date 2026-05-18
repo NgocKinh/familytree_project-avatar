@@ -9,6 +9,7 @@
 // ======================================================================
 
 import React, { useEffect, useState } from "react";
+import { formatName } from "../../utils/formatName";
 import {
   addMarriage,
   getMarriageById,
@@ -27,6 +28,7 @@ import PersonSelectWithAvatarV2 from "../common/PersonSelectWithAvatarV2";
 // Component chính
 // ======================================================================
 export default function MarriageForm({ role = "admin", editId = null, onBack }) {
+  console.log("🔥 MARRIAGE FORM RENDER");
   if (role === "viewer") {
     return (
       <p className="text-red-500 text-center">
@@ -44,6 +46,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
     start_precision: "exact",
     end_precision: "exact",
     status: "married",
+    priority: 0,
     ceremony_type: "",
     location: "",
     notes: "",
@@ -69,8 +72,9 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
   useEffect(() => {
     async function fetchPersons() {
       try {
+        console.log("🔥 FETCH PERSONS START");
         const list = await getPersonBasicList();
-
+        console.log("🔥 FETCH PERSONS RESULT:", list);
         const sorted = [...list]
           .filter((p) => p.delete_status === undefined || Number(p.delete_status) === 0)
           .sort((a, b) => {
@@ -106,7 +110,11 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
   // Load EDIT
   // ======================================================================
   useEffect(() => {
-    if (editId) loadOldData(editId);
+    if (editId) {
+      loadOldData(editId);
+    } else {
+      resetForm(); // ✅ [CHANGE]: vào chế độ Thêm mới thì xóa dữ liệu cũ
+    }
   }, [editId]);
 
   const loadOldData = async (id) => {
@@ -121,6 +129,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
         start_precision: detectPrecision(data.start_date),
         end_precision: detectPrecision(data.end_date),
         status: data.status ?? "married",
+        priority: data.priority ?? 0,
         ceremony_type: data.ceremony_type ?? "",
         location: data.location ?? "",
         notes: data.notes ?? "",
@@ -155,6 +164,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
       start_precision: "exact",
       end_precision: "exact",
       status: "married",
+      priority: 0,
       ceremony_type: "",
       location: "",
       notes: "",
@@ -176,6 +186,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
       start_date,
       end_date,
       status,
+      priority,
       ceremony_type,
       location,
       notes,
@@ -208,6 +219,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
           start_date: start_iso,
           end_date: end_iso,
           status,
+          priority,
           ceremony_type: ceremony_type || null,
           location,
           notes,
@@ -221,6 +233,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
           start_date: start_iso,
           end_date: end_iso,
           status,
+          priority,
           ceremony_type: ceremony_type || null,
           location,
           notes,
@@ -264,7 +277,10 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
           value={formData.spouse_a_id}
           genderFilter={husbandGender}
           onChange={(v) =>
-            setFormData({ ...formData, spouse_a_id: v })
+            setFormData((prev) => ({
+              ...prev,
+              spouse_a_id: v,
+            }))
           }
           persons={persons}
         />
@@ -283,7 +299,10 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
           value={formData.spouse_b_id}
           genderFilter={wifeGender}
           onChange={(v) =>
-            setFormData({ ...formData, spouse_b_id: v })
+            setFormData((prev) => ({
+              ...prev,
+              spouse_b_id: v,
+            }))
           }
           persons={persons}
         />
@@ -322,19 +341,48 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
           />
         </div>
 
-        {/* Trạng thái */}
-        <div>
-          <label className="block mb-1 font-medium text-gray-700">🔖 Tình trạng:</label>
-          <select
-            value={formData.status}
-            onChange={(e) => handleChange("status", e.target.value)}
-            className="w-full border border-gray-300 rounded p-2"
-          >
-            <option value="married">Đang hôn nhân</option>
-            <option value="separated">Ly thân</option>
-            <option value="divorced">Đã ly hôn</option>
-            <option value="cohabitation">Sống chung</option>
-          </select>
+        {/* Tình trạng + Ưu tiên */}
+        <div className="grid grid-cols-2 gap-4">
+
+          {/* Tình trạng */}
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">
+              💍 Tình trạng:
+            </label>
+
+            <select
+              value={formData.status}
+              onChange={(e) =>
+                handleChange("status", e.target.value)
+              }
+              className="w-full border border-gray-300 rounded p-2"
+            >
+              <option value="married">Đã kết hôn</option>
+              <option value="cohabiting">Sống chung</option>
+              <option value="separated">Ly thân</option>
+              <option value="divorced">Ly hôn</option>
+            </select>
+          </div>
+
+          {/* Ưu tiên */}
+          <div>
+            <label className="block mb-1 font-medium text-gray-700">
+              ⭐ Ưu tiên:
+            </label>
+
+            <input
+              type="number"
+              value={formData.priority}
+              onChange={(e) =>
+                handleChange(
+                  "priority",
+                  Number(e.target.value)
+                )
+              }
+              className="w-full border border-gray-300 rounded p-2"
+            />
+          </div>
+
         </div>
 
         {/* Ghi chú */}

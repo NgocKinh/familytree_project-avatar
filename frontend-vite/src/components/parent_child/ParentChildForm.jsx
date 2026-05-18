@@ -288,8 +288,8 @@ export default function ParentChildForm({ role = "admin", editId = null, onBack 
             className="w-full border border-gray-300 rounded p-2"
           >
             <option value="">-- Chọn loại --</option>
-            <option value="FATHER">Cha</option>
-            <option value="MOTHER">Mẹ</option>
+            <option value="father">Cha</option>
+            <option value="mother">Mẹ</option>
           </select>
         </div>
 

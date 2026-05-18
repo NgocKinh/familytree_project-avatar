@@ -11,11 +11,9 @@ function Avatar({ person, size = 80, onClick }) {
 
   if (!person) return null;
 
-  const src = getAvatarURL({
-    ...person,
-    person_id: person.person_id
-  });  
-  console.log("TREE PERSON:", person);
+  /* ✅ [CHANGE 1]: Dùng trực tiếp person để avatarEngine tự xử lý id/person_id*/
+  const src = getAvatarURL(person);
+  
   const onError = (e) => {
     handleAvatarError(e, person?.gender);
   };
@@ -36,31 +34,32 @@ function Avatar({ person, size = 80, onClick }) {
 
 /* ================= Person ================= */
 
-function Person({ person, go, size = 80 }) {
+function Person({ person, go, size = 60 }) {
 
   if (!person) return null;
 
   const name =
-    person.name ||
-    person.full_name ||
-    formatName(person, "full") ||
-    "Không rõ";
+      formatName(person, { mode: "full", showAlias: false }) ||
+      person.name ||
+      person.full_name ||
+      "Không rõ";
 
   const onClick = person?.person_id ? () => go(person.person_id) : undefined;
 
   return (
-    <div className="flex flex-col items-center w-[180px]">
+    <div className="flex flex-col items-center w-[130px]">
 
       <Avatar person={person} size={size} onClick={onClick} />
 
-      <p className="mt-2 font-medium text-center">
+      <p className="mt-2 font-medium text-center whitespace-nowrap overflow-hidden text-ellipsis">
         {name}
       </p>
 
-      <p className="text-sm text-gray-500">
-        {person.birth_year ?? "?"} – {person.death_year ?? ""}
-      </p>
-
+      {(person.birth_year || person.death_year) && (
+        <p className="text-sm text-gray-500">
+          {person.birth_year || "?"} – {person.death_year || "?"}
+        </p>
+      )}
     </div>
   );
 }
@@ -70,7 +69,7 @@ function Person({ person, go, size = 80 }) {
 
 function ensureTwo(list = []) {
 
-  const fake = { name: "Không rõ", gender: "other" };
+  const fake = { person_id: "fake_unknown", name: "Không rõ", gender: "other" };
 
   if (list.length === 0) return [fake, fake];
   if (list.length === 1) return [list[0], fake];
@@ -83,7 +82,6 @@ function heartIcon(status) {
 
   switch (status) {
     case "married": return "❤️";
-    case "cohabitation": return "💛";
     case "separated": return "💚";
     case "divorced": return "💔";
     case "widowed": return "🖤";
@@ -97,7 +95,7 @@ function heartIcon(status) {
 
 export default function TreePage() {
 
-  const { id } = useParams();
+  const { personId } = useParams();
   const navigate = useNavigate();
 
   const [tree, setTree] = useState(null);
@@ -118,7 +116,7 @@ export default function TreePage() {
 
       try {
 
-        const data = await getFamilyTree(id);
+        const data = await getFamilyTree(personId);
 
         if (!alive) return;
 
@@ -136,7 +134,7 @@ export default function TreePage() {
 
     return () => { alive = false };
 
-  }, [id]);
+  }, [personId]);
 
 
   /* ===== Extract data safely ===== */
@@ -177,7 +175,7 @@ export default function TreePage() {
 
   /* ===== Couple position ===== */
 
-  const fake = { name: "Không rõ", gender: "other" };
+  const fake = { person_id: "fake_spouse", name: "Không rõ", gender: "other" };
 
   const spouseObj = spouse || fake;
 
@@ -206,20 +204,28 @@ export default function TreePage() {
 
   return (
 
-    <div className="w-full flex flex-col items-center py-10 select-none">
+    <div className="w-full min-h-screen flex flex-col items-center py-6 select-none relative bg-slate-50">
 
+      {/* 🔵 [ADDED]: Nút quay về Trang chủ */}
+      <button
+        onClick={() => navigate("/")}
+        className="absolute top-4 left-4 bg-white px-3 py-1 rounded shadow hover:bg-gray-100"
+      >
+        ⬅ Trang chủ
+      </button>
 
-      {/* Parents */}
+      {/* ================= Parents ================= */}
 
-      <div className="flex justify-between w-full px-32">
+      <div className="flex justify-between w-full max-w-6xl px-10">
 
+        {/* Bên Nam */}
         <div className="flex flex-col items-center w-1/2">
 
           <p className="text-blue-700 font-medium mb-3 text-lg">
             Cha mẹ bên Nam
           </p>
 
-          <div className="flex gap-10">
+          <div className="flex gap-6">
             {safeFather.map((p, i) => (
               <Person key={p.person_id || i} person={p} go={go} />
             ))}
@@ -227,14 +233,14 @@ export default function TreePage() {
 
         </div>
 
-
+        {/* Bên Nữ */}
         <div className="flex flex-col items-center w-1/2">
 
           <p className="text-pink-700 font-medium mb-3 text-lg">
             Cha mẹ bên Nữ
           </p>
 
-          <div className="flex gap-10">
+          <div className="flex gap-6">
             {safeMother.map((p, i) => (
               <Person key={p.person_id || i} person={p} go={go} />
             ))}
@@ -243,40 +249,41 @@ export default function TreePage() {
         </div>
 
       </div>
+      {/* 🔵 [ADDED]: Đường nối từ cha mẹ xuống cặp vợ chồng */}
+      <div className="w-px h-4 bg-gray-300 mt-4"></div>
+      {/* ================= Couple ================= */}
 
+      <div className="flex items-center justify-center mt-2 gap-14">
 
-      {/* Couple */}
+        <Person person={left} size={100} go={go} />
 
-      <div className="flex items-center justify-center mt-14 gap-20">
-
-        <Person person={left} size={140} go={go} />
-
-        <div className="text-6xl">
+        <div className="text-4xl">
           {heartIcon(marriage_status)}
         </div>
 
-        <Person person={right} size={140} go={go} />
+        <Person person={right} size={100} go={go} />
 
       </div>
-
-
-      {/* Children */}
+      {/* 🔵 [ADDED]: Đường nối từ vợ chồng xuống con */}
+      {childrenSorted.length > 0 && (
+        <div className="w-px h-4 bg-gray-300 mt-4"></div>
+      )}
+      {/* ================= Children ================= */}
 
       {childrenSorted.length > 0 && (
 
         <>
-          <h3 className="mt-16 text-lg font-semibold">
+          <h3 className="mt-2 text-lg font-semibold text-gray-700">
             Con
           </h3>
 
-          <div className="flex flex-wrap justify-center gap-10 mt-8">
+          <div className="flex flex-wrap justify-center gap-x-10 gap-y-8 mt-6 max-w-5xl">
 
             {childrenSorted.map((c) => (
               <Person key={c.person_id} person={c} go={go} />
             ))}
 
           </div>
-
         </>
 
       )}
@@ -284,4 +291,4 @@ export default function TreePage() {
     </div>
 
   );
-}
+}        

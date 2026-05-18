@@ -3,7 +3,7 @@
 // ======================================================
 
 import React, { useState } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import ProtectedRouteV6 from "./components/ProtectedRouteV6";
 import Navbar from "./components/Navbar";
 
@@ -34,14 +34,25 @@ import FamilySetupPage from "./pages/FamilySetupPage";
 // App
 // ======================================================
 export default function App() {
-  const [role, setRole] = useState(localStorage.getItem("role") || "viewer");
-
   return (
     <Router>
-      <Navbar role={role} setRole={setRole} />
+      <AppContent />
+    </Router>
+  );
+}
 
-      <div className="container mx-auto p-4">
+function AppContent() {
+  const [role, setRole] = useState(localStorage.getItem("role") || "viewer");
+  const location = useLocation();
+  const isTreePage = location.pathname.startsWith("/tree");
+
+  return (
+    <>
+      {!isTreePage && <Navbar role={role} setRole={setRole} />}
+
+      <div className={isTreePage ? "w-full p-0 m-0" : "container mx-auto p-4"}>
         <Routes>
+
 
           {/* HOME */}
           <Route path="/" element={<Home role={role} />} />
@@ -115,7 +126,7 @@ export default function App() {
           <Route path="/person/detail/:id" element={<PersonDetailPage />} />
 
           {/* TREE VIEW */}
-          <Route path="/tree/:id" element={<TreePage />} />   {/* ✔ PARAM FIXED */}
+          <Route path="/tree/:personId" element={<TreePage />} />  {/* ✔ PARAM FIXED */}
 
           {/* ANNOUNCEMENT */}
           <Route path="/announcement" element={<AnnouncementPage />} />
@@ -157,6 +168,6 @@ export default function App() {
 
         </Routes>
       </div>
-    </Router>
+    </>
   );
 }

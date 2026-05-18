@@ -23,7 +23,7 @@ export const getMarriageById = async (id) => {
 // 🔹 POST: Thêm quan hệ hôn nhân mới
 // ===============================
 export const addMarriage = async (data) => {
-  const res = await axios.post(MARRIAGE_URL, data);
+  const res = await axios.post(`${MARRIAGE_URL}/`, data);
   return res.data;
 };
 

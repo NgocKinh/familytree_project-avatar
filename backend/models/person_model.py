@@ -6,7 +6,6 @@ from backend.db import Base
 from datetime import datetime
 import enum
 
-
 # 🔹 Enum (match DB)
 class GenderEnum(str, enum.Enum):
     male = "male"
@@ -38,7 +37,7 @@ class Person(Base):
     __tablename__ = "persons"
 
     # 🔑 PK
-    id = Column("person_id", Integer, primary_key=True, index=True)
+    id = Column("person_id", Integer, primary_key=True)
 
     lineage_id = Column(Integer, nullable=True)
 
@@ -47,7 +46,20 @@ class Person(Base):
     last_name = Column(String(100), nullable=False)
     middle_name = Column(String(100), nullable=True)
     first_name = Column(String(100), nullable=False)
-
+    full_name_vn = Column(String(350), nullable=True)
+    # 🔵 [ADDED]: full name chuẩn, không phụ thuộc cột full_name_vn
+    @property
+    def full_name(self):
+        return " ".join(
+            str(part).strip()
+            for part in [
+                self.sur_name,
+                self.last_name,
+                self.middle_name,
+                self.first_name,
+            ]
+            if part and str(part).strip()
+        )
     # 👤 Basic
     gender = Column(Enum(GenderEnum), nullable=False, default=GenderEnum.other)
 

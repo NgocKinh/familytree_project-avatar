@@ -8,11 +8,25 @@
 
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../api/apiConfig";
 import { formatDateVN } from "../utils/formatDate";
-
-const API_BASE = "http://127.0.0.1:8010/api";
+import { formatName } from "../utils/formatName";
 
 export default function MarriageList({ onEdit }) {
+  const savePriority = async (marriageId, priority) => {
+    try {
+      await axios.put(
+        `${API_BASE_URL}/marriage/${marriageId}/priority`,
+        {
+          priority,
+        }
+      );
+  
+      console.log("✅ Priority saved");
+    } catch (err) {
+      console.error("❌ Save priority failed", err);
+    }
+  };
   const [marriages, setMarriages] = useState([]);
   const [mode, setMode] = useState("full");
   const [showSurName, setShowSurName] = useState(false);
@@ -24,7 +38,9 @@ export default function MarriageList({ onEdit }) {
   // ================================================================
   const fetchMarriages = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/marriage`);
+      const res = await axios.get(
+        `${API_BASE_URL}/marriage`
+      );
       setMarriages(res.data || []);
     } catch (err) {
       setMessage("❌ Không tải được danh sách hôn nhân!");
@@ -36,31 +52,22 @@ export default function MarriageList({ onEdit }) {
   }, []);
 
   // ================================================================
-  // Tên đầy đủ / rút gọn
+  // ✅ [CHANGE 1]: Hiển thị tên bằng formatName chuẩn
+  // - Không tự tách chuỗi spouse_a_name / spouse_b_name nữa
+  // - Nếu backend chưa trả spouse_a/spouse_b thì chỉ dùng tên cũ để hiển thị tạm
   // ================================================================
-  const abbreviateName = (p) => {
-    const initials = [p.last_name, p.middle_name]
-      .filter(Boolean)
-      .map((x) => x.trim()[0]?.toUpperCase() + ".")
-      .join(" ");
-    return `${initials} ${p.first_name}`.trim();
-  };
+  const renderPersonName = (person, fallbackName = "") => {
+    // ✅ Nếu có object chuẩn → dùng formatName
+    if (person && typeof person === "object") {
+      return formatName(person, {
+        mode,
+        showAlias: showSurName,
+      });
+    }
+    // ✅ Nếu chưa có object (backend cũ) → dùng fallback string
+    if (fallbackName) return fallbackName;
 
-  const buildDisplayName = (rawName, surName) => {
-    if (!rawName) return "";
-
-    const split = rawName.split("|");
-    const p = {
-      last_name: split[0] || "",
-      middle_name: split[1] || "",
-      first_name: split[2] || "",
-    };
-
-    const full = `${p.last_name} ${p.middle_name} ${p.first_name}`.trim();
-    const short = abbreviateName(p);
-
-    const base = mode === "short" ? short : full;
-    return showSurName && surName ? `${surName} – ${base}` : base;
+    return "";
   };
 
   // ================================================================
@@ -68,11 +75,11 @@ export default function MarriageList({ onEdit }) {
   // ================================================================
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API_BASE}/marriage/${id}`);
+      await axios.delete(`${API_BASE_URL}/marriage/${id}`);
       await fetchMarriages(); // 🔥 THÊM DÒNG NÀY
       setMessage("🗑️ Đã xóa quan hệ hôn nhân!");
       setDeleteConfirmId(null);
-      fetchMarriages();
+      
     } catch {
       setMessage("❌ Lỗi khi xóa bản ghi!");
     }
@@ -134,7 +141,7 @@ export default function MarriageList({ onEdit }) {
               <th className="border p-2">Ngày bắt đầu</th>
               <th className="border p-2">Ngày kết thúc</th>
               <th className="border p-2">Trạng thái</th>
-              <th className="border p-2">Địa điểm</th>
+              <th className="border p-2">Ưu tiên</th>
               <th className="border p-2">Thao tác</th>
             </tr>
           </thead>
@@ -152,17 +159,28 @@ export default function MarriageList({ onEdit }) {
                   <td className="border p-2">{idx + 1}</td>
 
                   <td className="border p-2">
-                    {buildDisplayName(m.spouse_a_name, m.spouse_a_sur)}
+                    {renderPersonName(m.spouse_a, m.spouse_a_name)}
                   </td>
 
                   <td className="border p-2">
-                    {buildDisplayName(m.spouse_b_name, m.spouse_b_sur)}
+                    {renderPersonName(m.spouse_b, m.spouse_b_name)}
                   </td>
 
                   <td className="border p-2">{formatDateVN(m.start_date)}</td>
                   <td className="border p-2">{formatDateVN(m.end_date)}</td>
                   <td className="border p-2 capitalize">{m.status}</td>
-                  <td className="border p-2">{m.location}</td>
+                  <td className="border p-2">
+                    <input
+                      type="number"
+                      value={m.priority ?? 0}
+                      onChange={(e) => {
+                        m.priority = Number(e.target.value);
+                        setMarriages([...marriages]);
+                      }}
+                      onBlur={() => savePriority(m.id, m.priority)}
+                      className="w-16 border rounded px-2 py-1 text-center"
+                    />
+                  </td>
 
                   <td className="border p-2">
                     {deleteConfirmId === m.id ? (

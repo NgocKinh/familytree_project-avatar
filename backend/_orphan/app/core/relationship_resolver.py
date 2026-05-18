@@ -16,7 +16,6 @@ from backend.core.path_finder import bfs_kinship_path
 class RuleEngine:
 
     def resolve(self, path):
-        print("🔥 RULE ENGINE ACTIVE 🔥")
 
         if not path:
             return None
@@ -38,7 +37,6 @@ class RuleEngine:
                 direction.append("DOWN")
 
         relations = [rel for _, rel, _ in path]
-        print("RELATIONS DEBUG:", relations)
 
         # =====================================================
         # ===== AFFINITY RULES (ƯU TIÊN TRƯỚC) =====
@@ -144,10 +142,7 @@ class RelationshipResolver:
     def resolve(self, source_id: int, target_id: int) -> dict:
         final_relation = None
         gender_list = []
-        print("SOURCE =", source_id)
-        print("TARGET =", target_id)
-        print("RESOLVER VERSION TEST")
-
+    
         candidates: List[RelationshipCandidate] = []
 
         # -----------------------------
@@ -155,23 +150,15 @@ class RelationshipResolver:
         # -----------------------------
         graph = build_family_graph()
 
-        print("DEBUG GRAPH NODE 110:", graph.get(110))
-        print("DEBUG GRAPH NODE 106:", graph.get(106))
-        print("DEBUG GRAPH NODE 124:", graph.get(124))
-
         # -----------------------------
         # BFS PATH (V3B3)
         # -----------------------------
         path = bfs_kinship_path(graph, source_id, target_id)
 
-        print("KINSHIP PATH:", path)
-        print("DEBUG PATH:", path)
-
         # -----------------------------
         # RULE ENGINE
         # -----------------------------
         new_relation = self.rule_engine.resolve(path)
-        print("RULE ENGINE =", new_relation)
 
         # -----------------------------
         # BLOOD ENGINE (LEGACY)
@@ -219,10 +206,6 @@ class RelationshipResolver:
 
             depth = len(direction_list)
 
-            print("DEBUG direction_path:", direction_list)
-            print("DEBUG gender_path:", gender_list)
-            print("DEBUG lineage_path:", lineage_list)
-
             relation_name = RelationEngineV2.classify(
                 direction_list,
                 gender_list,
@@ -232,10 +215,8 @@ class RelationshipResolver:
 
             # ===== RULE ENGINE PRIORITY =====
             if new_relation is not None:
-                print("USING RULE ENGINE RESULT")
                 final_relation = new_relation
             else:
-                print("FALLBACK TO LEGACY")
                 final_relation = relation_name
 
             if blood_candidates:
@@ -255,7 +236,6 @@ class RelationshipResolver:
         # -----------------------------
         # RESULT SELECTION
         # -----------------------------
-        print("CANDIDATES:", candidates)
 
         if final_relation is None and not candidates:
             raise HTTPException(
@@ -265,12 +245,6 @@ class RelationshipResolver:
 
         engine = PriorityConflictEngine()
         best = engine.resolve(candidates)
-
-        if best:
-            print("DEBUG RELATION (LEGACY) =", best.name)
-        else:
-            print("DEBUG RELATION (RULE ENGINE) =", final_relation)
-
 
         vn_relation = self.rule_engine.to_vietnamese(final_relation, gender_list)
 

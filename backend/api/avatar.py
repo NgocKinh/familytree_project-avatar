@@ -10,6 +10,7 @@ from backend.models.person_model import Person
 import os
 
 router = APIRouter()
+# ✅ [DEBUG]: Kiểm tra avatar.py có được load không
 
 # ==========================================================
 # CONFIG
@@ -27,7 +28,8 @@ os.makedirs(AVATAR_DIR, exist_ok=True)
 # ==========================================================
 # 📌 UPLOAD AVATAR
 # ==========================================================
-@router.post("/api/person/{person_id}/avatar")
+# ✅ [CHANGE 1]: Bỏ /api/avatar để dùng prefix từ main.py
+@router.post("/upload/{person_id}")
 async def upload_avatar(
     person_id: int,
     file: UploadFile = File(...),
@@ -59,9 +61,9 @@ async def upload_avatar(
     filename = f"{person_id}{ext}"
     file_path = os.path.join(AVATAR_DIR, filename)
 
-    # 5️⃣ REMOVE OLD AVATAR
-    if person.avatar and person.avatar != filename:
-        old_file = os.path.join(AVATAR_DIR, person.avatar)
+    # ✅ [CHANGE 2]: Xóa cả jpg + png cũ
+    for ext in [".jpg", ".png"]:
+        old_file = os.path.join(AVATAR_DIR, f"{person_id}{ext}")
         if os.path.exists(old_file):
             try:
                 os.remove(old_file)
