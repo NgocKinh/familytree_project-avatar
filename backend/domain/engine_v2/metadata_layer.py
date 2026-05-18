@@ -417,14 +417,19 @@ def extract_uncle_aunt_metadata(a, b):
 # =========================================================
 
 def extract_sibling_metadata(a, b):
+    order_a = get_birth_order(a)
+    order_b = get_birth_order(b)
 
-    birth_a = get_birth(a)
-    birth_b = get_birth(b)
+    if order_a is not None and order_b is not None:
+        older = order_a < order_b
+    else:
+        birth_a = get_birth(a)
+        birth_b = get_birth(b)
 
-    older = is_older(
-        birth_a,
-        birth_b
-    )
+        older = is_older(
+            birth_a,
+            birth_b
+        )
 
     return {
         "older": older,
@@ -480,22 +485,22 @@ def extract_nephew_niece_metadata(a, b):
     birth_a = get_birth(a)
 
     older = birth_a < birth_parent
-32  ef compare(db, person_a_id: int, person_b_id: int):
-33      """
-34      So sánh kết quả V1 vs V2 cho 1 cặp người
-35      """
-36      # BẬT V2 (rất quan trọng: bật trên MODULE, không phải biến local)
-37      v2.COUSIN_V2_ENABLED = True
-38  
-39      r1 = v1.get_relationship(db, person_a_id, person_b_id)
-40      r2 = v2.get_relationship_v2(db, person_a_id, person_b_id)
-41  
-42      print("=" * 60)
-43      print(f"A = {person_a_id}, B = {person_b_id}")
-44      print("V1:", r1)
-45      print("V2:", r2)
-46      print("=" * 60)
-47      print()
+def compare(db, person_a_id: int, person_b_id: int):
+    """
+    So sánh kết quả V1 vs V2 cho 1 cặp người
+    """
+    # BẬT V2 (rất quan trọng: bật trên MODULE, không phải biến local)
+    v2.COUSIN_V2_ENABLED = True
+
+    r1 = v1.get_relationship(db, person_a_id, person_b_id)
+    r2 = v2.get_relationship_v2(db, person_a_id, person_b_id)
+  
+    print("=" * 60)
+    print(f"A = {person_a_id}, B = {person_b_id}")
+    print("V1:", r1)
+    print("V2:", r2)
+    print("=" * 60)
+    print()
     return {
         "side": side,
         "older": older,
