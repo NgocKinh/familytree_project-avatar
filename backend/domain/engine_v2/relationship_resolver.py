@@ -21,11 +21,7 @@ from backend.domain.engine_v2.metadata_layer import (
     extract_metadata
 )
 from backend.domain.engine_v2.render_layer import (
-    build_grandparent_output,
-    build_grandchild_output,
-    build_sibling_output,
-    build_uncle_aunt_output,
-    build_nephew_niece_output
+    build_standard_output,
 )
 from .relations.constants import (
     REGION,
@@ -152,34 +148,7 @@ def resolver_relationship(a: int, b: int):
         }    
     }
 
-
-# # ===== SIBLING =====
-# def resolve_sibling(a, b, gender_a):
-
-#     birth_a = get_birth(a)
-#     birth_b = get_birth(b)
-
-#     # fallback nếu thiếu dữ liệu
-#     if not birth_a or not birth_b:
-#         return "anh/chị/em"
-
-#     # A lớn hơn B
-#     if birth_a < birth_b:
-#         if gender_a == "male":
-#             return "anh"
-#         else:
-#             return "chị"
-
-#     # A nhỏ hơn B
-#     else:
-#         if gender_a == "male":
-#             return "em trai"
-#         else:
-#             return "em gái"
 # ==========================================================
-# ⚠️ LEGACY SPECIALIZED RESOLVER
-# ⚠️ NOT USED IN MAIN RESOLVER FLOW
-# ⚠️ KEPT TEMPORARILY FOR SAFE MIGRATION
 # 🔥 STEP 6 — UNCLE/AUNT ORCHESTRATOR
 # ==========================================================
        
@@ -237,19 +206,6 @@ def resolve_uncle_aunt_v2(a, b):
             side,
             older
         )[1] 
-
-# # =====================================
-# # 🔵 DATA LAYER (TEMP - CHƯA MOVE)
-# # =====================================
-
-# def detect_side(path):
-#     # father = nội, mother = ngoại
-#     for node, rel, role in path:
-#         if role == "father":
-#             return "paternal"
-#         if role == "mother":
-#             return "maternal"
-#     return None
 
 # =====================================
 # 🔥 LEVEL 3 — CON DÂU / CON RỂ
@@ -407,447 +363,364 @@ def get_uncle_aunt_call(side, gender, birth_a, birth_parent, region):
                 return "dì"
 
     return "không rõ"
-    
-# def build_call(call_north=None, call_south=None, fallback=None):
-#     """
-#     Chuẩn hóa call cho toàn bộ hệ thống
-#     """
 
-#     if call_north or call_south:
+# def build_standard_output(a, b, relation, path, metadata):
+
+#     gender_a = get_gender(a)
+
+#     relation_text = None
+
+#     # =====================================
+#     # 🔥 LEVEL 2 — BASIC FAMILY LABEL
+#     # =====================================
+
+#     if relation == "child":
+
+#         gender = metadata["gender"]
+
 #         return {
-#             "north": call_north,
-#             "south": call_south
+#             "relation": "con trai" if gender == "male" else "con gái",
+#             "relation_basic": "child",
+#             "relation_side": None,
+#             "gender": gender,
+#             "call": None
 #         }
 
-#     if fallback:
+#     if relation == "parent":
+
+#         gender = metadata["gender"]
+
 #         return {
-#             "north": fallback,
-#             "south": fallback
+#             "relation": "cha" if gender == "male" else "mẹ",
+#             "relation_basic": "parent",
+#             "relation_side": None,
+#             "gender": gender,
+#             "call": None
 #         }
 
-#     return None
-
-def build_standard_output(a, b, relation, path, metadata):
-
-    gender_a = get_gender(a)
-
-    relation_text = None
-
-    # =====================================
-    # 🔥 LEVEL 2 — BASIC FAMILY LABEL
-    # =====================================
-
-    if relation == "child":
-
-        gender = metadata["gender"]
-
-        return {
-            "relation": "con trai" if gender == "male" else "con gái",
-            "relation_basic": "child",
-            "relation_side": None,
-            "gender": gender,
-            "call": None
-        }
-
-    if relation == "parent":
-
-        gender = metadata["gender"]
-
-        return {
-            "relation": "cha" if gender == "male" else "mẹ",
-            "relation_basic": "parent",
-            "relation_side": None,
-            "gender": gender,
-            "call": None
-        }
-
-    if relation == "spouse":
-
-        gender = metadata["gender"]
-
-        return {
-            "relation": "chồng" if gender == "male" else "vợ",
-            "relation_basic": "spouse",
-            "relation_side": None,
-            "gender": gender,
-            "call": None
-        }
-
-    # =====================================
-    # 🔥 GRANDPARENT
-    # =====================================
-
-    if relation == "grandparent":
-        return build_grandparent_output(metadata)
-
-    # =====================================
-    # 🔥 GRANDCHILD
-    # =====================================
-
-    if relation == "grandchild":
-        return build_grandchild_output(metadata)
-
-    # # 🔥 DATA ENGINE IN-LAW
-    # # =====================================
-    # # 🔥 FIXED SIBLING IN LAW (NO CLEAN FALLBACK)
-    # # =====================================
-    # if relation == "sibling_in_law":
-
-    #     gender_a = get_gender(a)
-
-    #     spouse = get_spouse(a)
-    #     if not spouse:
-    #         return {
-    #             "relation": "unknown",
-    #             "gender": gender_a,
-    #             "call": None
-    #         }
-
-    #     siblings = get_siblings(spouse)
-
-    #     if b not in siblings:
-    #         return {
-    #             "relation": "unknown",
-    #             "gender": gender_a,
-    #             "call": None
-    #         }
-
-    #     gender_b = get_gender(b)
-    #     spouse_gender = get_gender(spouse)
-
-    #     birth_a = get_birth(a)
-    #     birth_b = get_birth(b)
-
-    #     older = False
-    #     if birth_a and birth_b:
-    #         older = birth_b < birth_a
-
-    #     # =========================
-    #     # 🔥 CORE FIX LOGIC
-    #     # =========================
-
-    #     if spouse_gender == "female":
-    #         # vợ → family của vợ = VỢ SIDE
-    #         if gender_b == "male":
-    #             rel = "anh vợ" if older else "em vợ"
-    #         else:
-    #             rel = "chị vợ" if older else "em vợ"
-
-    #     else:
-    #         # chồng → family của chồng = CHỒNG SIDE
-    #         if gender_b == "male":
-    #             rel = "anh rể" if older else "em rể"
-    #         else:
-    #             rel = "chị dâu" if older else "em dâu"
-
-    #     return {
-    #         "relation": rel,
-    #         "relation_basic": "sibling_in_law",
-    #         "relation_side": None,
-    #         "gender": gender_b,
-    #         "call": {
-    #             "north": rel,
-    #             "south": rel
-    #         }
-    #     }
-
-    # =====================================
-    # 🔥 LEVEL 2.5 — ANH / CHỊ / EM
-    # =====================================
-    if relation == "sibling":
-
-        metadata = extract_sibling_metadata(a, b)
-
-        return build_sibling_output(metadata)
-
-    # =====================================
-    # 🔥 SIBLING IN-LAW
-    # =====================================
-
-    if relation == "sibling_in_law":
-
-        gender_a = get_gender(a)
-
-        spouse = get_spouse(a)
-        if not spouse:
-            return {
-                "relation": "chưa xác định mối quan hệ",
-                "gender": gender_a,
-                "call": None
-            }
-
-        siblings = get_siblings(spouse)
-
-        if b not in siblings:
-            return {
-                "relation": "chưa xác định mối quan hệ",
-                "gender": gender_a,
-                "call": None
-            }
-
-        gender_b = get_gender(b)
-        spouse_gender = get_gender(spouse)
-
-        birth_a = get_birth(a)
-        birth_b = get_birth(b)
-
-        older = False
-        if birth_a and birth_b:
-            older = birth_b < birth_a
-
-        # =========================
-        # 🔥 CORE LOGIC FIX
-        # =========================
-
-        if spouse_gender == "female":
-            # bên vợ
-            if gender_b == "male":
-                rel = "anh vợ" if older else "em vợ"
-            else:
-                rel = "chị vợ" if older else "em vợ"
-
-        else:
-            # bên chồng
-            if gender_b == "male":
-                rel = "anh rể" if older else "em rể"
-            else:
-                rel = "chị dâu" if older else "em dâu"
-
-        return {
-            "relation": rel,
-            "relation_basic": "sibling_in_law",
-            "relation_side": None,
-            "gender": gender_b,
-            "call": {
-                "north": rel,
-                "south": rel
-            }
-        }
-
-    # =====================================
-    # 🔥 CHILD IN-LAW
-    # =====================================
-
-    if relation == "child_in_law":
-
-        gender_b = get_gender(b)
-
-        rel = "con dâu" if gender_b == "female" else "con rể"
-
-        return {
-            "relation": rel,
-            "relation_basic": "in-law",
-            "relation_side": None,
-            "gender": gender_b,
-            "call": {
-                "north": rel,
-                "south": rel
-            }
-        } 
-
-    # =====================================
-    # 🔥 PARENT IN-LAW
-    # =====================================
-
-    if relation == "parent_in_law":
-
-        gender_a = get_gender(a)
-        gender_b = get_gender(b)
-
-        # =====================================
-        # 🔥 SOURCE LÀ NAM
-        # =====================================
-
-        if gender_a == "male":
-
-            rel = "ba vợ" if gender_b == "male" else "mẹ vợ"
-
-        # =====================================
-        # 🔥 SOURCE LÀ NỮ
-        # =====================================
-
-        else:
-
-            rel = "ba chồng" if gender_b == "male" else "mẹ chồng"
-
-        return {
-            "relation": rel,
-            "relation_basic": "in-law",
-            "relation_side": None,
-            "gender": gender_b,
-            "call": {
-                "north": rel,
-                "south": rel
-            }
-        }    
-    # =====================================
-    # 🔥 STEP 6.2 — NEPHEW / NIECE (FINAL CLEAN)
-    # =====================================
-    # ⚠️ NOT USED BY CURRENT CANONICAL FLOW
-    if relation == "nephew/niece":
-
-        gender_a = get_gender(a)
-
-        # =========================
-        # 🔹 tìm CHA/MẸ của A
-        # =========================
-        parents_a = get_parents(a)
-
-        if not parents_a:
-            return {
-                "relation": "unknown",
-                "gender": gender_a,
-                "call": None
-            }
-
-        found_parent = None
-        side = None
-
-        # =========================
-        # 🔥 tìm parent đúng (có quan hệ với B)
-        # =========================
-        for parent_id, role in parents_a:
-            siblings = get_siblings(parent_id)
-
-            if b in siblings:
-                found_parent = parent_id
-
-                if role == "father":
-                    side = "paternal"
-                elif role == "mother":
-                    side = "maternal"
-
-                break
-
-        if not found_parent:
-            return {
-                "relation": "unknown",
-                "gender": gender_a,
-                "call": None
-            }
-
-        # =========================
-        # 🔥 xác định cách gọi
-        # =========================
-        gender_b = get_gender(b)
-
-        birth_b = get_birth(b)
-        birth_parent = get_birth(found_parent)
-
-        older = False
-        if birth_b and birth_parent:
-            older = birth_b < birth_parent
-
-        call_north, call_south = resolve_uncle_aunt_call(
-            gender_b,
-            side,
-            older
-        )
-
-        # =========================
-        # 🔥 text hiển thị
-        # =========================
-        if gender_a == "male":
-            relation_text = f"cháu trai gọi {call_north} (Bắc) / {call_south} (Nam)"
-        else:
-            relation_text = f"cháu gái gọi {call_north} (Bắc) / {call_south} (Nam)"
-
-        return {
-            "relation": relation_text,
-            "relation_basic": "cháu",
-            "relation_side": side,
-            "gender": gender_a,
-            "call": {
-                "north": call_north,
-                "south": call_south
-            }
-        }
-    # =====================================
-    # 🔥 UNCLE / AUNT (CANONICAL)
-    # =====================================
-    if relation == "uncle_aunt":
-
-        if not metadata:
-            return {
-                "relation": "unknown",
-                "gender": None,
-                "call": None
-            }
-
-        call_north, call_south = resolve_uncle_aunt_call(
-            metadata["gender"],
-            metadata["side"],
-            metadata["older"]
-        )
-
-        return build_uncle_aunt_output(
-            metadata,
-            call_north,
-            call_south
-        )
-    # =====================================
-    # 🔥 NEPHEW / NIECE
-    # =====================================
-
-    if relation == "nephew_niece":
-
-        if not metadata:
-            return {
-                "relation": "unknown",
-                "gender": None,
-                "call": None
-            }
-
-        return build_nephew_niece_output(metadata)
-    # =====================================
-    # SPOUSE OF UNCLE / AUNT
-    # =====================================
-
-    if relation == "spouse_of_uncle_aunt":
-
-        side = metadata.get("side")
-        gender = metadata.get("gender")
-        older = metadata.get("older")
-
-        if side == "paternal":
-
-            if gender == "male":
-                if older:
-                    relation_name = "bác trai"
-                else:
-                    relation_name = "dượng"
-            else:
-                if older:
-                    relation_name = "bác gái"
-                else:
-                    relation_name = "thím"
-
-        elif side == "maternal":
-
-            if gender == "male":
-                relation_name = "dượng"
-            else:
-                relation_name = "mợ"
-
-        else:
-            relation_name = "chưa xác định mối quan hệ"
-
-        return {
-            "relation": relation_name,
-            "relation_basic": relation,
-            "relation_side": side,
-            "gender": gender,
-            "call": {
-                "north": relation_name,
-                "south": relation_name
-            }
-        }    
-    # =====================================
-    # DEFAULT
-    # =====================================
-    return {
-        "relation": "chưa xác định mối quan hệ",
-        "gender": gender_a,
-        "call": None
-    }
+#     if relation == "spouse":
+
+#         gender = metadata["gender"]
+
+#         return {
+#             "relation": "chồng" if gender == "male" else "vợ",
+#             "relation_basic": "spouse",
+#             "relation_side": None,
+#             "gender": gender,
+#             "call": None
+#         }
+
+#     # =====================================
+#     # 🔥 GRANDPARENT
+#     # =====================================
+
+#     if relation == "grandparent":
+#         return build_grandparent_output(metadata)
+
+#     # =====================================
+#     # 🔥 GRANDCHILD
+#     # =====================================
+
+#     if relation == "grandchild":
+#         return build_grandchild_output(metadata)
+
+#     # =====================================
+#     # 🔥 LEVEL 2.5 — ANH / CHỊ / EM
+#     # =====================================
+#     if relation == "sibling":
+
+#         metadata = extract_sibling_metadata(a, b)
+
+#         return build_sibling_output(metadata)
+
+#     # =====================================
+#     # 🔥 SIBLING IN-LAW
+#     # =====================================
+
+#     if relation == "sibling_in_law":
+
+#         gender_a = get_gender(a)
+
+#         spouse = get_spouse(a)
+#         if not spouse:
+#             return {
+#                 "relation": "chưa xác định mối quan hệ",
+#                 "gender": gender_a,
+#                 "call": None
+#             }
+
+#         siblings = get_siblings(spouse)
+
+#         if b not in siblings:
+#             return {
+#                 "relation": "chưa xác định mối quan hệ",
+#                 "gender": gender_a,
+#                 "call": None
+#             }
+
+#         gender_b = get_gender(b)
+#         spouse_gender = get_gender(spouse)
+
+#         birth_a = get_birth(a)
+#         birth_b = get_birth(b)
+
+#         older = False
+#         if birth_a and birth_b:
+#             older = birth_b < birth_a
+
+#         # =========================
+#         # 🔥 CORE LOGIC FIX
+#         # =========================
+
+#         if spouse_gender == "female":
+#             # bên vợ
+#             if gender_b == "male":
+#                 rel = "anh vợ" if older else "em vợ"
+#             else:
+#                 rel = "chị vợ" if older else "em vợ"
+
+#         else:
+#             # bên chồng
+#             if gender_b == "male":
+#                 rel = "anh rể" if older else "em rể"
+#             else:
+#                 rel = "chị dâu" if older else "em dâu"
+
+#         return {
+#             "relation": rel,
+#             "relation_basic": "sibling_in_law",
+#             "relation_side": None,
+#             "gender": gender_b,
+#             "call": {
+#                 "north": rel,
+#                 "south": rel
+#             }
+#         }
+
+#     # =====================================
+#     # 🔥 CHILD IN-LAW
+#     # =====================================
+
+#     if relation == "child_in_law":
+
+#         gender_b = get_gender(b)
+
+#         rel = "con dâu" if gender_b == "female" else "con rể"
+
+#         return {
+#             "relation": rel,
+#             "relation_basic": "in-law",
+#             "relation_side": None,
+#             "gender": gender_b,
+#             "call": {
+#                 "north": rel,
+#                 "south": rel
+#             }
+#         } 
+
+#     # =====================================
+#     # 🔥 PARENT IN-LAW
+#     # =====================================
+
+#     if relation == "parent_in_law":
+
+#         gender_a = get_gender(a)
+#         gender_b = get_gender(b)
+
+#         # =====================================
+#         # 🔥 SOURCE LÀ NAM
+#         # =====================================
+
+#         if gender_a == "male":
+
+#             rel = "ba vợ" if gender_b == "male" else "mẹ vợ"
+
+#         # =====================================
+#         # 🔥 SOURCE LÀ NỮ
+#         # =====================================
+
+#         else:
+
+#             rel = "ba chồng" if gender_b == "male" else "mẹ chồng"
+
+#         return {
+#             "relation": rel,
+#             "relation_basic": "in-law",
+#             "relation_side": None,
+#             "gender": gender_b,
+#             "call": {
+#                 "north": rel,
+#                 "south": rel
+#             }
+#         }    
+#     # =====================================
+#     # 🔥 STEP 6.2 — NEPHEW / NIECE (FINAL CLEAN)
+#     # =====================================
+#     # ⚠️ NOT USED BY CURRENT CANONICAL FLOW
+#     if relation == "nephew/niece":
+
+#         gender_a = get_gender(a)
+
+#         # =========================
+#         # 🔹 tìm CHA/MẸ của A
+#         # =========================
+#         parents_a = get_parents(a)
+
+#         if not parents_a:
+#             return {
+#                 "relation": "unknown",
+#                 "gender": gender_a,
+#                 "call": None
+#             }
+
+#         found_parent = None
+#         side = None
+
+#         # =========================
+#         # 🔥 tìm parent đúng (có quan hệ với B)
+#         # =========================
+#         for parent_id, role in parents_a:
+#             siblings = get_siblings(parent_id)
+
+#             if b in siblings:
+#                 found_parent = parent_id
+
+#                 if role == "father":
+#                     side = "paternal"
+#                 elif role == "mother":
+#                     side = "maternal"
+
+#                 break
+
+#         if not found_parent:
+#             return {
+#                 "relation": "unknown",
+#                 "gender": gender_a,
+#                 "call": None
+#             }
+
+#         # =========================
+#         # 🔥 xác định cách gọi
+#         # =========================
+#         gender_b = get_gender(b)
+
+#         birth_b = get_birth(b)
+#         birth_parent = get_birth(found_parent)
+
+#         older = False
+#         if birth_b and birth_parent:
+#             older = birth_b < birth_parent
+
+#         call_north, call_south = resolve_uncle_aunt_call(
+#             gender_b,
+#             side,
+#             older
+#         )
+
+#         # =========================
+#         # 🔥 text hiển thị
+#         # =========================
+#         if gender_a == "male":
+#             relation_text = f"cháu trai gọi {call_north} (Bắc) / {call_south} (Nam)"
+#         else:
+#             relation_text = f"cháu gái gọi {call_north} (Bắc) / {call_south} (Nam)"
+
+#         return {
+#             "relation": relation_text,
+#             "relation_basic": "cháu",
+#             "relation_side": side,
+#             "gender": gender_a,
+#             "call": {
+#                 "north": call_north,
+#                 "south": call_south
+#             }
+#         }
+#     # =====================================
+#     # 🔥 UNCLE / AUNT (CANONICAL)
+#     # =====================================
+#     if relation == "uncle_aunt":
+
+#         if not metadata:
+#             return {
+#                 "relation": "unknown",
+#                 "gender": None,
+#                 "call": None
+#             }
+
+#         call_north, call_south = resolve_uncle_aunt_call(
+#             metadata["gender"],
+#             metadata["side"],
+#             metadata["older"]
+#         )
+
+#         return build_uncle_aunt_output(
+#             metadata,
+#             call_north,
+#             call_south
+#         )
+#     # =====================================
+#     # 🔥 NEPHEW / NIECE
+#     # =====================================
+
+#     if relation == "nephew_niece":
+
+#         if not metadata:
+#             return {
+#                 "relation": "unknown",
+#                 "gender": None,
+#                 "call": None
+#             }
+
+#         return build_nephew_niece_output(metadata)
+#     # =====================================
+#     # SPOUSE OF UNCLE / AUNT
+#     # =====================================
+
+#     if relation == "spouse_of_uncle_aunt":
+
+#         side = metadata.get("side")
+#         gender = metadata.get("gender")
+#         older = metadata.get("older")
+
+#         if side == "paternal":
+
+#             if gender == "male":
+#                 if older:
+#                     relation_name = "bác trai"
+#                 else:
+#                     relation_name = "dượng"
+#             else:
+#                 if older:
+#                     relation_name = "bác gái"
+#                 else:
+#                     relation_name = "thím"
+
+#         elif side == "maternal":
+
+#             if gender == "male":
+#                 relation_name = "dượng"
+#             else:
+#                 relation_name = "mợ"
+
+#         else:
+#             relation_name = "chưa xác định mối quan hệ"
+
+#         return {
+#             "relation": relation_name,
+#             "relation_basic": relation,
+#             "relation_side": side,
+#             "gender": gender,
+#             "call": {
+#                 "north": relation_name,
+#                 "south": relation_name
+#             }
+#         }    
+#     # =====================================
+#     # DEFAULT
+#     # =====================================
+#     return {
+#         "relation": "chưa xác định mối quan hệ",
+#         "gender": gender_a,
+#         "call": None
+#     }
     
