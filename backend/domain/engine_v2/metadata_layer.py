@@ -190,7 +190,20 @@ def extract_metadata(path, source_person, target_person):
         b = target_person.get("id")
 
         metadata = extract_nephew_niece_metadata(a, b)
+    # =====================================
+    # FIX SPOUSE -> NEPHEW / NIECE
+    # =====================================
 
+    if steps == ["spouse", "parent", "child", "child"]:
+
+        a = source_person.get("id")
+        b = target_person.get("id")
+
+        metadata = extract_nephew_niece_from_spouse_metadata(
+            a,
+            b,
+            path
+        )
     # =====================================
     # FIX SIBLING
     # =====================================
@@ -236,6 +249,7 @@ def extract_metadata(path, source_person, target_person):
         metadata = extract_spouse_metadata(a, b)
 
     return metadata
+    
 # =========================================================
 # EXTRACT PARENT METADATA
 # =========================================================
@@ -546,7 +560,36 @@ def extract_nephew_niece_metadata(a, b):
         "older": older,
         "gender": gender
     }  
+# =========================================================
+# EXTRACT NEPHEW / NIECE FROM SPOUSE METADATA
+# =========================================================
 
+def extract_nephew_niece_from_spouse_metadata(a, b, path):
+
+    spouse_id = None
+
+    for rel, node, meta in path:
+        if rel == "spouse":
+            spouse_id = node
+            break
+
+    if spouse_id is None:
+        return None
+
+    base_metadata = extract_nephew_niece_metadata(
+        spouse_id,
+        b
+    )
+
+    if not base_metadata:
+        return None
+
+    return {
+        "side": base_metadata.get("side"),
+        "older": base_metadata.get("older"),
+        "gender": get_gender(b)
+    }
+    
 def compare(db, person_a_id: int, person_b_id: int):
     """
     So sánh kết quả V1 vs V2 cho 1 cặp người

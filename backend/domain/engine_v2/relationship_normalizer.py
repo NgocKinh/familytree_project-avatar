@@ -55,6 +55,11 @@ def normalize_path(path_steps):
     # parent -> child -> child = nephew_niece
     if path_steps == ["parent", "child", "child"]:
         return ["nephew_niece"]
+
+    # spouse -> parent -> child -> child
+    # = nephew / niece from spouse of uncle/aunt side
+    if path_steps == ["spouse", "parent", "child", "child"]:
+        return ["nephew_niece"]    
     
     # parent -> parent = grandparent
     if path_steps == ["parent", "parent"]:

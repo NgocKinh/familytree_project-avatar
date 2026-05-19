@@ -793,8 +793,6 @@ def build_standard_output(a, b, relation, path, metadata):
 
     if relation == "nephew_niece":
 
-        metadata = extract_nephew_niece_metadata(a, b)
-
         if not metadata:
             return {
                 "relation": "unknown",
@@ -803,7 +801,7 @@ def build_standard_output(a, b, relation, path, metadata):
             }
 
         return build_nephew_niece_output(metadata)
-        # =====================================
+    # =====================================
     # SPOUSE OF UNCLE / AUNT
     # =====================================
 
