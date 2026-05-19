@@ -123,6 +123,7 @@ def extract_metadata(path, source_person, target_person):
         "gender": detect_gender(source_person)
 
     }
+
     # =====================================
     # FIX GRANDPARENT
     # =====================================
@@ -164,6 +165,21 @@ def extract_metadata(path, source_person, target_person):
 
         metadata = extract_uncle_aunt_metadata(a, b)
 
+    # =====================================
+    # FIX SPOUSE OF UNCLE / AUNT
+    # =====================================
+
+    if steps == ["parent", "parent", "child", "spouse"]:
+
+        a = source_person.get("id")
+        b = target_person.get("id")
+
+        metadata = extract_spouse_of_uncle_aunt_metadata(
+            a,
+            b,
+            path
+        )
+        
     # =====================================
     # FIX NEPHEW / NIECE
     # =====================================
@@ -412,6 +428,36 @@ def extract_uncle_aunt_metadata(a, b):
         }
 
     return None
+
+# =========================================================
+# EXTRACT SPOUSE OF UNCLE / AUNT METADATA
+# =========================================================
+
+def extract_spouse_of_uncle_aunt_metadata(a, b, path):
+
+    uncle_aunt_id = None
+
+    for rel, node, meta in path:
+        if rel == "child":
+            uncle_aunt_id = node
+
+    if uncle_aunt_id is None:
+        return None
+
+    base_metadata = extract_uncle_aunt_metadata(
+        a,
+        uncle_aunt_id
+    )
+
+    if not base_metadata:
+        return None
+
+    return {
+        "side": base_metadata.get("side"),
+        "older": base_metadata.get("older"),
+        "gender": get_gender(b)
+    }
+
 # =========================================================
 # EXTRACT SIBLING METADATA
 # =========================================================
@@ -481,10 +527,26 @@ def extract_nephew_niece_metadata(a, b):
     if not found_parent:
         return None
 
-    birth_parent = get_birth(found_parent)
-    birth_a = get_birth(a)
+    order_a = get_birth_order(a)
+    order_parent = get_birth_order(found_parent)
 
-    older = birth_a < birth_parent
+    if order_a is not None and order_parent is not None:
+        older = order_a < order_parent
+    else:
+        birth_parent = get_birth(found_parent)
+        birth_a = get_birth(a)
+
+        older = is_older(
+            birth_a,
+            birth_parent
+        )
+
+    return {
+        "side": side,
+        "older": older,
+        "gender": gender
+    }  
+
 def compare(db, person_a_id: int, person_b_id: int):
     """
     So sánh kết quả V1 vs V2 cho 1 cặp người
@@ -500,9 +562,4 @@ def compare(db, person_a_id: int, person_b_id: int):
     print("V1:", r1)
     print("V2:", r2)
     print("=" * 60)
-    print()
-    return {
-        "side": side,
-        "older": older,
-        "gender": gender
-    }    
+    print()      

@@ -60,6 +60,36 @@ def render_relationship(a, b, normalized, metadata):
             return "em dâu"
 
         return relation
+        
+    # =====================================
+    # SPOUSE OF UNCLE / AUNT
+    # =====================================
+
+    if relation == "spouse_of_uncle_aunt":
+
+        side = metadata.get("side")
+        gender = metadata.get("gender")
+        older = metadata.get("older")
+
+        if side == "paternal":
+
+            if gender == "male":
+                if older:
+                    return "bác trai"
+                return "dượng"
+
+            if older:
+                return "bác gái"
+            return "thím"
+
+        if side == "maternal":
+
+            if gender == "male":
+                return "dượng"
+
+            return "mợ"
+
+        return relation    
     # =====================================
     # AFFINITY PEER
     # =====================================

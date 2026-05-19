@@ -18,7 +18,7 @@
 # It is NOT a simple formatter/cleanup layer.
 # ==========================================================
 def normalize_path(path_steps):
-
+    print("DEBUG normalize_path path_steps =", path_steps)
     # parent -> child = sibling
     if path_steps == ["parent", "child"]:
         return ["sibling"]
@@ -42,7 +42,11 @@ def normalize_path(path_steps):
     # spouse -> parent -> child -> spouse
     # = affinity_peer
     if path_steps == ["spouse", "parent", "child", "spouse"]:
-        return ["affinity_peer"]    
+        return ["affinity_peer"] 
+
+    # parent -> parent -> child -> spouse = spouse_of_uncle_aunt
+    if path_steps == ["parent", "parent", "child", "spouse"]:
+        return ["spouse_of_uncle_aunt"]       
 
     # parent -> parent -> child = uncle_aunt
     if path_steps == ["parent", "parent", "child"]:

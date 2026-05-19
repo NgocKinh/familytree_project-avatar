@@ -803,6 +803,49 @@ def build_standard_output(a, b, relation, path, metadata):
             }
 
         return build_nephew_niece_output(metadata)
+        # =====================================
+    # SPOUSE OF UNCLE / AUNT
+    # =====================================
+
+    if relation == "spouse_of_uncle_aunt":
+
+        side = metadata.get("side")
+        gender = metadata.get("gender")
+        older = metadata.get("older")
+
+        if side == "paternal":
+
+            if gender == "male":
+                if older:
+                    relation_name = "bác trai"
+                else:
+                    relation_name = "dượng"
+            else:
+                if older:
+                    relation_name = "bác gái"
+                else:
+                    relation_name = "thím"
+
+        elif side == "maternal":
+
+            if gender == "male":
+                relation_name = "dượng"
+            else:
+                relation_name = "mợ"
+
+        else:
+            relation_name = "chưa xác định mối quan hệ"
+
+        return {
+            "relation": relation_name,
+            "relation_basic": relation,
+            "relation_side": side,
+            "gender": gender,
+            "call": {
+                "north": relation_name,
+                "south": relation_name
+            }
+        }    
     # =====================================
     # DEFAULT
     # =====================================
