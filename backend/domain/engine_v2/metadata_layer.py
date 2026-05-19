@@ -469,7 +469,7 @@ def extract_spouse_of_uncle_aunt_metadata(a, b, path):
     return {
         "side": base_metadata.get("side"),
         "older": base_metadata.get("older"),
-        "gender": get_gender(b)
+        "gender": get_gender(a)
     }
 
 # =========================================================
@@ -587,9 +587,9 @@ def extract_nephew_niece_from_spouse_metadata(a, b, path):
     return {
         "side": base_metadata.get("side"),
         "older": base_metadata.get("older"),
-        "gender": get_gender(b)
+        "gender": get_gender(a)
     }
-    
+
 def compare(db, person_a_id: int, person_b_id: int):
     """
     So sánh kết quả V1 vs V2 cho 1 cặp người

@@ -27,7 +27,11 @@ from backend.domain.engine_v2.render_layer import (
     build_uncle_aunt_output,
     build_nephew_niece_output
 )
-
+from .relations.constants import (
+    REGION,
+    SPOUSE_MAP,
+)
+from .relations.helpers import build_call
 # ==========================================================
 # ✅ [STEP 5.3] Convert NEW path → OLD format
 # ==========================================================
@@ -44,16 +48,16 @@ def convert_path_format(new_path):
             continue
         converted.append((rel, node, meta))
     return converted
-REGION = "north"
+# REGION = "north"
 
-SPOUSE_MAP = {
-    "bác": "bác gái",
-    "chú": "thím",
-    "cậu": "mợ",
-    "cô": "dượng",
-    "dì": "dượng",
-    "bác gái": "bác trai"
-}
+# SPOUSE_MAP = {
+#     "bác": "bác gái",
+#     "chú": "thím",
+#     "cậu": "mợ",
+#     "cô": "dượng",
+#     "dì": "dượng",
+#     "bác gái": "bác trai"
+# }
 # ======================================================
 # 🔥 STEP 12: LẤY THÔNG TIN PERSON
 # ======================================================
@@ -101,11 +105,9 @@ def resolver_relationship(a: int, b: int):
     # =====================================
     # 🔵 NORMALIZE PATH
     # =====================================
-    print("====== STEPS ======")
-    print(steps)
+
     normalized = normalize_path(steps)
-    print("====== NORMALIZED ======")
-    print(normalized)
+
     # =====================================
     # 🔵 SAFE RELATION
     # =====================================
@@ -126,11 +128,7 @@ def resolver_relationship(a: int, b: int):
         path,
         metadata
     )
-    print("====== FINAL PATH ======")
-    print(path)
 
-    print("====== FINAL RELATION ======")
-    print(relation)
     return {
         "a": a,
         "b": b,
@@ -410,24 +408,24 @@ def get_uncle_aunt_call(side, gender, birth_a, birth_parent, region):
 
     return "không rõ"
     
-def build_call(call_north=None, call_south=None, fallback=None):
-    """
-    Chuẩn hóa call cho toàn bộ hệ thống
-    """
+# def build_call(call_north=None, call_south=None, fallback=None):
+#     """
+#     Chuẩn hóa call cho toàn bộ hệ thống
+#     """
 
-    if call_north or call_south:
-        return {
-            "north": call_north,
-            "south": call_south
-        }
+#     if call_north or call_south:
+#         return {
+#             "north": call_north,
+#             "south": call_south
+#         }
 
-    if fallback:
-        return {
-            "north": fallback,
-            "south": fallback
-        }
+#     if fallback:
+#         return {
+#             "north": fallback,
+#             "south": fallback
+#         }
 
-    return None
+#     return None
 
 def build_standard_output(a, b, relation, path, metadata):
 
