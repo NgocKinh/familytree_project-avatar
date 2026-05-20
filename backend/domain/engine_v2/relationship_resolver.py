@@ -12,10 +12,10 @@ from backend.domain.engine_v2.data_layer_db import (
 from backend.domain.engine_v2.graph_engine import find_relationship_path
 from backend.domain.engine_v2.family_side_analyzer import detect_side
 
-from backend.domain.engine_v2.cultural_resolver import (
-    resolve_uncle_aunt_call,
-    get_uncle_aunt_call,
-)
+# from backend.domain.engine_v2.cultural_resolver import (
+#     resolve_uncle_aunt_call,
+#     get_uncle_aunt_call,
+# )
 from backend.domain.engine_v2.metadata_layer import (
     extract_uncle_aunt_metadata,
     extract_sibling_metadata,
@@ -149,64 +149,64 @@ def resolver_relationship(a: int, b: int):
         }    
     }
 
-# ==========================================================
-# 🔥 STEP 6 — UNCLE/AUNT ORCHESTRATOR
-# ==========================================================
+# # ==========================================================
+# # 🔥 STEP 6 — UNCLE/AUNT ORCHESTRATOR
+# # ==========================================================
        
-def resolve_uncle_aunt_v2(a, b):
-    from data_layer import get_parent, get_children, get_birth
+# def resolve_uncle_aunt_v2(a, b):
+#     from data_layer import get_parent, get_children, get_birth
 
-    gender_a = get_gender(a)
+#     gender_a = get_gender(a)
 
-    # =========================
-    # 🔹 CHA/MẸ của B
-    # =========================
-    parents_b = []
+#     # =========================
+#     # 🔹 CHA/MẸ của B
+#     # =========================
+#     parents_b = []
 
-    # lấy tất cả cha/mẹ của B
-    for parent_id, role in get_parents(b):
-        parents_b.append(parent_id)
+#     # lấy tất cả cha/mẹ của B
+#     for parent_id, role in get_parents(b):
+#         parents_b.append(parent_id)
 
-    if not parents_b:
-        return None
+#     if not parents_b:
+#         return None
 
-    # =========================
-    # 🔥 LOOP QUA CẢ CHA VÀ MẸ
-    # =========================
-    for parent_b in parents_b:
+#     # =========================
+#     # 🔥 LOOP QUA CẢ CHA VÀ MẸ
+#     # =========================
+#     for parent_b in parents_b:
 
-        grandparent = get_parent(parent_b)
-        if not grandparent:
-            continue
+#         grandparent = get_parent(parent_b)
+#         if not grandparent:
+#             continue
 
-        siblings_parent = get_children(grandparent)
-        siblings_parent = [x for x in siblings_parent if x != parent_b]
+#         siblings_parent = get_children(grandparent)
+#         siblings_parent = [x for x in siblings_parent if x != parent_b]
 
-        if a not in siblings_parent:
-            continue
+#         if a not in siblings_parent:
+#             continue
 
-        gender_parent = get_gender(parent_b)
+#         gender_parent = get_gender(parent_b)
 
-        if gender_parent == "male":
-            side = "paternal"
-        else:
-            side = "maternal"
+#         if gender_parent == "male":
+#             side = "paternal"
+#         else:
+#             side = "maternal"
 
-        birth_a = get_birth(a)
-        birth_parent = get_birth(parent_b)
+#         birth_a = get_birth(a)
+#         birth_parent = get_birth(parent_b)
 
-        older = False
-        if birth_a and birth_parent:
-            older = birth_a < birth_parent
+#         older = False
+#         if birth_a and birth_parent:
+#             older = birth_a < birth_parent
 
-        # =========================
-        # 🔥 CULTURAL RESOLUTION
-        # =========================
-        return resolve_uncle_aunt_call(
-            gender_a,
-            side,
-            older
-        )[1] 
+#         # =========================
+#         # 🔥 CULTURAL RESOLUTION
+#         # =========================
+#         return resolve_uncle_aunt_call(
+#             gender_a,
+#             side,
+#             older
+#         )[1] 
 
 # def get_uncle_aunt_call(side, gender, birth_a, birth_parent, region):
 #     # fallback
