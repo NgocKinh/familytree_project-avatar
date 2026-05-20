@@ -18,6 +18,16 @@
 # It is NOT a simple formatter/cleanup layer.
 # ==========================================================
 def normalize_path(path_steps):
+
+    # BASIC RELATIONS
+    if path_steps == ["parent"]:
+        return ["parent"]
+
+    if path_steps == ["child"]:
+        return ["child"]
+
+    if path_steps == ["spouse"]:
+        return ["spouse"]
   
     # parent -> child = sibling
     if path_steps == ["parent", "child"]:
