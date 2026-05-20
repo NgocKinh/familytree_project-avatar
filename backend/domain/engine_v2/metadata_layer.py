@@ -24,7 +24,9 @@
 from backend.domain.engine_v2.data_layer_db import (
     get_birth,
     get_birth_order,
-    get_gender
+    get_gender,
+    get_parents,
+    get_siblings
 )
 
 def is_older(person_a_birth, person_b_birth):
@@ -160,10 +162,21 @@ def extract_metadata(path, source_person, target_person):
 
     if steps == ["parent", "parent", "child"]:
 
-        a = source_person.get("id")
-        b = target_person.get("id")
+        source_id = source_person.get("id")
 
-        metadata = extract_uncle_aunt_metadata(a, b)
+        parent_role = path[0][2]
+
+        side = (
+            "paternal"
+            if parent_role == "father"
+            else "maternal"
+        )
+
+        metadata = {
+            "side": side,
+            "older": False,
+            "gender": get_gender(source_id)
+        }
 
     # =====================================
     # FIX SPOUSE OF UNCLE / AUNT
@@ -186,10 +199,31 @@ def extract_metadata(path, source_person, target_person):
 
     if steps == ["parent", "child", "child"]:
 
-        a = source_person.get("id")
-        b = target_person.get("id")
+        source_id = source_person.get("id")
 
-        metadata = extract_nephew_niece_metadata(a, b)
+        parent_id = path[1][1]
+
+        parent_gender = get_gender(parent_id)
+
+        side = (
+            "paternal"
+            if parent_gender == "male"
+            else "maternal"
+        )
+
+        birth_source = get_birth(source_id)
+        birth_parent = get_birth(parent_id)
+
+        older = False
+
+        if birth_source and birth_parent:
+            older = birth_source < birth_parent
+
+        metadata = {
+            "side": side,
+            "older": older,
+            "gender": get_gender(source_id)
+        }
     # =====================================
     # FIX SPOUSE -> NEPHEW / NIECE
     # =====================================
@@ -257,9 +291,8 @@ def extract_metadata(path, source_person, target_person):
 def extract_parent_metadata(a, b):
 
     return {
-        "gender": get_gender(b)
+        "gender": get_gender(a)
     }
-
 
 # =========================================================
 # EXTRACT CHILD METADATA
@@ -268,9 +301,8 @@ def extract_parent_metadata(a, b):
 def extract_child_metadata(a, b):
 
     return {
-        "gender": get_gender(b)
+        "gender": get_gender(a)
     }
-
 
 # =========================================================
 # EXTRACT SPOUSE METADATA
@@ -279,7 +311,7 @@ def extract_child_metadata(a, b):
 def extract_spouse_metadata(a, b):
 
     return {
-        "gender": get_gender(b)
+        "gender": get_gender(a)
     }
 
 # =====================================
@@ -350,14 +382,6 @@ def extract_grandchild_metadata(a, b, path):
 # =========================================================
 # EXTRACT UNCLE / AUNT METADATA
 # =========================================================
-
-from backend.domain.engine_v2.data_layer_db import (
-    get_parents,
-    get_gender,
-    get_birth,
-    get_birth_order,
-    get_siblings
-)
 
 def extract_uncle_aunt_metadata(a, b):
 

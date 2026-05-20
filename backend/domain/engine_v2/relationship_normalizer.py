@@ -21,10 +21,10 @@ def normalize_path(path_steps):
 
     # BASIC RELATIONS
     if path_steps == ["parent"]:
-        return ["parent"]
+        return ["child"]
 
     if path_steps == ["child"]:
-        return ["child"]
+        return ["parent"]
 
     if path_steps == ["spouse"]:
         return ["spouse"]
@@ -59,26 +59,26 @@ def normalize_path(path_steps):
     if path_steps == ["parent", "parent", "child", "spouse"]:
         return ["nephew_niece"]       
 
-    # parent -> parent -> child = uncle_aunt
+    # parent -> parent -> child = source is nephew/niece of target
     if path_steps == ["parent", "parent", "child"]:
-        return ["uncle_aunt"]
-
-    # parent -> child -> child = nephew_niece
-    if path_steps == ["parent", "child", "child"]:
         return ["nephew_niece"]
+
+    # parent -> child -> child = source is uncle/aunt of target
+    if path_steps == ["parent", "child", "child"]:
+        return ["uncle_aunt"]
 
     # spouse -> parent -> child -> child
     # source is spouse of uncle/aunt of target
     if path_steps == ["spouse", "parent", "child", "child"]:
         return ["spouse_of_uncle_aunt"] 
     
-    # parent -> parent = grandparent
+    # parent -> parent = source is grandchild of target
     if path_steps == ["parent", "parent"]:
-        return ["grandparent"]
-
-    # child -> child = grandchild
-    if path_steps == ["child", "child"]:
         return ["grandchild"]
+
+    # child -> child = source is grandparent of target
+    if path_steps == ["child", "child"]:
+        return ["grandparent"]
     
 
     return ["unknown"]
