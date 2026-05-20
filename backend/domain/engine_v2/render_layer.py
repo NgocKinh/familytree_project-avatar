@@ -111,19 +111,35 @@ def get_uncle_aunt_call(side, gender, birth_a, birth_parent, region):
 # =====================================
 # 🔥 GRANDPARENT OUTPUT
 # =====================================
-
 def build_grandparent_output(metadata):
 
     side = metadata.get("side")
     gender = metadata.get("gender")
 
+    relation = render_grandparent(metadata)
+
     return {
-        "relation": render_grandparent(metadata),
+        "relation": relation,
         "relation_basic": "grandparent",
         "relation_side": side,
         "gender": gender,
-        "call": None
+        "call": {
+            "north": relation,
+            "south": relation
+        }
     }
+# def build_grandparent_output(metadata):
+
+#     side = metadata.get("side")
+#     gender = metadata.get("gender")
+
+#     return {
+#         "relation": render_grandparent(metadata),
+#         "relation_basic": "grandparent",
+#         "relation_side": side,
+#         "gender": gender,
+#         "call": None
+#     }
 
 # =====================================
 # 🔥 GRANDCHILD OUTPUT
@@ -134,12 +150,17 @@ def build_grandchild_output(metadata):
     side = metadata.get("side")
     gender = metadata.get("gender")
 
+    relation = render_grandchild(metadata)
+
     return {
-        "relation": render_grandchild(metadata),
+        "relation": relation,
         "relation_basic": "grandchild",
         "relation_side": side,
         "gender": gender,
-        "call": None
+        "call": {
+            "north": relation,
+            "south": relation
+        }
     }
 
 # =====================================
@@ -226,40 +247,55 @@ def build_standard_output(a, b, relation, path, metadata):
     # 🔥 LEVEL 2 — BASIC FAMILY LABEL
     # =====================================
 
-    if relation == "child":
-
-        gender = metadata["gender"]
-
-        return {
-            "relation": "con trai" if gender == "male" else "con gái",
-            "relation_basic": "child",
-            "relation_side": None,
-            "gender": gender,
-            "call": None
-        }
-
     if relation == "parent":
 
         gender = metadata["gender"]
 
+        relation_name = "cha" if gender == "male" else "mẹ"
+
         return {
-            "relation": "cha" if gender == "male" else "mẹ",
+            "relation": relation_name,
             "relation_basic": "parent",
             "relation_side": None,
             "gender": gender,
-            "call": None
+            "call": {
+                "north": relation_name,
+                "south": relation_name
+            }
+        }
+
+    if relation == "child":    
+
+        gender = metadata["gender"]
+
+        relation_name = "con trai" if gender == "male" else "con gái"
+
+        return {
+            "relation": relation_name,
+            "relation_basic": "child",
+            "relation_side": None,
+            "gender": gender,
+            "call": {
+                "north": relation_name,
+                "south": relation_name
+            }
         }
 
     if relation == "spouse":
 
         gender = metadata["gender"]
 
+        relation_name = "chồng" if gender == "male" else "vợ"
+
         return {
-            "relation": "chồng" if gender == "male" else "vợ",
+            "relation": relation_name,
             "relation_basic": "spouse",
             "relation_side": None,
             "gender": gender,
-            "call": None
+            "call": {
+                "north": relation_name,
+                "south": relation_name
+            }
         }
 
     # =====================================

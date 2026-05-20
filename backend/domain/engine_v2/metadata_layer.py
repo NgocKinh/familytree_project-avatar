@@ -335,7 +335,7 @@ def extract_grandparent_metadata(a, b, path):
 
         "side": side,
 
-        "gender": get_gender(b),
+        "gender": get_gender(a),
 
         "older": False
 
@@ -374,7 +374,7 @@ def extract_grandchild_metadata(a, b, path):
 
         "side": side,
 
-        "gender": get_gender(b),
+        "gender": get_gender(a),
 
         "older": True
 
@@ -526,7 +526,7 @@ def extract_sibling_metadata(a, b):
 
 def extract_nephew_niece_metadata(a, b):
 
-    gender = get_gender(b)
+    gender = get_gender(a)
 
     parents_b = get_parents(b)
 
