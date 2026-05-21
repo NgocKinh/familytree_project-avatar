@@ -67,7 +67,8 @@ class Person(Base):
     birth_date_precision = Column(
         Enum(DatePrecisionEnum), nullable=True, default=DatePrecisionEnum.unknown
     )
-
+    birth_order = Column(Integer, nullable=True)
+    
     death_date = Column(Date, nullable=True)
     death_date_precision = Column(
         Enum(DatePrecisionEnum), nullable=True, default=DatePrecisionEnum.unknown

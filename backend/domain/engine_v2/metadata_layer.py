@@ -40,7 +40,35 @@ def is_older(person_a_birth, person_b_birth):
         return False
 
     return person_a_birth < person_b_birth
+    
+def resolve_older_younger(person_a_id, person_b_id):
+    """
+    Return:
+    - True  -> person_a older than person_b
+    - False -> person_a younger than person_b
+    - None  -> not enough data / cannot determine
 
+    Priority:
+    1. birth year if both exist and different
+    2. birth_order if birth year missing or same
+    """
+
+    birth_a = get_birth(person_a_id)
+    birth_b = get_birth(person_b_id)
+
+    # 1. Có năm sinh và khác nhau -> dùng năm sinh
+    if birth_a is not None and birth_b is not None and birth_a != birth_b:
+        return birth_a < birth_b
+
+    order_a = get_birth_order(person_a_id)
+    order_b = get_birth_order(person_b_id)
+
+    # 2. Thiếu năm sinh hoặc trùng năm sinh -> dùng birth_order
+    if order_a is not None and order_b is not None and order_a != order_b:
+        return order_a < order_b
+
+    # 3. Không đủ dữ liệu
+    return None
 # =========================================================
 # DETECT SIDE
 # =========================================================
@@ -501,23 +529,11 @@ def extract_spouse_of_uncle_aunt_metadata(a, b, path):
 # =========================================================
 
 def extract_sibling_metadata(a, b):
-    order_a = get_birth_order(a)
-    order_b = get_birth_order(b)
-
-    if order_a is not None and order_b is not None:
-        older = order_a < order_b
-    else:
-        birth_a = get_birth(a)
-        birth_b = get_birth(b)
-
-        older = is_older(
-            birth_a,
-            birth_b
-        )
+    older = resolve_older_younger(a, b)
 
     return {
+        "gender": get_gender(a),
         "older": older,
-        "gender": get_gender(a)
     }
 
 # =========================================================

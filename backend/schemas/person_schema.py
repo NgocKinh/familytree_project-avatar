@@ -56,6 +56,7 @@ class PersonBase(BaseModel):
 
     birth_date: Optional[date] = None
     birth_date_precision: Optional[str] = None
+    birth_order: Optional[int] = None
 
     death_date: Optional[date] = None
     death_date_precision: Optional[str] = None
@@ -139,13 +140,13 @@ class PersonBasicResponse(BaseModel):
     gender: Optional[str]
 
     birth_date: Optional[date]
+    birth_order: Optional[int]
     death_date: Optional[date]
 
     avatar: Optional[str]
 
     class Config:
         from_attributes = True
-
 
 # ==========================================================
 # RESPONSE - DETAIL ⭐ (ADD NEW)
@@ -162,6 +163,7 @@ class PersonDetailResponse(BaseModel):
     # Basic
     gender: Optional[str]
     birth_date: Optional[date]
+    birth_order: Optional[int]
     birth_date_precision: Optional[str]
 
     death_date: Optional[date]

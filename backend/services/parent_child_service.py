@@ -232,7 +232,6 @@ def assign_parent_clean(db: Session, child_id: int, parent_id: int, ptype: str):
 
     return pc
 
-
 # ==========================================================
 # 🔹 DELETE
 # ==========================================================
