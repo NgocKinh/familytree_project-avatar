@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../api/apiConfig";
 import PersonDropdown from "../common/PersonDropdown";
@@ -33,21 +33,25 @@ function AssignParentForm() {
   const [hasMother, setHasMother] = useState(false);
   const [lockForm, setLockForm] = useState(false);
   const [birthConflictWarning, setBirthConflictWarning] = useState("");
+  const [showBirthOrderPanel, setShowBirthOrderPanel] = useState(false);
+  const [birthOrderRows, setBirthOrderRows] = useState([]);
+  const [birthOrderLoading, setBirthOrderLoading] = useState(false);
+  const birthOrderPanelRef = useRef(null);
   useEffect(() => {
     axios.get(`${API_BASE_URL}/person`)
       .then(res => {
         const data = res.data || [];
-  
+
         // ✅ [CHANGE 1]: chuẩn hóa name để dropdown không bị undefined
         const normalized = data.map(p => ({
           ...p,
           name: formatName(p)
         }));
-  
+
         setPersons(normalized);
       })
       .catch(() => setPersons([]));
-  
+
     axios.get(`${API_BASE_URL}/marriage`)
       .then(res => setMarriages(res.data || []))
       .catch(() => setMarriages([]));
@@ -74,22 +78,34 @@ function AssignParentForm() {
   };
   const checkBirthConflict = async (childId) => {
     try {
-  
+
       const childRes = await axios.get(
         `${API_BASE_URL}/person/${childId}`
       );
-  
+
       const siblingsRes = await axios.get(
         `${API_BASE_URL}/parent_child/child/${childId}/siblings`
       );
-  
+
       const child = childRes.data;
       const siblings = siblingsRes.data || [];
-  
+      console.log("BO CHECK siblings:", siblings);
+      const hasBirthOrder = (p) =>
+        Number.isInteger(p.birth_order) &&
+        p.birth_order > 0;
+      
+      const missingBirthOrder = (people) =>
+        people.some(p => !hasBirthOrder(p));
+
       // CASE 1: không có ngày sinh
       if (!child.birth_date) {
 
         if (siblings.length === 0) {
+          setBirthConflictWarning("");
+          return;
+        }
+      
+        if (!missingBirthOrder([child, ...siblings])) {
           setBirthConflictWarning("");
           return;
         }
@@ -100,21 +116,27 @@ function AssignParentForm() {
       
         return;
       }
-  
+
       // CASE 2: có sibling trùng ngày sinh
       const getBirthYear = (birthDate) => {
         if (!birthDate) return null;
         return String(birthDate).slice(0, 4);
       };
-      
       const childBirthYear = getBirthYear(child.birth_date);
-      
-      const hasSameBirthYear = siblings.some((s) => {
+      const sameYearSiblings = siblings.filter((s) => {
         const siblingBirthYear = getBirthYear(s.birth_date);
         return siblingBirthYear && siblingBirthYear === childBirthYear;
       });
+      console.log("childBirthYear:", childBirthYear);
+      console.log("sameYearSiblings:", sameYearSiblings);
+      console.log("child:", child);
+      console.log("siblings:", siblings);
+      if (sameYearSiblings.length > 0) {
       
-      if (hasSameBirthYear) {
+        if (!missingBirthOrder([child, ...sameYearSiblings])) {
+          setBirthConflictWarning("");
+          return;
+        }
       
         setBirthConflictWarning(
           "⚠ Có anh/chị/em trùng năm sinh. Vui lòng nhập Birth Order để xác định thứ tự sinh."
@@ -122,15 +144,56 @@ function AssignParentForm() {
       
         return;
       }
-  
       // KHÔNG conflict
       setBirthConflictWarning("");
-  
+
     } catch (err) {
-  
+
       console.error("Birth conflict check error:", err);
-  
+
       setBirthConflictWarning("");
+    }
+  };
+  const openBirthOrderPanel = async () => {
+
+    if (!childId) return;
+
+    try {
+
+      setBirthOrderLoading(true);
+
+      const res = await axios.get(
+        `${API_BASE_URL}/parent_child/child/${childId}/siblings`
+      );
+
+      const siblings = res.data || [];
+
+      const childRes = await axios.get(
+        `${API_BASE_URL}/person/${childId}`
+      );
+
+      const child = childRes.data;
+      console.log("BO CHECK child:", child);
+      setBirthOrderRows([
+        child,
+        ...siblings
+      ]);
+
+      setShowBirthOrderPanel(true);
+      setTimeout(() => {
+        birthOrderPanelRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      }, 100);
+    } catch (err) {
+
+      console.error("Open BO panel error:", err);
+
+    } finally {
+
+      setBirthOrderLoading(false);
+
     }
   };
   // -----------------------------
@@ -172,20 +235,20 @@ function AssignParentForm() {
           setError("❌ Không tìm thấy hôn nhân.");
           return;
         }
-        try {  
-        // CHA
-        await axios.post(`${API_BASE_URL}/parent_child/assign`, {
-          child_id: Number(childId),
-          parent_id: m.spouse_a_id,
-          type: "father"
-        });
-        // MẸ
-        await axios.post(`${API_BASE_URL}/parent_child/assign`, {
-          child_id: Number(childId),
-          parent_id: m.spouse_b_id,
-          type: "mother"
-        });
-      } catch (err) {
+        try {
+          // CHA
+          await axios.post(`${API_BASE_URL}/parent_child/assign`, {
+            child_id: Number(childId),
+            parent_id: m.spouse_a_id,
+            type: "father"
+          });
+          // MẸ
+          await axios.post(`${API_BASE_URL}/parent_child/assign`, {
+            child_id: Number(childId),
+            parent_id: m.spouse_b_id,
+            type: "mother"
+          });
+        } catch (err) {
           console.error("❌ BACKEND ERROR:", err.response?.data);
           setError(err.response?.data?.detail || "Lỗi hệ thống");
           return;
@@ -204,7 +267,7 @@ function AssignParentForm() {
 
     } catch (err) {
       console.error("❌ ASSIGN ERROR:", err.response?.data || err);
-    
+
       setError(
         err.response?.data?.detail ||
         err.response?.data?.error ||
@@ -223,7 +286,21 @@ function AssignParentForm() {
       {success && <div className="text-green-600 mb-2">{success}</div>}
       {birthConflictWarning && (
         <div className="text-yellow-700 bg-yellow-100 p-2 rounded mb-2">
-          {birthConflictWarning}
+
+          <div className="flex flex-col gap-2">
+
+            <span>{birthConflictWarning}</span>
+
+            <button
+              type="button"
+              onClick={openBirthOrderPanel}
+              className="w-fit px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+            >
+              Cập nhật Birth Order
+            </button>
+
+          </div>
+
         </div>
       )}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -371,10 +448,10 @@ function AssignParentForm() {
                 disabled={lockForm}
                 filterFn={(p) => {
                   const t = (type || "").toLowerCase();
-                
+
                   if (t === "father") return p.gender === "male";
                   if (t === "mother") return p.gender === "female";
-                
+
                   return false;
                 }}
                 placeholder="-- chọn --"
@@ -406,25 +483,112 @@ function AssignParentForm() {
             ❌ Hủy
           </button>
 
-        {/* 🔵 [CHANGE]: Ẩn Lưu khi đã lockForm (đã lưu xong) */}
-        {!lockForm && (
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-600 text-white rounded"
-          >
-            💾 Lưu
-          </button>
-        )}
+          {/* 🔵 [CHANGE]: Ẩn Lưu khi đã lockForm (đã lưu xong) */}
+          {!lockForm && (
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-600 text-white rounded"
+            >
+              💾 Lưu
+            </button>
+          )}
           {lockForm && (
-          <button
-            type="button"
-            onClick={() => navigate("/")}
-            className="px-4 py-2 bg-gray-600 text-white rounded"
-          >
-            ⬅ Quay về Home
-          </button>
-        )}
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="px-4 py-2 bg-gray-600 text-white rounded"
+            >
+              ⬅ Quay về Home
+            </button>
+          )}
         </div>
+        {showBirthOrderPanel && (
+          <div
+            ref={birthOrderPanelRef}
+            className="mt-4 border rounded p-4 bg-gray-50"
+          >
+
+            <h3 className="font-bold mb-4">
+              Cập nhật Birth Order
+            </h3>
+
+            <div className="space-y-2">
+
+              {birthOrderRows.map((p) => (
+
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between gap-4"
+                >
+
+                  <div className="flex-1">
+                  {displayName(
+                    p.name ||
+                    p.full_name ||
+                    p.fullname ||
+                    [p.sur_name, p.last_name, p.middle_name, p.first_name]
+                      .filter(Boolean)
+                      .join(" ")
+                  )}
+                  </div>
+
+                  <div className="flex-1 text-sm text-gray-600">
+                    {p.birth_date || "Chưa có ngày sinh"}
+                  </div>
+
+                  <input
+                    type="number"
+                    min={1}
+                    value={p.birth_order || ""}
+                    onChange={(e) => {
+
+                      const value = e.target.value;
+
+                      setBirthOrderRows(rows =>
+                        rows.map(r =>
+                          r.id === p.id
+                            ? {
+                              ...r,
+                              birth_order:
+                                value === ""
+                                  ? null
+                                  : Number(value)
+                            }
+                            : r
+                        )
+                      );
+
+                    }}
+                    className="w-24 border rounded p-1"
+                    placeholder="BO"
+                  />
+
+                </div>
+              ))}
+
+            </div>
+
+            <div className="flex gap-2 mt-4">
+
+              <button
+                type="button"
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+              >
+                💾 Lưu BO
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowBirthOrderPanel(false)}
+                className="px-4 py-2 bg-gray-500 text-white rounded"
+              >
+                Đóng
+              </button>
+
+            </div>
+
+          </div>
+        )}
       </form >
     </div >
   );
