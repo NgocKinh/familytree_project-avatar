@@ -32,6 +32,7 @@ function AssignParentForm() {
   const [hasFather, setHasFather] = useState(false);
   const [hasMother, setHasMother] = useState(false);
   const [lockForm, setLockForm] = useState(false);
+  const [birthConflictWarning, setBirthConflictWarning] = useState("");
   useEffect(() => {
     axios.get(`${API_BASE_URL}/person`)
       .then(res => {
@@ -71,7 +72,67 @@ function AssignParentForm() {
       setLockForm(true);
     }
   };
+  const checkBirthConflict = async (childId) => {
+    try {
+  
+      const childRes = await axios.get(
+        `${API_BASE_URL}/person/${childId}`
+      );
+  
+      const siblingsRes = await axios.get(
+        `${API_BASE_URL}/parent_child/child/${childId}/siblings`
+      );
+  
+      const child = childRes.data;
+      const siblings = siblingsRes.data || [];
+  
+      // CASE 1: không có ngày sinh
+      if (!child.birth_date) {
 
+        if (siblings.length === 0) {
+          setBirthConflictWarning("");
+          return;
+        }
+      
+        setBirthConflictWarning(
+          "⚠ Người con này chưa có ngày sinh và đã có anh/chị/em trong gia đình. Nên nhập Birth Order để xác định anh/chị/em."
+        );
+      
+        return;
+      }
+  
+      // CASE 2: có sibling trùng ngày sinh
+      const getBirthYear = (birthDate) => {
+        if (!birthDate) return null;
+        return String(birthDate).slice(0, 4);
+      };
+      
+      const childBirthYear = getBirthYear(child.birth_date);
+      
+      const hasSameBirthYear = siblings.some((s) => {
+        const siblingBirthYear = getBirthYear(s.birth_date);
+        return siblingBirthYear && siblingBirthYear === childBirthYear;
+      });
+      
+      if (hasSameBirthYear) {
+      
+        setBirthConflictWarning(
+          "⚠ Có anh/chị/em trùng năm sinh. Vui lòng nhập Birth Order để xác định thứ tự sinh."
+        );
+      
+        return;
+      }
+  
+      // KHÔNG conflict
+      setBirthConflictWarning("");
+  
+    } catch (err) {
+  
+      console.error("Birth conflict check error:", err);
+  
+      setBirthConflictWarning("");
+    }
+  };
   // -----------------------------
   // SUBMIT
   // -----------------------------
@@ -160,7 +221,11 @@ function AssignParentForm() {
 
       {error && <div className="text-red-600 mb-2">{error}</div>}
       {success && <div className="text-green-600 mb-2">{success}</div>}
-
+      {birthConflictWarning && (
+        <div className="text-yellow-700 bg-yellow-100 p-2 rounded mb-2">
+          {birthConflictWarning}
+        </div>
+      )}
       <form onSubmit={handleSubmit} className="space-y-4">
 
         {/* ================================================= */}
@@ -181,6 +246,7 @@ function AssignParentForm() {
 
               if (!id) return;
               checkParentStatus(id);
+              checkBirthConflict(id);
             }}
             persons={persons}
             placeholder="-- chọn người con --"

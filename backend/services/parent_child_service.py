@@ -140,7 +140,47 @@ def get_child_parents_status(db: Session, child_id: int):
         "father": father,
         "mother": mother
     }
+# ==========================================================
+# 🔹 GET CHILD SIBLINGS
+# ==========================================================
+def get_child_siblings(db: Session, child_id: int):
+    # Lấy parent của child hiện tại
+    parent_rows = db.query(ParentChild).filter(
+        ParentChild.child_id == child_id
+    ).all()
 
+    parent_ids = [row.parent_id for row in parent_rows]
+
+    if not parent_ids:
+        return []
+
+    # Lấy các child khác có cùng cha/mẹ
+    sibling_rows = db.query(ParentChild).filter(
+        ParentChild.parent_id.in_(parent_ids),
+        ParentChild.child_id != child_id
+    ).all()
+
+    sibling_ids = list({row.child_id for row in sibling_rows})
+
+    if not sibling_ids:
+        return []
+
+    siblings = db.query(Person).filter(
+        Person.id.in_(sibling_ids),
+        Person.delete_status == 0
+    ).all()
+
+    return [
+        {
+            "id": p.id,
+            "person_id": p.id,
+            "full_name": p.full_name,
+            "gender": p.gender,
+            "birth_date": str(p.birth_date) if p.birth_date else None,
+            "birth_order": p.birth_order,
+        }
+        for p in siblings
+    ]
 # ==========================================================
 # 🔹 ASSIGN PARENT
 # ==========================================================

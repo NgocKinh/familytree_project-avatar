@@ -6,6 +6,7 @@ from backend.services.parent_child_service import (
     get_all_parent_child,
     get_one_parent_child,
     get_child_parents_status,
+    get_child_siblings,
     assign_parent_clean,
     delete_parent_child
 )
@@ -44,6 +45,12 @@ def get_one(rid: int, db: Session = Depends(get_db)):
 def get_parents_status(child_id: int, db: Session = Depends(get_db)):
     return get_child_parents_status(db, child_id)
 
+# ==========================================================
+# 🔹 GET CHILD SIBLINGS
+# ==========================================================
+@router.get("/child/{child_id}/siblings")
+def get_siblings_of_child(child_id: int, db: Session = Depends(get_db)):
+    return get_child_siblings(db, child_id)
 
 # ==========================================================
 # 🔹 ASSIGN PARENT

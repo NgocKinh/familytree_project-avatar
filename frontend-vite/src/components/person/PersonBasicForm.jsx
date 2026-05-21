@@ -45,6 +45,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
     first_name: "",
     gender: "",
     birth_date: "",
+    birth_order: "",
     death_date: "",
     birth_date_precision: "unknown",
     death_date_precision: "unknown",
@@ -66,6 +67,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
       first_name: "",
       gender: "",
       birth_date: "",
+      birth_order: "",
       death_date: "",
       birth_date_precision: "unknown",
       death_date_precision: "unknown",
@@ -100,6 +102,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
           data.birth_date,
           data.birth_date_precision
         ),
+        birth_order: data.birth_order || "",
         death_date: formatDateVN(
           data.death_date,
           data.death_date_precision
@@ -188,6 +191,9 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
       birth_date: parseVNDate(form.birth_date),
       death_date: parseVNDate(form.death_date),
       birth_date_precision: detectPrecision(form.birth_date),
+      birth_order: form.birth_order
+        ? Number(form.birth_order)
+        : null,
       death_date_precision: detectPrecision(form.death_date),
       role,
     };
@@ -338,7 +344,28 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
             className="border p-2 w-full"
           />
         </div>
+        {/* Optional Birth Order */}
+        {!form.birth_date && (
+          <div className="mb-2">
+            <label>🔢 Thứ tự sinh (Birth Order):</label>
 
+            <input
+              autoComplete="off"
+              type="number"
+              min="1"
+              name="birth_order"
+              value={form.birth_order || ""}
+              onChange={handleChange}
+              className="border p-2 w-full"
+              placeholder="1 = anh/chị lớn nhất"
+            />
+
+            <p className="text-xs text-gray-500 mt-1">
+              Chỉ dùng khi không có ngày sinh
+              hoặc anh/chị/em trùng ngày sinh.
+            </p>
+          </div>
+        )}
         <div className="mb-2">
           <label>🕯 Ngày mất:</label>
           <input
