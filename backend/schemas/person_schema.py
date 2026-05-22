@@ -206,3 +206,10 @@ class PersonDetailResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+class BirthOrderUpdateItem(BaseModel):
+    person_id: int
+    birth_order: Optional[int] = None
+
+class BirthOrderBulkUpdate(BaseModel):
+    items: List[BirthOrderUpdateItem]

@@ -104,7 +104,11 @@ def detect_side(path):
 def detect_older(source_person, target_person):
 
     """
-    Compare birth year
+    Priority:
+
+    1. birth_year
+    2. birth_order fallback
+
     True  -> source older
     False -> source younger
     """
@@ -112,10 +116,36 @@ def detect_older(source_person, target_person):
     birth_a = source_person.get("birth_year")
     birth_b = target_person.get("birth_year")
 
-    if birth_a is None or birth_b is None:
-        return None
+    # =====================================================
+    # CASE 1: có đủ năm sinh và KHÁC năm
+    # =====================================================
 
-    return birth_a < birth_b
+    if (
+        birth_a is not None and
+        birth_b is not None and
+        birth_a != birth_b
+    ):
+        return birth_a < birth_b
+
+    # =====================================================
+    # CASE 2: fallback sang birth_order
+    # =====================================================
+
+    bo_a = source_person.get("birth_order")
+    bo_b = target_person.get("birth_order")
+
+    if (
+        bo_a is not None and
+        bo_b is not None and
+        bo_a != bo_b
+    ):
+        return bo_a < bo_b
+
+    # =====================================================
+    # KHÔNG ĐỦ DỮ LIỆU
+    # =====================================================
+
+    return None
 
 
 # =========================================================

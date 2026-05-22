@@ -111,7 +111,7 @@ function AssignParentForm() {
         }
       
         setBirthConflictWarning(
-          "⚠ Người con này chưa có ngày sinh và đã có anh/chị/em trong gia đình. Nên nhập Birth Order để xác định anh/chị/em."
+          "⚠ Người con này chưa có ngày sinh và đã có anh/chị/em trong gia đình. Vui lòng bấm Cập nhập Birth Order để xác định anh/chị/em."
         );
       
         return;
@@ -139,7 +139,7 @@ function AssignParentForm() {
         }
       
         setBirthConflictWarning(
-          "⚠ Có anh/chị/em trùng năm sinh. Vui lòng nhập Birth Order để xác định thứ tự sinh."
+          "⚠ Có anh/chị/em trùng năm sinh. Vui lòng bấm nút Cập nhập Birth Order để xác định thứ tự sinh."
         );
       
         return;
@@ -174,10 +174,45 @@ function AssignParentForm() {
 
       const child = childRes.data;
       console.log("BO CHECK child:", child);
-      setBirthOrderRows([
+      const rows = [
         child,
         ...siblings
-      ]);
+      ].sort((a, b) => {
+      
+        // 1. sort theo BO
+        const boA = a.birth_order ?? 9999;
+        const boB = b.birth_order ?? 9999;
+      
+        if (boA !== boB) {
+          return boA - boB;
+        }
+      
+        // 2. sort theo birth_date
+        const dateA = a.birth_date || "";
+        const dateB = b.birth_date || "";
+      
+        if (dateA !== dateB) {
+          return dateA.localeCompare(dateB);
+        }
+      
+        // 3. sort theo tên
+        const nameA = displayName(
+          a.name ||
+          a.full_name ||
+          `${a.sur_name || ""} ${a.last_name || ""} ${a.middle_name || ""} ${a.first_name || ""}`.trim()
+        );
+      
+        const nameB = displayName(
+          b.name ||
+          b.full_name ||
+          `${b.sur_name || ""} ${b.last_name || ""} ${b.middle_name || ""} ${b.first_name || ""}`.trim()
+        );
+      
+        return nameA.localeCompare(nameB);
+      
+      });
+      
+      setBirthOrderRows(rows);
 
       setShowBirthOrderPanel(true);
       setTimeout(() => {
@@ -194,6 +229,44 @@ function AssignParentForm() {
 
       setBirthOrderLoading(false);
 
+    }
+  };
+  const hasDuplicateBirthOrder = () => {
+
+    const values = birthOrderRows
+      .map(p => p.birth_order)
+      .filter(v => v !== null && v !== undefined && v !== "");
+  
+    return new Set(values).size !== values.length;
+  
+  };
+  const saveBirthOrders = async () => {
+    if (hasDuplicateBirthOrder()) {
+      setError("❌ Birth Order không được trùng nhau trong cùng nhóm anh/chị/em.\n Sửa BO hoặc chọn thao tác khác");
+      return;
+    }
+    try {
+  
+      await axios.put(
+        `${API_BASE_URL}/person/birth-order/bulk`,
+        {
+          items: birthOrderRows.map((p) => ({
+            person_id: p.id || p.person_id,
+            birth_order: p.birth_order
+          }))
+        }
+      );
+  
+      await checkBirthConflict(childId);
+  
+      setShowBirthOrderPanel(false);
+  
+    } catch (err) {
+  
+      console.error("Save BO error:", err);
+  
+      setError("❌ Không lưu được Birth Order");
+  
     }
   };
   // -----------------------------
@@ -282,7 +355,6 @@ function AssignParentForm() {
   return (
     <div className="max-w-xl mx-auto p-4 bg-white shadow rounded">
 
-      {error && <div className="text-red-600 mb-2">{error}</div>}
       {success && <div className="text-green-600 mb-2">{success}</div>}
       {birthConflictWarning && (
         <div className="text-yellow-700 bg-yellow-100 p-2 rounded mb-2">
@@ -502,6 +574,11 @@ function AssignParentForm() {
             </button>
           )}
         </div>
+        {error && (
+          <div className="text-red-600 mb-2 whitespace-pre-line">
+            {error}
+          </div>
+        )}
         {showBirthOrderPanel && (
           <div
             ref={birthOrderPanelRef}
@@ -541,7 +618,7 @@ function AssignParentForm() {
                     min={1}
                     value={p.birth_order || ""}
                     onChange={(e) => {
-
+                      setError("");
                       const value = e.target.value;
 
                       setBirthOrderRows(rows =>
@@ -568,24 +645,25 @@ function AssignParentForm() {
 
             </div>
 
-            <div className="flex gap-2 mt-4">
+              <div className="flex gap-2 mt-4">
 
-              <button
-                type="button"
-                className="px-4 py-2 bg-blue-600 text-white rounded"
-              >
-                💾 Lưu BO
-              </button>
+                <button
+                  type="button"
+                  onClick={saveBirthOrders}
+                  className="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600"
+                >
+                  💾 Lưu BO
+                </button>
 
-              <button
-                type="button"
-                onClick={() => setShowBirthOrderPanel(false)}
-                className="px-4 py-2 bg-gray-500 text-white rounded"
-              >
-                Đóng
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setShowBirthOrderPanel(false)}
+                  className="px-4 py-2 bg-gray-500 text-white rounded"
+                >
+                  Đóng
+                </button>
 
-            </div>
+              </div>
 
           </div>
         )}

@@ -6,7 +6,7 @@
 //   - Giữ nguyên filter/tab/delete/sort
 // ======================================================
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAvatarURL, handleAvatarError } from "../utils/avatarEngine";
 import {
@@ -25,6 +25,12 @@ export default function PersonList({ role }) {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("active"); 
   const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [highlightIds, setHighlightIds] = useState([]);
+  const [searchResultCount, setSearchResultCount] = useState(0);
+  const [searchMatchIds, setSearchMatchIds] = useState([]);
+  const [searchCurrentIndex, setSearchCurrentIndex] = useState(0);
+  const rowRefs = useRef({});
   // ✅ [CHANGE 1]: Chuẩn hóa ID vì backend có lúc trả id, có lúc trả person_id
   const getPersonId = (person) => person?.person_id ?? person?.id;
   // 🔵 [ADDED]: Quyền xem ID
@@ -59,7 +65,47 @@ export default function PersonList({ role }) {
       },
     });
   const handleViewTree = (id) => navigate(`/tree/${id}`);
+  const handleSearchJump = () => {
+    const keyword = searchTerm.trim().toLowerCase();
+  
+    if (!keyword) return;
+  
+    const matches = sortedPersons.filter((p) =>
+      formatName(p, { mode: "full", showAlias: true })
+        .toLowerCase()
+        .includes(keyword)
+    );
+    
+    if (matches.length === 0) {
+      alert("Không tìm thấy thành viên phù hợp.");
+      return;
+    }
+    
+    const ids = matches.map((p) => getPersonId(p));
+    setSearchResultCount(matches.length);
+    setSearchMatchIds(ids);
+    setSearchCurrentIndex(0);
+    setHighlightIds(ids);
+    
+  };
+  const handleShowNextSearchResult = () => {
 
+    if (searchMatchIds.length === 0) return;
+  
+    const id = searchMatchIds[searchCurrentIndex];
+  
+    setHighlightIds([id]);
+  
+    rowRefs.current[id]?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  
+    setSearchCurrentIndex((prev) =>
+      prev + 1 >= searchMatchIds.length ? 0 : prev + 1
+    );
+  
+  };
   const handleSoftDelete = async (id) => {
 
     if (!window.confirm("Bạn có chắc muốn Ẩn tạm người này?")) {
@@ -127,30 +173,89 @@ export default function PersonList({ role }) {
     <div className="p-4">
       {loading && <div className="mb-2 text-blue-500">⏳ Đang tải dữ liệu...</div>}
       {/* TAB */}
-      <div className="flex gap-4 mb-4">
-        <button
-          className={`px-4 py-2 rounded-lg ${
-            activeTab === "active"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 hover:bg-gray-300"
-          }`}
-          onClick={() => setActiveTab("active")}
-        >
-          🟢 Hoạt động
-        </button>
+      <div className="flex items-center justify-between mb-4">
 
-        <button
-          className={`px-4 py-2 rounded-lg ${
-            activeTab === "hidden"
-              ? "bg-yellow-600 text-white"
-              : "bg-gray-200 hover:bg-gray-300"
-          }`}
-          onClick={() => setActiveTab("hidden")}
-        >
-          🟡 Đã Ẩn Tạm
-        </button>
+        <div className="flex gap-4">
+
+          <button
+            className={`px-4 py-2 rounded ${
+              activeTab === "active"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-200"
+            }`}
+            onClick={() => setActiveTab("active")}
+          >
+            🟢 Hoạt động
+          </button>
+
+          <button
+            className={`px-4 py-2 rounded ${
+              activeTab === "hidden"
+                ? "bg-yellow-500 text-white"
+                : "bg-gray-200"
+            }`}
+            onClick={() => setActiveTab("hidden")}
+          >
+            🟡 Đã Ẩn tạm
+          </button>
+
+        </div>
+
+        <div className="flex items-center gap-3">
+
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleSearchJump();
+              }
+            }}
+            placeholder="Tìm theo họ tên..."
+            className="border rounded px-3 py-2 w-[420px]"
+          />
+
+          <button
+            type="button"
+            onClick={handleSearchJump}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            🔍 Tìm
+          </button>
+
+          {searchResultCount > 0 && (
+            <>
+              <span className="text-sm text-green-700">
+                {searchResultCount} kết quả
+              </span>
+
+              <button
+                type="button"
+                onClick={handleShowNextSearchResult}
+                className="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+              >
+                Hiển thị
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setSearchResultCount(0);
+                  setSearchMatchIds([]);
+                  setHighlightIds([]);
+                }}
+                className="px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Thoát
+              </button>
+            </>
+          )}
+
+        </div>
+
       </div>
-      
       {/* TABLE */}
       <table className="min-w-full border border-gray-300">
         <thead className="bg-gray-100">
@@ -181,7 +286,15 @@ export default function PersonList({ role }) {
             </tr>
           ) : (
             sortedPersons.map((p) => (
-              <tr key={getPersonId(p)} className="border-t hover:bg-gray-50">
+              <tr
+                key={getPersonId(p)}
+                ref={(el) => {
+                  rowRefs.current[getPersonId(p)] = el;
+                }}
+                className={`border-t hover:bg-gray-50 scroll-mt-40 ${
+                  highlightIds.includes(getPersonId(p)) ? "bg-yellow-100" : ""
+                }`}
+              >
                 <td className="px-4 py-2 text-center">
                   <img
                     src={getAvatarURL({

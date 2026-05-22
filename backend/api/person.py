@@ -22,6 +22,9 @@ from backend.schemas.person_schema import (
     PersonDetailResponse,
     PersonCreate
 )
+from backend.schemas.person_schema import (
+    BirthOrderBulkUpdate
+)
 router = APIRouter(tags=["Person"])
 
 # ==========================================================
@@ -215,8 +218,12 @@ def get_person_orm(pid: int, db: Session = Depends(get_db)):
         "middle_name": person.middle_name,
         "first_name": person.first_name,
         "gender": person.gender,
+
         "birth_date": str(person.birth_date) if person.birth_date else None,
+        "birth_order": person.birth_order,
+
         "death_date": str(person.death_date) if person.death_date else None,
+
         "birth_date_precision": person.birth_date_precision,
         "death_date_precision": person.death_date_precision
     }
@@ -243,7 +250,32 @@ def delete_person(person_id: int, db: Session = Depends(get_db)):
         return {"message": "Deleted"}
     except NotFoundError as e:
         raise HTTPException(status_code=404, detail=e.message)
+# ==========================================================
+# BULK UPDATE BIRTH ORDER
+# ==========================================================
+@router.put("/birth-order/bulk")
+def update_birth_order_bulk(
+    payload: BirthOrderBulkUpdate,
+    db: Session = Depends(get_db)
+):
 
+    for item in payload.items:
+
+        person = db.query(Person).filter(
+            Person.id == item.person_id
+        ).first()
+
+        if not person:
+            continue
+
+        person.birth_order = item.birth_order
+
+    db.commit()
+
+    return {
+        "success": True,
+        "message": "Birth Order updated successfully"
+    }
 # ==========================================================
 # CHECK DUPLICATE
 # ==========================================================
