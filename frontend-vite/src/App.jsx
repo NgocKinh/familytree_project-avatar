@@ -47,6 +47,7 @@ function AppContent() {
   const hideNavbarRoutes = [
     "/person",
     "/parent_child",
+    "/marriage",
   ];
   
   const shouldHideNavbar =

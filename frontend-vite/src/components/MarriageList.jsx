@@ -32,6 +32,8 @@ export default function MarriageList({ onEdit }) {
   const [showSurName, setShowSurName] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
   const [message, setMessage] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
 
   // ================================================================
   // LOAD
@@ -86,40 +88,99 @@ export default function MarriageList({ onEdit }) {
   };
 
   // ================================================================
+  // SEARCH / FILTER
+  // ================================================================
+  const normalizedSearch = activeSearch.trim().toLowerCase();
+  
+  const filteredMarriages = marriages.filter((m) => {
+    if (!normalizedSearch) return true;
+  
+    const text = [
+      renderPersonName(m.spouse_a, m.spouse_a_name),
+      renderPersonName(m.spouse_b, m.spouse_b_name),
+      formatDateVN(m.start_date),
+      formatDateVN(m.end_date),
+      m.status,
+      m.priority,
+    ]
+      .join(" ")
+      .toLowerCase();
+  
+    return text.includes(normalizedSearch);
+  });
+  
+  // ================================================================
   // UI
   // ================================================================
   return (
-    <div className="bg-white p-4 rounded-xl shadow border">
-      <h3 className="text-xl font-bold text-blue-600 mb-4 text-center">
-        📋 Danh Sách Quan Hệ Hôn Nhân
-      </h3>
-
-      {/* Bộ lọc */}
-      <div className="flex flex-wrap justify-center gap-4 mb-4">
-        <div className="flex items-center gap-2">
-          <span className="text-gray-700 font-medium">Kiểu hiển thị tên:</span>
-          <select
-            value={mode}
-            onChange={(e) => setMode(e.target.value)}
-            className="border p-2 rounded"
-          >
-            <option value="full">Đầy đủ</option>
-            <option value="short">Rút gọn</option>
-          </select>
-        </div>
-
-        <label className="flex items-center gap-2 cursor-pointer">
+    <div className="bg-white p-0 rounded-xl shadow border">
+      <div className="sticky top-[56px] z-40 bg-white border rounded-xl shadow-sm p-1 mb-0">
+        <h3 className="text-xl font-bold text-blue-600 mb-2 text-center">
+          📋 Danh Sách Hôn Nhân
+        </h3>
+  
+        <div className="flex flex-wrap justify-center items-center gap-3">
           <input
-            type="checkbox"
-            checked={showSurName}
-            onChange={() => setShowSurName(!showSurName)}
-            className="w-4 h-4 accent-blue-600"
+            type="text"
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") setActiveSearch(searchText);
+            }}
+            placeholder="Nhập tên, ngày, trạng thái..."
+            className="border rounded px-3 py-2 w-72"
           />
-          <span className="font-medium text-gray-700">Tên hiệu</span>
-        </label>
+  
+          <button
+            onClick={() => setActiveSearch(searchText)}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+          >
+            🔍 Tìm kiếm
+          </button>
+  
+          {activeSearch && (
+            <button
+              onClick={() => {
+                setSearchText("");
+                setActiveSearch("");
+              }}
+              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+            >
+              🚪 Thoát
+            </button>
+          )}
+  
+          <div className="flex items-center gap-2">
+            <span className="text-gray-700 font-medium">Kiểu hiển thị tên:</span>
+            <select
+              value={mode}
+              onChange={(e) => setMode(e.target.value)}
+              className="border p-2 rounded"
+            >
+              <option value="full">Đầy đủ</option>
+              <option value="short">Rút gọn</option>
+            </select>
+          </div>
+  
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showSurName}
+              onChange={() => setShowSurName(!showSurName)}
+              className="w-4 h-4 accent-blue-600"
+            />
+            <span className="font-medium text-gray-700">Tên hiệu</span>
+          </label>
+        </div>
+  
+        {activeSearch && (
+          <p className="text-center text-sm text-gray-600 mt-2">
+            Tìm thấy {filteredMarriages.length} kết quả cho:{" "}
+            <span className="font-semibold text-blue-600">{activeSearch}</span>
+          </p>
+        )}
       </div>
-
-      {/* Thông báo */}
+  
       {message && (
         <p
           className={`text-center font-semibold mb-2 ${
@@ -129,102 +190,102 @@ export default function MarriageList({ onEdit }) {
           {message}
         </p>
       )}
-
-      {/* Bảng */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full border text-sm text-center">
-          <thead className="bg-blue-50">
-            <tr>
-              <th className="border p-2">#</th>
-              <th className="border p-2">Người thứ nhất</th>
-              <th className="border p-2">Người thứ hai</th>
-              <th className="border p-2">Ngày bắt đầu</th>
-              <th className="border p-2">Ngày kết thúc</th>
-              <th className="border p-2">Trạng thái</th>
-              <th className="border p-2">Ưu tiên</th>
-              <th className="border p-2">Thao tác</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {marriages.length === 0 ? (
+  
+        <div className="overflow-x-auto">
+          <table className="min-w-full border text-sm text-center">
+            <thead className="bg-blue-50 sticky top-[0px] z-30">
               <tr>
-                <td colSpan="8" className="p-4 text-gray-500">
-                  Không có dữ liệu
-                </td>
+                <th className="border p-2">#</th>
+                <th className="border p-2">Người thứ nhất</th>
+                <th className="border p-2">Người thứ hai</th>
+                <th className="border p-2">Ngày bắt đầu</th>
+                <th className="border p-2">Ngày kết thúc</th>
+                <th className="border p-2">Trạng thái</th>
+                <th className="border p-2">Ưu tiên</th>
+                <th className="border p-2">Thao tác</th>
               </tr>
-            ) : (
-              marriages.map((m, idx) => (
-                <tr key={m.id} className="hover:bg-gray-50">
-                  <td className="border p-2">{idx + 1}</td>
-
-                  <td className="border p-2">
-                    {renderPersonName(m.spouse_a, m.spouse_a_name)}
-                  </td>
-
-                  <td className="border p-2">
-                    {renderPersonName(m.spouse_b, m.spouse_b_name)}
-                  </td>
-
-                  <td className="border p-2">{formatDateVN(m.start_date)}</td>
-                  <td className="border p-2">{formatDateVN(m.end_date)}</td>
-                  <td className="border p-2 capitalize">{m.status}</td>
-                  <td className="border p-2">
-                    <input
-                      type="number"
-                      value={m.priority ?? 0}
-                      onChange={(e) => {
-                        m.priority = Number(e.target.value);
-                        setMarriages([...marriages]);
-                      }}
-                      onBlur={() => savePriority(m.id, m.priority)}
-                      className="w-16 border rounded px-2 py-1 text-center"
-                    />
-                  </td>
-
-                  <td className="border p-2">
-                    {deleteConfirmId === m.id ? (
-                      <div className="text-red-600 font-medium">
-                        Xác nhận xóa?
-                        <div className="flex justify-center gap-2 mt-1">
-                          <button
-                            onClick={() => handleDelete(m.id)}
-                            className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                          >
-                            Xóa
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirmId(null)}
-                            className="bg-gray-300 px-2 py-1 rounded hover:bg-gray-400"
-                          >
-                            Hủy
-                          </button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex justify-center gap-2">
-                        <button
-                          onClick={() => onEdit(m.id)}
-                          className="bg-yellow-400 text-white px-2 py-1 rounded hover:bg-yellow-500"
-                        >
-                          ✏️
-                        </button>
-
-                        <button
-                          onClick={() => setDeleteConfirmId(m.id)}
-                          className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                        >
-                          🗑️
-                        </button>
-                      </div>
-                    )}
+            </thead>
+  
+            <tbody>
+              {filteredMarriages.length === 0 ? (
+                <tr>
+                  <td colSpan="8" className="p-4 text-gray-500">
+                    Không có dữ liệu
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                filteredMarriages.map((m, idx) => (
+                  <tr key={m.id} className="hover:bg-gray-50">
+                    <td className="border p-2">{idx + 1}</td>
+  
+                    <td className="border p-2">
+                      {renderPersonName(m.spouse_a, m.spouse_a_name)}
+                    </td>
+  
+                    <td className="border p-2">
+                      {renderPersonName(m.spouse_b, m.spouse_b_name)}
+                    </td>
+  
+                    <td className="border p-2">{formatDateVN(m.start_date)}</td>
+                    <td className="border p-2">{formatDateVN(m.end_date)}</td>
+                    <td className="border p-2 capitalize">{m.status}</td>
+  
+                    <td className="border p-2">
+                      <input
+                        type="number"
+                        value={m.priority ?? 0}
+                        onChange={(e) => {
+                          m.priority = Number(e.target.value);
+                          setMarriages([...marriages]);
+                        }}
+                        onBlur={() => savePriority(m.id, m.priority)}
+                        className="w-16 border rounded px-2 py-1 text-center"
+                      />
+                    </td>
+  
+                    <td className="border p-2">
+                      {deleteConfirmId === m.id ? (
+                        <div className="text-red-600 font-medium">
+                          Xác nhận xóa?
+                          <div className="flex justify-center gap-2 mt-1">
+                            <button
+                              onClick={() => handleDelete(m.id)}
+                              className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                            >
+                              Xóa
+                            </button>
+                            <button
+                              onClick={() => setDeleteConfirmId(null)}
+                              className="bg-gray-300 px-2 py-1 rounded hover:bg-gray-400"
+                            >
+                              Hủy
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex justify-center gap-2">
+                          <button
+                            onClick={() => onEdit(m.id)}
+                            className="bg-yellow-400 text-white px-2 py-1 rounded hover:bg-yellow-500"
+                          >
+                            ✏️
+                          </button>
+  
+                          <button
+                            onClick={() => setDeleteConfirmId(m.id)}
+                            className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                          >
+                            🗑️
+                          </button>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
     </div>
   );
 }

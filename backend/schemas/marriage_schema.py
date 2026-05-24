@@ -40,20 +40,23 @@ class MarriageCreate(BaseModel):
     def validate_all(self):
         return self
 
-
 # ==========================================================
 # UPDATE
 # ==========================================================
 class MarriageUpdate(BaseModel):
+    spouse_a_id: Optional[int] = None
+    spouse_b_id: Optional[int] = None
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
     status: Optional[MarriageStatus] = None
     priority: Optional[int] = 0
-    end_date: Optional[date] = None
+    ceremony_type: Optional[str] = None
+    location: Optional[str] = None
+    notes: Optional[str] = None
+    consanguineous: Optional[bool] = False
 
     @model_validator(mode="after")
     def validate_status(self):
-        # if self.status == MarriageStatus.widowed:
-        #     raise ValueError("Không được set status = widowed trực tiếp")
-
         return self
 
 # ==========================================================

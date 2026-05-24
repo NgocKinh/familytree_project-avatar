@@ -7,63 +7,78 @@
 // ======================================================================
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import MarriageList from "../components/MarriageList";
 import MarriageForm from "../components/marriage/MarriageForm";
 
 export default function MarriagePage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("list");
   const [editId, setEditId] = useState(null);
-
-  // Khi bấm nút Sửa trong danh sách
+  const [refreshKey, setRefreshKey] = useState(0);
   const handleEdit = (id) => {
     console.log("🟦 EDIT ID:", id);
     setEditId(id);
     setActiveTab("form");
   };
 
-  // Khi lưu xong hoặc quay lại
   const handleBack = () => {
     setEditId(null);
     setActiveTab("list");
+    setRefreshKey((prev) => prev + 1);
   };
 
   return (
-    <div className="max-w-6xl mx-auto p-4 bg-white shadow-md rounded-lg">
-      <h2 className="text-2xl font-bold text-center text-blue-600 mb-4">
-      👨‍👩 Quản Lý Quan Hệ Hôn Nhân
-      </h2>
+    <div className="w-full p-4 bg-white">
+      <div className="sticky top-0 z-50 bg-white border-b py-1 mb-0">
+        <div className="flex items-center justify-between gap-3">
+          {/* LEFT */}
+          <button
+            onClick={() => navigate("/")}
+            className="px-3 py-1 rounded bg-gray-700 text-white hover:bg-gray-800 whitespace-nowrap"
+          >
+            🏠 Home
+          </button>
 
-      {/* Tabs */}
-      <div className="flex justify-center gap-4 mb-6">
-        <button
-          onClick={handleBack}
-          className={`px-4 py-2 rounded ${
-            activeTab === "list"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          📋 Danh sách
-        </button>
+          {/* CENTER */}
+          <h2 className="text-3xl font-bold text-yellow-600 whitespace-nowrap">
+            👨‍👩 Quản Lý Quan Hệ Hôn Nhân
+          </h2>
 
-        <button
-          onClick={() => {
-            setEditId(null);
-            setActiveTab("form");
-          }}
-          className={`px-4 py-2 rounded ${
-            activeTab === "form"
-              ? "bg-blue-600 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          ✏️ Thêm / Sửa
-        </button>
-      </div>
+          {/* RIGHT */}
+          <div className="flex gap-2">
+            <button
+              onClick={handleBack}
+              className={`px-3 py-1 rounded whitespace-nowrap ${
+                activeTab === "list"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              📋 Danh sách
+            </button>
 
-      {/* Nội dung */}
+            <button
+              onClick={() => {
+                setEditId(null);
+                setActiveTab("form");
+              }}
+              className={`px-3 py-1 rounded whitespace-nowrap ${
+                activeTab === "form"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
+            >
+              ✏️ Thêm / Sửa
+            </button>
+          </div>
+        </div>
+      </div>        
       {activeTab === "list" ? (
-        <MarriageList onEdit={handleEdit} />
+        <MarriageList
+          key={refreshKey}
+          onEdit={handleEdit}
+        />
       ) : (
         <MarriageForm editId={editId} onBack={handleBack} />
       )}
