@@ -25,6 +25,7 @@ export default function PersonList({ role }) {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("active"); 
   const navigate = useNavigate();
+  const handleGoHome = () => navigate("/");
   const [searchTerm, setSearchTerm] = useState("");
   const [highlightIds, setHighlightIds] = useState([]);
   const [searchResultCount, setSearchResultCount] = useState(0);
@@ -173,10 +174,15 @@ export default function PersonList({ role }) {
     <div className="p-4">
       {loading && <div className="mb-2 text-blue-500">⏳ Đang tải dữ liệu...</div>}
       {/* TAB */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="sticky top-0 z-50 bg-white border-b py-2 mb-1 flex items-center justify-between">
 
-        <div className="flex gap-4">
-
+        <div className="flex gap-3 items-center"> 
+          <button
+            onClick={handleGoHome}
+            className="px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-800"
+          >
+            🏠 Home
+          </button>
           <button
             className={`px-4 py-2 rounded ${
               activeTab === "active"
@@ -258,7 +264,7 @@ export default function PersonList({ role }) {
       </div>
       {/* TABLE */}
       <table className="min-w-full border border-gray-300">
-        <thead className="bg-gray-100">
+      <thead className="bg-gray-100 sticky top-[58px] z-40">
           <tr>
             <th className="px-4 py-2">Ảnh</th>
             {canViewId && (

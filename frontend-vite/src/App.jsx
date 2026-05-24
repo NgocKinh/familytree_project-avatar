@@ -44,15 +44,31 @@ export default function App() {
 function AppContent() {
   const [role, setRole] = useState(localStorage.getItem("role") || "viewer");
   const location = useLocation();
-  const isTreePage = location.pathname.startsWith("/tree");
+  const hideNavbarRoutes = [
+    "/person",
+    "/parent_child",
+  ];
+  
+  const shouldHideNavbar =
+    location.pathname.startsWith("/tree") ||
+    hideNavbarRoutes.includes(location.pathname);
 
   return (
     <>
-      {!isTreePage && <Navbar role={role} setRole={setRole} />}
+      {!shouldHideNavbar && (
+        <Navbar role={role} setRole={setRole} />
+      )}
 
-      <div className={isTreePage ? "w-full p-0 m-0" : "container mx-auto p-4"}>
+      <div
+        className={
+          location.pathname.startsWith("/tree")
+            ? "w-full p-0 m-0"
+            : shouldHideNavbar
+            ? "w-full p-4"
+            : "container mx-auto p-4"
+        }
+      >
         <Routes>
-
 
           {/* HOME */}
           <Route path="/" element={<Home role={role} />} />
