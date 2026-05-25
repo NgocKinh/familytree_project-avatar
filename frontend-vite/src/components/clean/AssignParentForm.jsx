@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../api/apiConfig";
 import PersonDropdown from "../common/PersonDropdown";
+import MarriageDropdown from "../common/MarriageDropdown";
 import { formatName } from "../../utils/formatName";
 import { useNavigate } from "react-router-dom";
 function AssignParentForm() {
@@ -398,7 +399,7 @@ function AssignParentForm() {
               checkBirthConflict(id);
             }}
             persons={persons}
-            placeholder="-- chọn người con --"
+            placeholder="-- Gõ tên hoặc kéo xuống Chọn người con --"
           />
         </div>
 
@@ -442,19 +443,13 @@ function AssignParentForm() {
               </label>
 
               {!noMarriage && (
-                <select
-                  className="w-full border p-2 rounded"
+                <MarriageDropdown
                   value={marriageId}
-                  onChange={e => setMarriageId(e.target.value)}
-                >
-                  <option value="">-- chọn Cha & Mẹ --</option>
-                  {marriages.map(m => (
-                    <option key={m.id} value={m.id}>
-                      #{m.id} – {displayName(m.spouse_a_name)} & {displayName(m.spouse_b_name)}
-                    </option>
-                  ))}
-
-                </select>
+                  onChange={setMarriageId}
+                  marriages={marriages}
+                  placeholder="-- Gõ tên hoặc kéo xuống chọn Cha & Mẹ --"
+                  disabled={lockForm}
+                />
               )}
             </div>
           )
@@ -526,7 +521,7 @@ function AssignParentForm() {
 
                   return false;
                 }}
-                placeholder="-- chọn --"
+                placeholder="-- Gõ tên hoặc kéo xuống chọn --"
               />
             </div>
           )

@@ -48,6 +48,7 @@ function AppContent() {
     "/person",
     "/parent_child",
     "/marriage",
+    "/relation_finder",
   ];
   
   const shouldHideNavbar =

@@ -3,7 +3,6 @@ from typing import Optional
 from datetime import date
 from enum import Enum
 
-
 # ==========================================================
 # ENUM — Marriage Status
 # ==========================================================
@@ -13,7 +12,6 @@ class MarriageStatus(str, Enum):
     separated = "separated"
     divorced = "divorced"
     widowed = "widowed"
-
 
 # ==========================================================
 # CREATE

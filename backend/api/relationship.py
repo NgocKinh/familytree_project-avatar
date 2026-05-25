@@ -78,3 +78,24 @@ def get_relationship(
         "target_id": target_id,
         **result
     }
+
+    if new_result and new_result.get("normalized") in (
+        "sibling_in_law",
+        "affinity_peer"
+    ):
+        result = new_result
+    else:
+        try:
+            result = resolver_relationship(source_id, target_id)
+        except Exception as e:
+            return {
+                "error": str(e)
+            }
+
+    return {
+        "source_id": source_id,
+        "target_id": target_id,
+        **result
+    }
+
+    

@@ -19,6 +19,7 @@ export default function PersonSelectWithAvatarV2({
 }) {
   const [open, setOpen] = useState(false);
   const [filterOn, setFilterOn] = useState(true); // trạng thái toggle
+  const [search, setSearch] = useState("");
   const ref = useRef();
 
   const effectiveGender =
@@ -66,12 +67,16 @@ export default function PersonSelectWithAvatarV2({
   // ==========================================
   // Lọc danh sách theo toggle
   // ==========================================
-  const filteredPersons = persons.filter((p) => {
-    if (filterOn && effectiveGender) {
-      return (p.gender || "").toLowerCase().trim() === effectiveGender;
-    }
-    return true;
-  });
+  const filteredPersons = persons
+    .filter((p) => {
+      if (filterOn && effectiveGender) {
+        return (p.gender || "").toLowerCase().trim() === effectiveGender;
+      }
+      return true;
+    })
+    .filter((p) =>
+      formatPersonName(p).toLowerCase().includes(search.toLowerCase())
+    );
   
   // ==========================================
   // Format tên: Fullname + lifespan
@@ -140,28 +145,47 @@ export default function PersonSelectWithAvatarV2({
 
       {/* POPUP */}
       {open && (
-        <div className="absolute mt-1 border rounded shadow bg-white max-h-60 overflow-y-auto w-full z-50">
+        <div className="absolute mt-1 border rounded shadow bg-white w-full z-50">
 
-          {filteredPersons.map((p) => (
-            <div
-            key={p.person_id ?? p.id}
-              onClick={() => {
-                onChange(String(p.person_id ?? p.id));
-                setOpen(false);
-              }}
-              className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-gray-100"
-            >
-              <img
-                src={getAvatarURL({
-                  ...p,
-                  id: p.person_id ?? p.id
-                })}  
-                onError={(e) => handleAvatarError(e, p.gender)}
-                className="w-7 h-7 rounded-full object-cover"
-              />
-              <span>{formatPersonName(p)}</span>
-            </div>
-          ))}
+          {/* SEARCH */}
+          <div className="p-2 border-b bg-gray-50">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Gõ tên để tìm..."
+              className="w-full border rounded px-2 py-1 text-sm"
+              autoFocus
+            />
+          </div>
+
+          {/* LIST */}
+          <div className="max-h-60 overflow-y-auto">
+
+            {filteredPersons.map((p) => (
+              <div
+                key={p.person_id ?? p.id}
+                onClick={() => {
+                  onChange(String(p.person_id ?? p.id));
+                  setSearch("");
+                  setOpen(false);
+                }}
+                className="flex items-center space-x-2 p-2 cursor-pointer hover:bg-gray-100"
+              >
+                <img
+                  src={getAvatarURL({
+                    ...p,
+                    id: p.person_id ?? p.id
+                  })}
+                  onError={(e) => handleAvatarError(e, p.gender)}
+                  className="w-7 h-7 rounded-full object-cover"
+                />
+
+                <span>{formatPersonName(p)}</span>
+              </div>
+            ))}
+
+          </div>
         </div>
       )}
     </div>

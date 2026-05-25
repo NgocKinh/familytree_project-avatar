@@ -43,7 +43,7 @@ app.include_router(marriage_router, prefix="/api/marriage")
 app.include_router(parent_child_router, prefix="/api/parent_child")
 app.include_router(avatar_router, prefix="/api/avatar")
 app.include_router(avatar_cdn_router, prefix="/cdn")
-app.include_router(relationship_router, prefix="/api/relationship")
+app.include_router(relationship_router)
 app.include_router(tree_router, prefix="/api/tree")
 
 # ======================================================
