@@ -16,5 +16,3 @@ export const API_BASE_URL = API_FASTAPI;
 // Hàm tiện ích để tạo URL động (nếu muốn)
 export const makeApiUrl = (endpoint) =>
   `${API_BASE_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
-
-

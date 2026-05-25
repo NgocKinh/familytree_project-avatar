@@ -9,12 +9,12 @@ API: Announcement (v4.1-CLEAN-NAME-ORDER)
 - Ultra Safe: try/except + safe_close
 """
 
-from flask import Blueprint, jsonify
+from fastapi import APIRouter
 from backend.db import get_connection
 from lunarcalendar import Converter, Lunar
 from datetime import date, timedelta
 
-announcement_bp = Blueprint("announcement_bp", __name__)
+router = APIRouter()
 
 
 # ------------------------------------------------------------
@@ -64,7 +64,7 @@ def build_message(name, lunar_str, solar_date):
 # ------------------------------------------------------------
 # Hôm nay
 # ------------------------------------------------------------
-@announcement_bp.route("/api/announcement/today", methods=["GET"])
+@router.get("/today")
 def announcement_today():
 
     conn = None
@@ -140,15 +140,15 @@ def announcement_today():
         lunar_today = Converter.Solar2Lunar(today)
         lunar_str = f"{str(lunar_today.day).zfill(2)}/{str(lunar_today.month).zfill(2)}"
 
-        return jsonify({
+        return {
             "date": today.strftime("%d/%m/%Y"),
             "lunar": lunar_str,
             "announcements": result
-        }), 200
+        }
 
     except Exception as e:
         print("❌ ERROR TODAY:", e)
-        return jsonify({"error": str(e)}), 500
+        return {"error": str(e)}
 
     finally:
         safe_close(conn, cursor)
@@ -157,7 +157,7 @@ def announcement_today():
 # ------------------------------------------------------------
 # Sắp tới 7 ngày
 # ------------------------------------------------------------
-@announcement_bp.route("/api/announcement/upcoming", methods=["GET"])
+@router.get("/upcoming")
 def announcement_upcoming():
 
     conn = None
@@ -229,14 +229,14 @@ def announcement_upcoming():
                             "calendar_type": "solar",
                         })
 
-        return jsonify({
+        return {
             "range_days": 7,
             "announcements": result
-        }), 200
+        }
 
     except Exception as e:
         print("❌ ERROR UPCOMING:", e)
-        return jsonify({"error": str(e)}), 500
+        return {"error": str(e)}
 
     finally:
         safe_close(conn, cursor)
