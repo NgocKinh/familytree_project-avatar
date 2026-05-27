@@ -16,8 +16,8 @@ function AnnouncementPage() {
     const fetchData = async () => {
       try {
         const [todayRes, upcomingRes] = await Promise.all([
-          fetch("http://localhost:5000/api/announcement/today"),
-          fetch("http://localhost:5000/api/announcement/upcoming?days=7"),
+          fetch("http://localhost:8000/api/announcement/today"),
+          fetch("http://localhost:8000/api/announcement/upcoming?days=7"),
         ]);
         const todayJson = await todayRes.json();
         const upcomingJson = await upcomingRes.json();
@@ -65,8 +65,10 @@ function AnnouncementPage() {
       </h1>
 
       <p className="text-center text-gray-600 mb-8">
-        Ngày Dương: <b>{todayData?.date}</b> &nbsp; | &nbsp; Ngày Âm:{" "}
-        <b>{todayData?.lunar}</b>
+      Ngày Dương: <b>{todayData?.date}</b> &nbsp; | &nbsp; Ngày Âm:{" "}
+      <b>
+        {todayData?.lunar} {todayData?.lunar_year_name}
+      </b>
       </p>
 
       {/* --- PHẦN 1: Hôm nay --- */}
@@ -91,7 +93,15 @@ function AnnouncementPage() {
               <div className="text-3xl">{item.icon}</div>
               <div>
                 <p className="font-semibold">{item.title}</p>
-                <p className="text-gray-500 text-sm">{item.date}</p>
+
+                <p className="text-gray-500 text-sm">
+                  Dương lịch: <b>{item.date}</b> | Âm lịch:{" "}
+                  <b>{item.lunar} {item.lunar_year_name}</b>
+                </p>
+
+                <p className="text-xs text-gray-400 italic">
+                  {item.calendar_type === "lunar" ? "Giỗ theo âm lịch" : "Giỗ theo dương lịch"}
+                </p>
               </div>
             </div>
           ))}
@@ -119,8 +129,14 @@ function AnnouncementPage() {
               <div className="text-3xl">{item.icon}</div>
               <div>
                 <p className="font-semibold">{item.title}</p>
+
                 <p className="text-gray-500 text-sm">
-                  {item.date} {item.year_diff && `(Lần thứ ${item.year_diff})`}
+                  Dương lịch: <b>{item.date}</b> | Âm lịch:{" "}
+                  <b>{item.lunar} {item.lunar_year_name}</b>
+                </p>
+
+                <p className="text-xs text-gray-400 italic">
+                  {item.calendar_type === "lunar" ? "Giỗ theo âm lịch" : "Giỗ theo dương lịch"}
                 </p>
               </div>
             </div>
@@ -132,5 +148,3 @@ function AnnouncementPage() {
 }
 
 export default AnnouncementPage;
-
-

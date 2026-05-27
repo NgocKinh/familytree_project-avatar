@@ -13,7 +13,7 @@ from fastapi import APIRouter
 from backend.db import get_connection
 from lunarcalendar import Converter, Lunar
 from datetime import date, timedelta
-
+from backend.domain.announcement.lunar_utils import get_can_chi_year
 router = APIRouter()
 
 
@@ -86,6 +86,7 @@ def announcement_today():
                 first_name,
                 birth_date,
                 anniversary_death,
+                anniversary_type,
                 death_date
             FROM persons
             WHERE delete_status = 0
@@ -97,35 +98,36 @@ def announcement_today():
         for row in rows:
 
             full_name = f"{row['sur_name']} {row['last_name']} {row['middle_name']} {row['first_name']}".strip()
-
             ann = row["anniversary_death"]
+            ann_type = (row.get("anniversary_type") or "lunar").strip().lower()
 
             # ---------------------------
-            # Trường hợp có ngày giỗ âm
+            # Trường hợp có ngày giỗ riêng
             # ---------------------------
             if ann:
-                solar = lunar_to_solar_this_year(ann)
-                if solar and solar == today:
-                    result.append({
-                        "type": "gio",
-                        "icon": "🕯️",
-                        "title": f"Giỗ {full_name}",
-                        "date": solar.strftime("%d/%m/%Y"),
-                        "lunar": ann,
-                        "calendar_type": "lunar",
-                    })
 
-            # ---------------------------
-            # Không có ngày giỗ âm → lấy ngày mất dương lịch
-            # ---------------------------
-            else:
-                dd = row["death_date"]
-                if dd:
-                    solar_this_year = date(today.year, dd.month, dd.day)
-                    if solar_this_year == today:
-                        lunar_today = Converter.Solar2Lunar(
-                            date(today.year, dd.month, dd.day)
-                        )
+                # GIỖ ÂM
+                if ann_type == "lunar":
+                    solar = lunar_to_solar_this_year(ann)
+
+                    if solar and solar == today:
+                        result.append({
+                            "type": "gio",
+                            "icon": "🕯️",
+                            "title": f"Giỗ {full_name}",
+                            "date": solar.strftime("%d/%m/%Y"),
+                            "lunar": ann,
+                            "lunar_year_name": get_can_chi_year(today.year),
+                            "calendar_type": "lunar",
+                        })
+
+                # GIỖ DƯƠNG
+                elif ann_type == "solar":
+                    d, m = ann.split("/")
+                    solar_this_year = date(today.year, int(m), int(d))
+
+                    if today < solar_this_year <= next_7:
+                        lunar_today = Converter.Solar2Lunar(solar_this_year)
                         lunar_str = f"{str(lunar_today.day).zfill(2)}/{str(lunar_today.month).zfill(2)}"
 
                         result.append({
@@ -134,6 +136,29 @@ def announcement_today():
                             "title": f"Giỗ {full_name}",
                             "date": solar_this_year.strftime("%d/%m/%Y"),
                             "lunar": lunar_str,
+                            "lunar_year_name": get_can_chi_year(today.year),
+                            "calendar_type": "solar",
+                        })
+
+            # ---------------------------
+            # Không có ngày giỗ riêng → fallback ngày mất dương lịch
+            # ---------------------------
+            else:
+                dd = row["death_date"]
+                if dd:
+                    solar_this_year = date(today.year, dd.month, dd.day)
+
+                    if solar_this_year == today:
+                        lunar_today = Converter.Solar2Lunar(solar_this_year)
+                        lunar_str = f"{str(lunar_today.day).zfill(2)}/{str(lunar_today.month).zfill(2)}"
+
+                        result.append({
+                            "type": "gio",
+                            "icon": "🕯️",
+                            "title": f"Giỗ {full_name}",
+                            "date": solar_this_year.strftime("%d/%m/%Y"),
+                            "lunar": lunar_str,
+                            "lunar_year_name": get_can_chi_year(today.year),
                             "calendar_type": "solar",
                         })
 
@@ -143,6 +168,7 @@ def announcement_today():
         return {
             "date": today.strftime("%d/%m/%Y"),
             "lunar": lunar_str,
+            "lunar_year_name": get_can_chi_year(today.year),
             "announcements": result
         }
 
@@ -169,7 +195,8 @@ def announcement_upcoming():
 
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
-
+        cursor.execute("SELECT DATABASE() AS db_name")
+        print("DEBUG DB:", cursor.fetchone())
         # ⭐ FIX THỨ TỰ TÊN – CHUẨN CẤU TRÚC PROJECT
         cursor.execute("""
             SELECT 
@@ -180,6 +207,7 @@ def announcement_upcoming():
                 first_name,
                 birth_date,
                 anniversary_death,
+                anniversary_type,
                 death_date
             FROM persons
             WHERE delete_status = 0
@@ -192,21 +220,43 @@ def announcement_upcoming():
 
             full_name = f"{row['sur_name']} {row['last_name']} {row['middle_name']} {row['first_name']}".strip()
             ann = row["anniversary_death"]
-
-            # ---------------------------
-            # GIỖ ÂM
-            # ---------------------------
+            ann_type = (row.get("anniversary_type") or "lunar").strip().lower()
+            print("DEBUG ANN:", row["person_id"], ann, ann_type)
             if ann:
-                solar = lunar_to_solar_this_year(ann)
-                if solar and today < solar <= next_7:
-                    result.append({
-                        "type": "gio",
-                        "icon": "🕯️",
-                        "title": f"Giỗ {full_name}",
-                        "date": solar.strftime("%d/%m/%Y"),
-                        "lunar": ann,
-                        "calendar_type": "lunar",
-                    })
+
+                # GIỖ ÂM
+                if ann_type == "lunar":
+                    solar = lunar_to_solar_this_year(ann)
+
+                    if solar and today < solar <= next_7:
+                        result.append({
+                            "type": "gio",
+                            "icon": "🕯️",
+                            "title": f"Giỗ {full_name}",
+                            "date": solar.strftime("%d/%m/%Y"),
+                            "lunar": ann,
+                            "lunar_year_name": get_can_chi_year(today.year),
+                            "calendar_type": "lunar",
+                        })
+
+                # GIỖ DƯƠNG
+                elif ann_type == "solar":
+                    d, m = ann.split("/")
+                    solar_this_year = date(today.year, int(m), int(d))
+
+                    if today < solar_this_year <= next_7:
+                        lunar_today = Converter.Solar2Lunar(solar_this_year)
+                        lunar_str = f"{str(lunar_today.day).zfill(2)}/{str(lunar_today.month).zfill(2)}"
+
+                        result.append({
+                            "type": "gio",
+                            "icon": "🕯️",
+                            "title": f"Giỗ {full_name}",
+                            "date": solar_this_year.strftime("%d/%m/%Y"),
+                            "lunar": lunar_str,
+                            "lunar_year_name": get_can_chi_year(today.year),
+                            "calendar_type": "solar",
+                        })
 
             # ---------------------------
             # GIỖ DƯƠNG
@@ -226,6 +276,7 @@ def announcement_upcoming():
                             "title": f"Giỗ {full_name}",
                             "date": solar_this_year.strftime("%d/%m/%Y"),
                             "lunar": lunar_str,
+                            "lunar_year_name": get_can_chi_year(today.year),
                             "calendar_type": "solar",
                         })
 
