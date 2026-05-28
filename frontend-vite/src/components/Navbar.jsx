@@ -90,7 +90,20 @@ const Navbar = ({ role, setRole }) => {
             <FaBell className="text-orange-400" />
             <span>Thông Báo</span>
           </Link>
-
+          {/* 📢 Thông báo nội bộ */}
+          {["member_basic", "member_close", "co_operator", "admin"].includes(role) && (
+            <Link
+              to="/internal-notification"
+              className={`flex items-center gap-2 hover:text-yellow-400 transition ${
+                location.pathname === "/internal-notification"
+                  ? "underline underline-offset-4"
+                  : ""
+              }`}
+            >
+              <span className="text-blue-400">📢</span>
+              <span>Nội Bộ</span>
+            </Link>
+          )}
           {/* 👥 Danh sách thành viên */}
           <Link
             to="/person"

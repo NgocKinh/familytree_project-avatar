@@ -241,6 +241,13 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
   // =========================
   return (
     <div className="max-w-xl mx-auto p-4 border rounded shadow">
+      <button
+        type="button"
+        onClick={() => navigate("/")}
+        className="mb-4 px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-800"
+      >
+        🏠 Home
+      </button>
       <h2 className="text-2xl font-bold mb-4">
         {isEdit ? "Chỉnh sửa thành viên" : "Thêm thành viên mới"}
       </h2>

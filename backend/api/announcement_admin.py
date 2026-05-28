@@ -5,6 +5,7 @@ from backend.domain.announcement.announcement_repository import (
     list_announcements,
     get_announcement_by_id,
     create_announcement,
+    update_announcement,
     delete_announcement,
 )
 
@@ -38,7 +39,31 @@ def api_create_announcement(data: AnnouncementCreate):
         "success": True,
         "data": item
     }
+# ======================================================
+# UPDATE ANNOUNCEMENT
+# ======================================================
 
+@router.put("/{announcement_id}")
+def api_update_announcement(
+    announcement_id: int,
+    data: AnnouncementCreate
+):
+
+    item = update_announcement(
+        announcement_id,
+        data
+    )
+
+    if not item:
+        raise HTTPException(
+            status_code=404,
+            detail="Announcement not found"
+        )
+
+    return {
+        "success": True,
+        "data": item
+    }
 
 # ======================================================
 # GET ANNOUNCEMENT DETAIL

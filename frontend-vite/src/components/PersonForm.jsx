@@ -12,6 +12,8 @@ const PersonForm = ({ initialData = {}, onSubmit, role = "viewer", mode = "add" 
     gender: "male",
     birth_date: "",
     death_date: "",
+    anniversary_death: "",
+    anniversary_type: "lunar",
     birth_place: "",
     death_place: "",
     grave_info: "",
@@ -100,6 +102,7 @@ const PersonForm = ({ initialData = {}, onSubmit, role = "viewer", mode = "add" 
             { label: "Tên chính", name: "first_name" },
             { label: "Ngày sinh", name: "birth_date", type: "date" },
             { label: "Ngày mất", name: "death_date", type: "date" },
+            { label: "Ngày giỗ", name: "anniversary_death", placeholder: "VD: 28/05" },
             { label: "Nơi sinh", name: "birth_place" },
             { label: "Nơi mất", name: "death_place" },
             { label: "Thông tin mộ", name: "grave_info" },
@@ -119,6 +122,7 @@ const PersonForm = ({ initialData = {}, onSubmit, role = "viewer", mode = "add" 
                 name={field.name}
                 value={formData[field.name] || ""}
                 onChange={handleChange}
+                placeholder={field.placeholder || ""}
                 className="w-full border p-1 rounded"
               />
             </div>
@@ -136,6 +140,18 @@ const PersonForm = ({ initialData = {}, onSubmit, role = "viewer", mode = "add" 
               <option value="male">Nam</option>
               <option value="female">Nữ</option>
               <option value="other">Khác</option>
+            </select>
+          </div>
+          <div>
+            <label className="block font-medium">Loại giỗ</label>
+            <select
+              name="anniversary_type"
+              value={formData.anniversary_type || "lunar"}
+              onChange={handleChange}
+              className="w-full border p-1 rounded"
+            >
+              <option value="lunar">Âm lịch</option>
+              <option value="solar">Dương lịch</option>
             </select>
           </div>
         </div>

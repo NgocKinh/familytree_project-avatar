@@ -111,7 +111,61 @@ def create_announcement(
 
     return get_announcement_by_id(new_id)
 
+# ======================================================
+# UPDATE ANNOUNCEMENT
+# ======================================================
 
+def update_announcement(
+    announcement_id: int,
+    data: AnnouncementCreate
+) -> Optional[Dict[str, Any]]:
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    payload = data.model_dump()
+
+    cursor.execute("""
+        UPDATE announcements
+        SET
+            title = %s,
+            description = %s,
+            event_type = %s,
+            calendar_type = %s,
+            solar_date = %s,
+            lunar_day = %s,
+            lunar_month = %s,
+            lunar_year = %s,
+            repeat_type = %s,
+            person_id = %s,
+            is_active = %s
+        WHERE id = %s
+    """, (
+        payload["title"],
+        payload["description"],
+        payload["event_type"],
+        payload["calendar_type"],
+        payload["solar_date"],
+        payload["lunar_day"],
+        payload["lunar_month"],
+        payload["lunar_year"],
+        payload["repeat_type"],
+        payload["person_id"],
+        payload["is_active"],
+        announcement_id,
+    ))
+
+    updated = cursor.rowcount > 0
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    if not updated:
+        return None
+
+    return get_announcement_by_id(announcement_id)
 # ======================================================
 # DELETE ANNOUNCEMENT
 # ======================================================

@@ -19,7 +19,8 @@ import RelationFinderPage from "./pages/RelationFinderPage.jsx";
 import LinePage from "./pages/LinePage";
 import AdminPage from "./pages/AdminPage";
 import AnnouncementPage from "./pages/AnnouncementPage";
-
+import AnnouncementAdminPage from "./pages/AnnouncementAdminPage";
+import InternalNotificationPage from "./pages/InternalNotificationPage";
 import MarriagePage from "./pages/MarriagePage";
 import ParentChildPage from "./pages/ParentChildPage";
 
@@ -49,11 +50,16 @@ function AppContent() {
     "/parent_child",
     "/marriage",
     "/relation_finder",
+    "/person/basic/",
+    "/announcement",
+    "/internal-notification",
   ];
   
   const shouldHideNavbar =
     location.pathname.startsWith("/tree") ||
-    hideNavbarRoutes.includes(location.pathname);
+    hideNavbarRoutes.some((route) =>
+      location.pathname.startsWith(route)
+    );
 
   return (
     <>
@@ -107,8 +113,30 @@ function AppContent() {
               </ProtectedRouteV6>
             }
           />
-
-
+          <Route
+            path="/admin/announcement"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={["co_operator", "admin"]}
+                redirectTo="/"
+              >
+                <AnnouncementAdminPage />
+              </ProtectedRouteV6>
+            }
+          />
+          <Route
+            path="/internal-notification"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
+                redirectTo="/"
+              >
+                <InternalNotificationPage />
+              </ProtectedRouteV6>
+            }
+          />
           {/* PERSON LIST */}
           <Route path="/person" element={<PersonList role={role} />} />
 
@@ -138,7 +166,6 @@ function AppContent() {
               </ProtectedRouteV6>
             }
           />
-
 
           {/* DETAIL */}
           <Route path="/person/detail/:id" element={<PersonDetailPage />} />

@@ -91,7 +91,7 @@ class Person(Base):
     grave_info = Column(String(255), nullable=True)
 
     anniversary_death = Column(String(10), nullable=True)
-
+    anniversary_type = Column(String(20), nullable=True)
     # 🌍 Info
     nationality = Column(String(100), nullable=True)
     ethnic_group = Column(String(100), nullable=True)

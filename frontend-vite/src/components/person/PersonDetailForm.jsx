@@ -11,7 +11,17 @@
 import React, { useState, useEffect } from "react";
 import { getPersonDetail, updatePersonDetail } from "../../api/personDetailApi";
 import { convertSolarToLunar } from "../../api/dateApi";
-
+// ============================================================
+//  CARD WRAPPER
+// ============================================================
+const Card = ({ icon, title, children }) => (
+  <div className="border rounded-lg p-4 shadow mb-6 bg-white">
+    <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
+      <span>{icon}</span> {title}
+    </h3>
+    {children}
+  </div>
+);
 export default function PersonDetailForm({ personId, role }) {
   const [form, setForm] = useState({
     // PERSONAL INFO
@@ -32,6 +42,7 @@ export default function PersonDetailForm({ personId, role }) {
     asian_birth_date: "",
     asian_death_date: "",
     anniversary_death: "",
+    anniversary_type: "lunar",
 
     // FUNERAL
     death_place: "",
@@ -101,25 +112,21 @@ export default function PersonDetailForm({ personId, role }) {
   // ============================================================
   const handleSubmit = async () => {
     try {
-      await updatePersonDetail(personId, form);
+      const payload = {
+        ...form,
+        lineage_id:
+          form.lineage_id === "" || form.lineage_id === null
+            ? null
+            : Number(form.lineage_id),
+      };
+  
+      await updatePersonDetail(personId, payload);
       alert("✔ Cập nhật chi tiết thành công!");
     } catch (err) {
       console.error("❌ ERROR update:", err);
       alert("Không thể lưu thông tin chi tiết!");
     }
   };
-
-  // ============================================================
-  //  CARD WRAPPER
-  // ============================================================
-  const Card = ({ icon, title, children }) => (
-    <div className="border rounded-lg p-4 shadow mb-6 bg-white">
-      <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
-        <span>{icon}</span> {title}
-      </h3>
-      {children}
-    </div>
-  );
 
   // ============================================================
   //  UI RENDER
@@ -158,9 +165,39 @@ export default function PersonDetailForm({ personId, role }) {
       ============================== */}
       <Card icon="📅" title="Ngày Tháng Âm Lịch">
         <div className="grid gap-3">
-          <input value={form.asian_birth_date || ""} readOnly placeholder="Ngày sinh âm lịch" className="border p-2 rounded bg-gray-100" />
-          <input value={form.asian_death_date || ""} readOnly placeholder="Ngày mất âm lịch" className="border p-2 rounded bg-gray-100" />
-          <input name="anniversary_death" value={form.anniversary_death || ""} onChange={handleChange} placeholder="Ngày giỗ (dd/mm âm)" className="border p-2 rounded" />
+
+          <input
+            value={form.asian_birth_date || ""}
+            readOnly
+            placeholder="Ngày sinh âm lịch"
+            className="border p-2 rounded bg-gray-100"
+          />
+
+          <input
+            value={form.asian_death_date || ""}
+            readOnly
+            placeholder="Ngày mất âm lịch"
+            className="border p-2 rounded bg-gray-100"
+          />
+
+          <input
+            name="anniversary_death"
+            value={form.anniversary_death || ""}
+            onChange={handleChange}
+            placeholder="Ngày giỗ (VD: 28/05)"
+            className="border p-2 rounded"
+          />
+
+          <select
+            name="anniversary_type"
+            value={form.anniversary_type || "lunar"}
+            onChange={handleChange}
+            className="border p-2 rounded"
+          >
+            <option value="lunar">Âm lịch</option>
+            <option value="solar">Dương lịch</option>
+          </select>
+
         </div>
       </Card>
 

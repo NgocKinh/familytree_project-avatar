@@ -58,13 +58,21 @@ function AnnouncementPage() {
   const upcomingList = upcomingData?.announcements || [];
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
+    <div className="max-w-4xl mx-auto px-6 pt-2 pb-6">
+    <div className="mb-4">
+      <button
+        onClick={() => window.location.href = "/"}
+        className="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-800"
+      >
+        🏠 Home
+      </button>
+    </div>  
       {/* Tiêu đề */}
-      <h1 className="text-3xl font-bold text-center mb-2 text-blue-700 drop-shadow-sm">
+      <h1 className="text-2xl font-bold text-center mb-1 text-blue-700 drop-shadow-sm">
         🔔 Thông Báo Tự Động
       </h1>
 
-      <p className="text-center text-gray-600 mb-8">
+      <p className="text-center text-gray-600 mb-1">
       Ngày Dương: <b>{todayData?.date}</b> &nbsp; | &nbsp; Ngày Âm:{" "}
       <b>
         {todayData?.lunar} {todayData?.lunar_year_name}
@@ -72,12 +80,12 @@ function AnnouncementPage() {
       </p>
 
       {/* --- PHẦN 1: Hôm nay --- */}
-      <h2 className="text-xl font-semibold text-center text-indigo-600 mb-4">
+      <h2 className="text-xl font-semibold text-center text-indigo-600 mb-2">
         📅 Sự kiện trong ngày
       </h2>
 
       {todayList.length === 0 ? (
-        <div className="text-center text-gray-500 mb-8">
+        <div className="text-center text-gray-500 mb-4">
           <div className="text-4xl mb-2">🌼</div>
           <p className="italic">Hôm nay không có sự kiện đặc biệt nào.</p>
         </div>
@@ -109,7 +117,7 @@ function AnnouncementPage() {
       )}
 
       {/* --- PHẦN 2: Sắp tới --- */}
-      <h2 className="text-xl font-semibold text-center text-green-600 mb-4">
+      <h2 className="text-xl font-semibold text-center text-green-600 mb-2">
         🔮 Sự kiện sắp tới (trong {upcomingData?.range_days} ngày)
       </h2>
 

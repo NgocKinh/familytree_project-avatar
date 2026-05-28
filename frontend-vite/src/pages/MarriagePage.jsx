@@ -69,7 +69,7 @@ export default function MarriagePage() {
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              ✏️ Thêm / Sửa
+              ✏️ Thêm
             </button>
           </div>
         </div>

@@ -218,12 +218,11 @@ def get_person_orm(pid: int, db: Session = Depends(get_db)):
         "middle_name": person.middle_name,
         "first_name": person.first_name,
         "gender": person.gender,
-
         "birth_date": str(person.birth_date) if person.birth_date else None,
         "birth_order": person.birth_order,
-
         "death_date": str(person.death_date) if person.death_date else None,
-
+        "anniversary_death": person.anniversary_death,
+        "anniversary_type": person.anniversary_type,
         "birth_date_precision": person.birth_date_precision,
         "death_date_precision": person.death_date_precision
     }

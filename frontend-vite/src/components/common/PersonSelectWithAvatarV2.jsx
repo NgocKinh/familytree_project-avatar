@@ -65,20 +65,6 @@ export default function PersonSelectWithAvatarV2({
   }, [selected, genderFilter]);
 
   // ==========================================
-  // Lọc danh sách theo toggle
-  // ==========================================
-  const filteredPersons = persons
-    .filter((p) => {
-      if (filterOn && effectiveGender) {
-        return (p.gender || "").toLowerCase().trim() === effectiveGender;
-      }
-      return true;
-    })
-    .filter((p) =>
-      formatPersonName(p).toLowerCase().includes(search.toLowerCase())
-    );
-  
-  // ==========================================
   // Format tên: Fullname + lifespan
   // ==========================================
   const formatPersonName = (p) => {
@@ -93,6 +79,20 @@ export default function PersonSelectWithAvatarV2({
     return `${fullname} (${birth || " "}–${death || " "})`;
   };
 
+  // ==========================================
+  // Lọc danh sách theo toggle
+  // ==========================================
+  const filteredPersons = persons
+    .filter((p) => {
+      if (filterOn && effectiveGender) {
+        return (p.gender || "").toLowerCase().trim() === effectiveGender;
+      }
+      return true;
+    })
+    .filter((p) =>
+      formatPersonName(p).toLowerCase().includes(search.toLowerCase())
+    );
+  
   return (
     <div className="mb-4 relative" ref={ref}>
       {/* LABEL */}
