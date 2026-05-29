@@ -205,9 +205,44 @@ function AppContent() {
           <Route path="/announcement" element={<AnnouncementPage />} />
 
           {/* RELATIONS */}
-          <Route path="/marriage" element={<MarriagePage />} />
-          <Route path="/parent_child" element={<ParentChildPage />} />
-          <Route path="/family-setup" element={<FamilySetupPage />} />
+          <Route
+            path="/marriage"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={["member_close", "co_operator", "admin"]}
+                redirectTo="/"
+              >
+                <MarriagePage />
+              </ProtectedRouteV6>
+            }
+          />
+
+          <Route
+            path="/parent_child"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={["member_close", "co_operator", "admin"]}
+                redirectTo="/"
+              >
+                <ParentChildPage />
+              </ProtectedRouteV6>
+            }
+          />
+
+          <Route
+            path="/family-setup"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={["member_close", "co_operator", "admin"]}
+                redirectTo="/"
+              >
+                <FamilySetupPage />
+              </ProtectedRouteV6>
+            }
+          />
             
           {/* PENDING APPROVAL */}
           <Route

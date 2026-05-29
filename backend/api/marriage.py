@@ -13,6 +13,7 @@ from backend.models.marriage_model import Marriage
 
 from backend.schemas.marriage_schema import MarriageCreate, MarriageUpdate
 from backend.services.marriage_service import create_marriage
+from backend.utils.auth_guard import require_permission
 from backend.db import get_connection
 router = APIRouter(tags=["Marriage"])
 
@@ -95,9 +96,12 @@ def marriage_payload(m):
 # CREATE MARRIAGE
 # ==========================================================
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_marriage_api(data: MarriageCreate, db: Session = Depends(get_db)):
+def create_marriage_api(
+    data: MarriageCreate,
+    db: Session = Depends(get_db),
+    role=Depends(require_permission("relation:create"))
+):
     return create_marriage(db, data)
-
 
 # ==========================================================
 # ✅ [CHANGE 1]: GET ALL MARRIAGES trả thêm spouse_a / spouse_b đầy đủ

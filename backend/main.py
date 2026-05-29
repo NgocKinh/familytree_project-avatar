@@ -10,6 +10,7 @@ from backend.core.exceptions import AppError
 # 👉 IMPORT ROUTERS (CHỈ IMPORT 1 LẦN)
 from backend.api.person import router as person_router
 from backend.api.marriage import router as marriage_router
+from backend.api.auth import router as auth_router
 from backend.api.announcement_admin import router as announcement_admin_router
 from backend.api.parent_child import router as parent_child_router
 from backend.api.avatar import router as avatar_router
@@ -25,24 +26,13 @@ import os
 # APP INIT
 # ======================================================
 app = FastAPI(title="FamilyTree API")
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
-
-# 🔥 ADD HERE
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 # ======================================================
 # REGISTER ROUTERS (CHỈ 1 LẦN – CHUẨN)
 # ======================================================
 app.include_router(person_router, prefix="/api/person")
 app.include_router(marriage_router, prefix="/api/marriage")
+app.include_router(auth_router, prefix="/api/auth")
 app.include_router(announcement_admin_router, prefix="/api/admin/announcement")
 app.include_router(parent_child_router, prefix="/api/parent_child")
 app.include_router(avatar_router, prefix="/api/avatar")
