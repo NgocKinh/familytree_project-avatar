@@ -17,6 +17,7 @@ from backend.api.avatar_cdn import router as avatar_cdn_router
 from backend.api.relationship import router as relationship_router
 from backend.api.tree import router as tree_router
 from backend.api.announcement import router as announcement_router
+from backend.api.feedback import router as feedback_router
 
 import os
 
@@ -49,7 +50,7 @@ app.include_router(avatar_cdn_router, prefix="/cdn")
 app.include_router(relationship_router)
 app.include_router(tree_router, prefix="/api/tree")
 app.include_router(announcement_router, prefix="/api/announcement")
-
+app.include_router(feedback_router, prefix="/api/feedback")
 # ======================================================
 # EXCEPTION HANDLER
 # ======================================================

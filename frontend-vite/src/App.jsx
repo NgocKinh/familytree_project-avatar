@@ -21,6 +21,8 @@ import AdminPage from "./pages/AdminPage";
 import AnnouncementPage from "./pages/AnnouncementPage";
 import AnnouncementAdminPage from "./pages/AnnouncementAdminPage";
 import InternalNotificationPage from "./pages/InternalNotificationPage";
+import AdminFeedbackPage from "./pages/AdminFeedbackPage";
+import FeedbackPage from "./pages/FeedbackPage";
 import MarriagePage from "./pages/MarriagePage";
 import ParentChildPage from "./pages/ParentChildPage";
 
@@ -53,6 +55,8 @@ function AppContent() {
     "/person/basic/",
     "/announcement",
     "/internal-notification",
+    "/feedback",
+    "/admin/feedback",
   ];
   
   const shouldHideNavbar =
@@ -126,6 +130,18 @@ function AppContent() {
             }
           />
           <Route
+            path="/admin/feedback"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={["co_operator", "admin"]}
+                redirectTo="/"
+              >
+                <AdminFeedbackPage />
+              </ProtectedRouteV6>
+            }
+          />
+          <Route
             path="/internal-notification"
             element={
               <ProtectedRouteV6
@@ -134,6 +150,18 @@ function AppContent() {
                 redirectTo="/"
               >
                 <InternalNotificationPage />
+              </ProtectedRouteV6>
+            }
+          />
+          <Route
+            path="/feedback"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
+                redirectTo="/"
+              >
+                <FeedbackPage />
               </ProtectedRouteV6>
             }
           />
