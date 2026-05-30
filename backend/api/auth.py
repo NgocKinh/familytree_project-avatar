@@ -1,28 +1,43 @@
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from jose import jwt
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from backend.db import get_db
 from backend.models.user_model import User
-
+from backend.domain.engine_v2.relationship_resolver import resolver_relationship
 
 router = APIRouter(tags=["Auth"])
 
 SECRET_KEY = "CHANGE_ME_FAMILYTREE_SECRET_KEY"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8
+NEAR_RELATION_BASICS = {
+    "self",
+    "spouse",
+    "parent",
+    "child",
+    "sibling",
+    "grandparent",
+    "grandchild",
+    "uncle_aunt",
+    "nephew_niece",
+}
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 class LoginRequest(BaseModel):
     username: str
     password: str
 
+class CheckNearRequest(BaseModel):
+    target_person_id: int
+    action: str = "relation:create"
 
 def verify_password(plain_password: str, password_hash: str) -> bool:
     return pwd_context.verify(plain_password, password_hash)
@@ -39,12 +54,50 @@ def create_access_token(data: dict):
 
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
+):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id = payload.get("sub")
+
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token không hợp lệ",
+            )
+
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token không hợp lệ hoặc đã hết hạn",
+        )
+
+    user = db.query(User).filter(User.id == int(user_id)).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Không tìm thấy user",
+        )
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tài khoản đã bị khoá",
+        )
+
+    return user
 
 @router.post("/login")
-def login(data: LoginRequest, db: Session = Depends(get_db)):
+def login(
+    form_data: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db)
+):
     user = (
         db.query(User)
-        .filter(User.username == data.username)
+        .filter(User.username == form_data.username)
         .first()
     )
 
@@ -60,7 +113,7 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
             detail="Tài khoản đã bị khoá",
         )
 
-    if not verify_password(data.password, user.password_hash):
+    if not verify_password(form_data.password, user.password_hash):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Sai tài khoản hoặc mật khẩu",
@@ -82,3 +135,69 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
             "role": user.role,
         }
     }
+@router.get("/me")
+def me(current_user: User = Depends(get_current_user)):
+    return {
+        "id": current_user.id,
+        "username": current_user.username,
+        "full_name": current_user.full_name,
+        "role": current_user.role,
+        "is_active": current_user.is_active,
+    }  
+
+@router.post("/check-near-access")
+def check_near_access(
+    data: CheckNearRequest,
+    current_user: User = Depends(get_current_user)
+):
+    if current_user.role in ["admin", "co_operator"]:
+        return {
+            "allowed": True,
+            "effective_role": current_user.role,
+            "reason": "Vai trò có quyền nhập liệu không cần xét quan hệ gần",
+            "current_person_id": current_user.person_id,
+            "target_person_id": data.target_person_id,
+            "relationship": None,
+        }
+
+    if current_user.person_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tài khoản chưa liên kết với Person",
+        )
+
+    if current_user.person_id == data.target_person_id:
+        return {
+            "allowed": True,
+            "effective_role": "member_close",
+            "reason": "Chính bản thân người dùng",
+            "current_person_id": current_user.person_id,
+            "target_person_id": data.target_person_id,
+            "relationship": "self",
+        }
+
+    result = resolver_relationship(
+        current_user.person_id,
+        data.target_person_id
+    )
+
+    relation_basic = None
+
+    if result:
+        relation_basic = (
+            result.get("result", {}).get("relation_basic")
+            or result.get("relation_basic")
+            or result.get("relationship")
+        )
+
+    allowed = relation_basic in NEAR_RELATION_BASICS
+
+    return {
+        "allowed": allowed,
+        "effective_role": "member_close" if allowed else current_user.role,
+        "reason": "Có quan hệ gần" if allowed else "Bạn không có quan hệ gần với người này",
+        "current_person_id": current_user.person_id,
+        "target_person_id": data.target_person_id,
+        "relation_basic": relation_basic,
+        "relationship": result,
+    }  

@@ -170,7 +170,12 @@ def get_marriage(mid: int, db: Session = Depends(get_db)):
 # UPDATE MARRIAGE
 # ==========================================================
 @router.put("/{mid}")
-def update_marriage(mid: int, data: MarriageUpdate, db: Session = Depends(get_db)):
+def update_marriage(
+    mid: int,
+    data: MarriageUpdate,
+    db: Session = Depends(get_db),
+    role=Depends(require_permission("relation:update"))
+):
     marriage = db.query(Marriage).filter(Marriage.id == mid).first()
 
     if not marriage:
@@ -194,7 +199,11 @@ def update_marriage(mid: int, data: MarriageUpdate, db: Session = Depends(get_db
 # DELETE MARRIAGE
 # ==========================================================
 @router.delete("/{mid}")
-def delete_marriage(mid: int, db: Session = Depends(get_db)):
+def delete_marriage(
+    mid: int,
+    db: Session = Depends(get_db),
+    role=Depends(require_permission("relation:delete"))
+):
     marriage = db.query(Marriage).filter(Marriage.id == mid).first()
 
     if not marriage:

@@ -14,7 +14,7 @@ class User(Base):
 
     full_name = Column(String(255), nullable=True)
     role = Column(String(50), nullable=False, default="viewer")
-
+    person_id = Column(Integer, nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
 
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
