@@ -20,33 +20,8 @@ import {
 import { hasKey } from "../utils/permissions";
 import { ROLE_KEYS } from "../roleKeys";
 
-const Navbar = ({ role, setRole }) => {
+const Navbar = ({ role }) => {
   const location = useLocation();
-
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState("");
-  const [pendingRole, setPendingRole] = React.useState(role);
-
-  const handleChangeRole = (nextRole) => {
-    // Role không cần chìa (viewer)
-    if (!ROLE_KEYS[nextRole]) {
-      setRole(nextRole);
-      localStorage.setItem("role", nextRole);
-      setPendingRole(nextRole);
-      return;
-    }
-
-    // Role cần chìa
-    if (password === ROLE_KEYS[nextRole]) {
-      setRole(nextRole);
-      localStorage.setItem("role", nextRole);
-      setPendingRole(nextRole);
-      setPassword("");
-      setError("");
-    } else {
-      setError("Sai chìa khoá");
-    }
-  };
 
   const roleColors = {
     viewer: "bg-gray-200 text-gray-700",
@@ -157,7 +132,7 @@ const Navbar = ({ role, setRole }) => {
           */}
 
           {/* 🟨 Cha–Con + 🩷 Hôn Nhân */}
-          {["member_close", "co_operator", "admin"].includes(role) && (
+          {["member_basic", "member_close", "co_operator", "admin"].includes(role) && (
             <>
               <Link
                 to="/parent_child"
@@ -183,7 +158,7 @@ const Navbar = ({ role, setRole }) => {
             </>
           )}
 
-          {["member_close", "co_operator", "admin"].includes(role) && (
+          {["member_basic", "member_close", "co_operator", "admin"].includes(role) && (
             <Link
               to="/family-setup"
               className={`flex items-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white px-3 py-1.5 rounded-lg shadow-md transition ${location.pathname === "/family-setup"
@@ -212,78 +187,15 @@ const Navbar = ({ role, setRole }) => {
           )}
         </div>
 
-        {/* Role chọn nhanh */}
+        {/* Role thật từ JWT */}
         <div className="flex items-center gap-3">
           <span
-            className={`px-2 py-1 rounded text-sm font-semibold ${roleColors[role] || "bg-gray-200 text-gray-700"
-              }`}
+            className={`px-2 py-1 rounded text-sm font-semibold ${
+              roleColors[role] || "bg-gray-200 text-gray-700"
+            }`}
           >
             {role.toUpperCase()}
           </span>
-
-          <select
-            id="role"
-            value={pendingRole}
-            onChange={(e) => {
-              const nextRole = e.target.value;
-
-              // Role KHÔNG cần chìa → áp dụng ngay (viewer)
-              if (!ROLE_KEYS[nextRole]) {
-                setRole(nextRole);
-                localStorage.setItem("role", nextRole);
-                setPendingRole(nextRole);
-                setPassword("");
-                setError("");
-                return;
-              }
-
-              // Role CẦN chìa → chỉ chọn trước
-              setPendingRole(nextRole);
-            }}
-
-            className="bg-gray-700 text-white rounded px-2 py-1 text-sm focus:outline-none focus:ring focus:ring-yellow-400"
-          >
-            <option value="viewer">Viewer</option>
-            <option value="member_basic">Member Basic</option>
-            <option value="member_close">Member Close</option>
-            <option value="co_operator">Co-operator</option>
-            <option value="admin">Admin</option>
-          </select>
-
-          {ROLE_KEYS[pendingRole] && (
-            <form
-              autoComplete="off"
-              className="flex items-center gap-2 mt-1"
-              onSubmit={(e) => e.preventDefault()}
-            >
-              <input
-                type="password"
-                name="role-key"                // tên KHÔNG gợi login
-                placeholder="Nhập chìa khoá"
-                autoComplete="off"
-                value={password}
-                onChange={(e) => {
-                  setPassword(e.target.value);
-                  setError("");
-                }}
-                className="bg-gray-700 text-white rounded px-2 py-1 text-sm focus:outline-none focus:ring focus:ring-yellow-400"
-              />
-              <button
-                type="button"
-                onClick={() => handleChangeRole(pendingRole)}
-                className="bg-yellow-500 hover:bg-yellow-600 text-black rounded px-2 py-1 text-sm"
-              >
-                Xác nhận
-              </button>
-            </form>
-          )}
-
-          {error && (
-            <div className="text-red-400 text-xs mt-1">
-              {error}
-            </div>
-          )}
-
         </div>
       </div>
     </nav>

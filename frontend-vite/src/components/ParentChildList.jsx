@@ -23,9 +23,18 @@ function ParentChildList({ onEdit }) {
   };
   
   const handleDelete = async (id) => {
-    if (window.confirm("Bạn có chắc muốn xóa mối quan hệ này không?")) {
+    if (!window.confirm("Bạn có chắc muốn xóa mối quan hệ này không?")) {
+      return;
+    }
+  
+    try {
       await deleteParentChild(id);
       await loadData();
+    } catch (err) {
+      alert(
+        err?.response?.data?.detail ||
+        "Bạn không có quyền xóa quan hệ này."
+      );
     }
   };
   // ✅ [CHANGE 1]: Dùng formatName chuẩn toàn project

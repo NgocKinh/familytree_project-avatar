@@ -55,6 +55,9 @@ export const updateMarriage = async (id, data) => {
 // 🔹 DELETE: Xóa quan hệ hôn nhân theo ID
 // ===============================
 export const deleteMarriage = async (id) => {
-  const res = await axios.delete(`${MARRIAGE_URL}/${id}`);
+  const res = await axios.delete(
+    `${MARRIAGE_URL}/${id}`,
+    getAuthConfig()
+  );
   return res.data;
 };

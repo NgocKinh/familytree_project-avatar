@@ -1,8 +1,12 @@
 import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
 
-const PARENT_CHILD_URL = `${API_BASE_URL}/parent_child/`;
-
+const PARENT_CHILD_URL = `${API_BASE_URL}/parent_child`;
+const getAuthConfig = () => ({
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+});
 // ===============================
 // 🔹 GET ALL: Lấy toàn bộ quan hệ cha–con
 // ===============================
@@ -23,7 +27,11 @@ export const getParentChildById = async (id) => {
 // 🔹 POST: Thêm quan hệ cha–con mới
 // ===============================
 export const addParentChild = async (data) => {
-  const res = await axios.post(PARENT_CHILD_URL, data);
+  const res = await axios.post(
+    PARENT_CHILD_URL,
+    data,
+    getAuthConfig()
+  );
   return res.data;
 };
 
@@ -31,7 +39,11 @@ export const addParentChild = async (data) => {
 // 🔹 PUT: Cập nhật quan hệ cha–con theo ID
 // ===============================
 export const updateParentChild = async (id, data) => {
-  const res = await axios.put(`${PARENT_CHILD_URL}/${id}`, data);
+  const res = await axios.put(
+    `${PARENT_CHILD_URL}/${id}`,
+    data,
+    getAuthConfig()
+  );
   return res.data;
 };
 
@@ -39,6 +51,9 @@ export const updateParentChild = async (id, data) => {
 // 🔹 DELETE: Xóa quan hệ cha–con theo ID
 // ===============================
 export const deleteParentChild = async (id) => {
-  const res = await axios.delete(`${PARENT_CHILD_URL}/${id}`);
+  const res = await axios.delete(
+    `${PARENT_CHILD_URL}/${id}`,
+    getAuthConfig()
+  );
   return res.data;
 };

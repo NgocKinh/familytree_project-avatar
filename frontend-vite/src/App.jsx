@@ -2,10 +2,12 @@
 // File: src/App.jsx (v3.0-FINAL-CLEAN)
 // ======================================================
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import ProtectedRouteV6 from "./components/ProtectedRouteV6";
 import Navbar from "./components/Navbar";
+import axios from "axios";
+import { API_BASE_URL } from "./api/apiConfig";
 
 // Pages
 import Home from "./pages/Home";
@@ -45,8 +47,42 @@ export default function App() {
 }
 
 function AppContent() {
-  const [role, setRole] = useState(localStorage.getItem("role") || "viewer");
+  const [role, setRole] = useState("viewer");
+  const [authLoading, setAuthLoading] = useState(true);
   const location = useLocation();
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+  
+    if (!token) {
+      setRole("viewer");
+      setAuthLoading(false);
+      return;
+    }
+  
+    axios
+      .get(`${API_BASE_URL}/auth/me`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .then((res) => {
+        setRole(res.data?.role || "viewer");
+      })
+      .catch((err) => {
+
+        if (err?.response?.status === 401) {
+          alert(
+            "Phiên đăng nhập đã hết hạn.\n\nVui lòng đăng nhập lại."
+          );
+        }
+      
+        localStorage.removeItem("token");
+        setRole("viewer");
+      })
+      .finally(() => {
+        setAuthLoading(false);
+      });
+  }, []);
   const hideNavbarRoutes = [
     "/person",
     "/parent_child",
@@ -64,11 +100,17 @@ function AppContent() {
     hideNavbarRoutes.some((route) =>
       location.pathname.startsWith(route)
     );
-
+  if (authLoading) {
+    return (
+      <div className="p-6 text-center text-gray-600">
+        ⏳ Đang kiểm tra quyền truy cập...
+      </div>
+    );
+  }
   return (
     <>
       {!shouldHideNavbar && (
-        <Navbar role={role} setRole={setRole} />
+        <Navbar role={role} />
       )}
 
       <div
@@ -210,7 +252,7 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_close", "co_operator", "admin"]}
+                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
                 redirectTo="/"
               >
                 <MarriagePage />
@@ -223,7 +265,7 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_close", "co_operator", "admin"]}
+                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
                 redirectTo="/"
               >
                 <ParentChildPage />
@@ -236,7 +278,7 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_close", "co_operator", "admin"]}
+                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
                 redirectTo="/"
               >
                 <FamilySetupPage />

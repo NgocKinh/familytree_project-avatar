@@ -11,7 +11,11 @@ import axios from "axios";
 import { API_BASE_URL } from "../api/apiConfig";
 import { formatDateVN } from "../utils/formatDate";
 import { formatName } from "../utils/formatName";
-
+const getAuthConfig = () => ({
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+  },
+});
 export default function MarriageList({ onEdit }) {
   const savePriority = async (marriageId, priority) => {
     try {
@@ -19,7 +23,8 @@ export default function MarriageList({ onEdit }) {
         `${API_BASE_URL}/marriage/${marriageId}/priority`,
         {
           priority,
-        }
+        },
+        getAuthConfig()
       );
   
       console.log("✅ Priority saved");
@@ -77,7 +82,10 @@ export default function MarriageList({ onEdit }) {
   // ================================================================
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`${API_BASE_URL}/marriage/${id}`);
+      await axios.delete(
+        `${API_BASE_URL}/marriage/${id}`,
+        getAuthConfig()
+      );
       await fetchMarriages(); // 🔥 THÊM DÒNG NÀY
       setMessage("🗑️ Đã xóa quan hệ hôn nhân!");
       setDeleteConfirmId(null);

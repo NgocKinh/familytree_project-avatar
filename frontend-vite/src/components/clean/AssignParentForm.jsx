@@ -264,7 +264,8 @@ function AssignParentForm() {
             person_id: p.id || p.person_id,
             birth_order: p.birth_order
           }))
-        }
+        },
+        getAuthConfig()
       );
   
       await checkBirthConflict(childId);

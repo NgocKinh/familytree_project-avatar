@@ -15,7 +15,14 @@ password = "admin123"
 existing = db.query(User).filter(User.username == username).first()
 
 if existing:
-    print("Admin user already exists")
+    existing.password_hash = pwd_context.hash(password)
+    existing.full_name = "System Admin"
+    existing.role = "admin"
+    existing.is_active = True
+    existing.person_id = 1
+
+    db.commit()
+    print("Admin user reset successfully")
 else:
     admin_user = User(
         username=username,
@@ -23,6 +30,7 @@ else:
         full_name="System Admin",
         role="admin",
         is_active=True,
+        person_id=1,
     )
 
     db.add(admin_user)
