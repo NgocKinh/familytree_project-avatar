@@ -2,7 +2,15 @@ import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
 
 const MARRIAGE_URL = `${API_BASE_URL}/marriage`;
+const getAuthConfig = () => {
+  const token = localStorage.getItem("token");
 
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+};
 // ===============================
 // 🔹 GET ALL: Lấy toàn bộ quan hệ hôn nhân
 // ===============================
@@ -23,7 +31,11 @@ export const getMarriageById = async (id) => {
 // 🔹 POST: Thêm quan hệ hôn nhân mới
 // ===============================
 export const addMarriage = async (data) => {
-  const res = await axios.post(`${MARRIAGE_URL}/`, data);
+  const res = await axios.post(
+    `${MARRIAGE_URL}/`,
+    data,
+    getAuthConfig()
+  );
   return res.data;
 };
 
@@ -31,7 +43,11 @@ export const addMarriage = async (data) => {
 // 🔹 PUT: Cập nhật quan hệ hôn nhân theo ID
 // ===============================
 export const updateMarriage = async (id, data) => {
-  const res = await axios.put(`${MARRIAGE_URL}/${id}`, data);
+  const res = await axios.put(
+    `${MARRIAGE_URL}/${id}`,
+    data,
+    getAuthConfig()
+  );
   return res.data;
 };
 

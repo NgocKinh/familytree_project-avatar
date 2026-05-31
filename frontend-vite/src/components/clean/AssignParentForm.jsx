@@ -6,6 +6,15 @@ import MarriageDropdown from "../common/MarriageDropdown";
 import { formatName } from "../../utils/formatName";
 import { useNavigate } from "react-router-dom";
 function AssignParentForm() {
+  const getAuthConfig = () => {
+    const token = localStorage.getItem("token");
+
+    return {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    };
+  };
   const navigate = useNavigate();
   // -----------------------------
   // DATA LISTS
@@ -293,11 +302,15 @@ function AssignParentForm() {
           return;
         }
 
-        await axios.post(`${API_BASE_URL}/parent_child/assign`, {
-          child_id: Number(childId),
-          parent_id: Number(parentId),
-          type: type
-        });
+        await axios.post(
+          `${API_BASE_URL}/parent_child/assign`,
+          {
+            child_id: Number(childId),
+            parent_id: Number(parentId),
+            type: type
+          },
+          getAuthConfig()
+        );
       }
 
       // ===============================
@@ -311,17 +324,25 @@ function AssignParentForm() {
         }
         try {
           // CHA
-          await axios.post(`${API_BASE_URL}/parent_child/assign`, {
-            child_id: Number(childId),
-            parent_id: m.spouse_a_id,
-            type: "father"
-          });
+          await axios.post(
+            `${API_BASE_URL}/parent_child/assign`,
+            {
+              child_id: Number(childId),
+              parent_id: m.spouse_a_id,
+              type: "father"
+            },
+            getAuthConfig()
+          );
           // MẸ
-          await axios.post(`${API_BASE_URL}/parent_child/assign`, {
-            child_id: Number(childId),
-            parent_id: m.spouse_b_id,
-            type: "mother"
-          });
+          await axios.post(
+            `${API_BASE_URL}/parent_child/assign`,
+            {
+              child_id: Number(childId),
+              parent_id: m.spouse_a_id,
+              type: "mother"
+            },
+            getAuthConfig()
+          );
         } catch (err) {
           console.error("❌ BACKEND ERROR:", err.response?.data);
           setError(err.response?.data?.detail || "Lỗi hệ thống");

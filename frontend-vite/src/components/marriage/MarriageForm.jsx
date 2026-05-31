@@ -17,7 +17,7 @@ import {
 } from "../../api/marriageApi";
 
 import { getPersonBasicList } from "../../api/personBasicApi";
-
+import { checkNearAccess } from "../../api/authApi";
 // Utils ngày tháng
 import { formatDateVN, parseVNDate, detectPrecision } from "../../utils/formatDate";
 
@@ -208,7 +208,18 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
 
     const start_iso = parseVNDate(start_date);
     const end_iso = parseVNDate(end_date);
-
+    // ======================================================
+    // Dynamic Close Member Check
+    // ======================================================
+    
+    const accessA = await checkNearAccess(spouse_a_id);
+    const accessB = await checkNearAccess(spouse_b_id);
+    
+    if (!accessA.allowed && !accessB.allowed) {
+      return setErrorMsg(
+        "❌ Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này."
+      );
+    }
     try {
       let res;
       if (editId) {

@@ -13,7 +13,12 @@ from backend.models.marriage_model import Marriage
 
 from backend.schemas.marriage_schema import MarriageCreate, MarriageUpdate
 from backend.services.marriage_service import create_marriage
-from backend.utils.auth_guard import require_permission
+from backend.utils.auth_guard import (
+    require_permission,
+    get_current_user,
+    has_near_access_to_any,
+)
+from backend.models.user_model import User
 from backend.db import get_connection
 router = APIRouter(tags=["Marriage"])
 
@@ -99,8 +104,18 @@ def marriage_payload(m):
 def create_marriage_api(
     data: MarriageCreate,
     db: Session = Depends(get_db),
-    role=Depends(require_permission("relation:create"))
+    current_user: User = Depends(get_current_user)
 ):
+    if not has_near_access_to_any(
+        current_user,
+        [data.spouse_a_id, data.spouse_b_id],
+        "relation:create"
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này",
+        )
+
     return create_marriage(db, data)
 
 # ==========================================================
@@ -174,12 +189,22 @@ def update_marriage(
     mid: int,
     data: MarriageUpdate,
     db: Session = Depends(get_db),
-    role=Depends(require_permission("relation:update"))
+    current_user: User = Depends(get_current_user)
 ):
     marriage = db.query(Marriage).filter(Marriage.id == mid).first()
 
     if not marriage:
         raise HTTPException(404, "Marriage not found")
+
+    if not has_near_access_to_any(
+        current_user,
+        [marriage.spouse_a_id, marriage.spouse_b_id],
+        "relation:update"
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này",
+        )
 
     update_data = data.dict(exclude_unset=True)
 
@@ -193,7 +218,6 @@ def update_marriage(
     db.refresh(marriage)
 
     return marriage_payload(marriage)
-
 
 # ==========================================================
 # DELETE MARRIAGE
@@ -213,7 +237,6 @@ def delete_marriage(
     db.commit()
 
     return {"message": "Deleted successfully"}
-
 
 # ==========================================================
 # GET ALL MARRIAGES OF A PERSON
@@ -270,7 +293,6 @@ def update_priority(mid: int, data: dict, db: Session = Depends(get_db)):
 
     db.commit()
     db.refresh(marriage)
-
 
 
     return {

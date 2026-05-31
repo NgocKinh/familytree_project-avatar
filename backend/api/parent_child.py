@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from backend.db import get_db
@@ -12,7 +12,8 @@ from backend.services.parent_child_service import (
 )
 
 from backend.schemas.parent_child_schema import ParentChildCreate
-
+from backend.utils.auth_guard import get_current_user, has_near_access_to_any
+from backend.models.user_model import User
 # ✅ [CHANGE 1]: Bỏ prefix nội bộ vì main.py đã gắn prefix="/api/parent_child"
 router = APIRouter(tags=["ParentChild"])
 
@@ -56,7 +57,21 @@ def get_siblings_of_child(child_id: int, db: Session = Depends(get_db)):
 # 🔹 ASSIGN PARENT
 # ==========================================================
 @router.post("/assign", status_code=201)
-def assign_parent(data: ParentChildCreate, db: Session = Depends(get_db)):
+def assign_parent(
+    data: ParentChildCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    if not has_near_access_to_any(
+        current_user,
+        [data.child_id, data.parent_id],
+        "relation:create"
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn không có quyền thêm/chỉnh sửa quan hệ cha con này",
+        )
+
     pc = assign_parent_clean(
         db,
         child_id=data.child_id,
@@ -68,7 +83,6 @@ def assign_parent(data: ParentChildCreate, db: Session = Depends(get_db)):
         "message": "Parent assigned successfully",
         "id": pc.id
     }
-
 
 # ==========================================================
 # 🔹 DELETE
