@@ -124,7 +124,83 @@ def update_user(
         "is_active": user.is_active,
     }
 
+@router.put("/{user_id}/lock")
+def lock_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
 
+    if current_user.id == user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Không thể tự khóa tài khoản đang đăng nhập",
+        )
+
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy user",
+        )
+
+    user.is_active = False
+    db.commit()
+
+    return {"message": "Đã khóa tài khoản", "id": user.id}
+
+
+@router.put("/{user_id}/unlock")
+def unlock_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy user",
+        )
+
+    user.is_active = True
+    db.commit()
+
+    return {"message": "Đã mở khóa tài khoản", "id": user.id}
+
+@router.put("/{user_id}/reset-password")
+def reset_password(
+    user_id: int,
+    data: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    if not data.password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password mới không được để trống",
+        )
+
+    user = db.query(User).filter(User.id == user_id).first()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy user",
+        )
+
+    user.password_hash = pwd_context.hash(data.password)
+    db.commit()
+
+    return {"message": "Reset password thành công", "id": user.id}
+        
 @router.delete("/{user_id}")
 def delete_user(
     user_id: int,
