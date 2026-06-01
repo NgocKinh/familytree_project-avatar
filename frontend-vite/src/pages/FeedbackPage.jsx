@@ -13,15 +13,16 @@ function FeedbackPage() {
   });
 
   const [success, setSuccess] = useState(false);
-
+  const [loading, setLoading] = useState(false);
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+    setLoading(true);
     // ======================================================
     // VALIDATION: Tiêu đề
     // ======================================================
     if (!form.title.trim()) {
     alert("Vui lòng nhập tiêu đề phản hồi.");
+    setLoading(false);
     return;
     }
 
@@ -30,6 +31,7 @@ function FeedbackPage() {
     // ======================================================
     if (!form.message.trim()) {
     alert("Vui lòng nhập nội dung phản hồi.");
+    setLoading(false);
     return;
     }
 
@@ -41,6 +43,7 @@ function FeedbackPage() {
     !form.contact_phone.trim()
     ) {
     alert("Vui lòng nhập Email hoặc Số điện thoại để ban quản trị có thể phản hồi.");
+    setLoading(false);
     return;
     }
   
@@ -71,7 +74,9 @@ function FeedbackPage() {
       }
     } catch (err) {
       console.error(err);
-      alert("Không gửi được feedback");
+      alert("Không gửi được góp ý");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -208,9 +213,14 @@ function FeedbackPage() {
 
         <button
           type="submit"
-          className="px-6 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+          disabled={loading}
+          className={`px-6 py-2 rounded text-white ${
+            loading
+              ? "bg-blue-300 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700"
+          }`}
         >
-          Gửi phản hồi
+          {loading ? "⏳ Đang gửi..." : "Gửi phản hồi"}
         </button>
 
       </form>

@@ -39,6 +39,7 @@ function AssignParentForm() {
   // -----------------------------
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [loading, setLoading] = useState(false);
   const [hasFather, setHasFather] = useState(false);
   const [hasMother, setHasMother] = useState(false);
   const [lockForm, setLockForm] = useState(false);
@@ -285,15 +286,17 @@ function AssignParentForm() {
   // -----------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
+    setLoading(true);
     setError("");
     setSuccess("");
-
-    if (!childId) {
-      setError("❌ Chưa chọn người con.");
-      return;
-    }
-
+  
     try {
+  
+      if (!childId) {
+        setError("❌ Chưa chọn người con.");
+        return;
+      }  
       // ===============================
       // CASE 1: KHÔNG CÓ HÔN NHÂN
       // ===============================
@@ -363,12 +366,15 @@ function AssignParentForm() {
 
     } catch (err) {
       console.error("❌ ASSIGN ERROR:", err.response?.data || err);
-
+    
       setError(
         err.response?.data?.detail ||
         err.response?.data?.error ||
         "❌ Lỗi hệ thống."
       );
+    
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -576,9 +582,14 @@ function AssignParentForm() {
           {!lockForm && (
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded"
+              disabled={loading}
+              className={`px-4 py-2 text-white rounded ${
+                loading
+                  ? "bg-blue-300 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
             >
-              💾 Lưu
+              {loading ? "⏳ Đang kiểm tra quyền..." : "💾 Lưu"}
             </button>
           )}
           {lockForm && (

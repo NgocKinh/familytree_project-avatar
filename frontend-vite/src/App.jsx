@@ -34,7 +34,7 @@ import PendingReviewPage from "./pages/PendingReviewPage.jsx";
 import PersonDetailPage from "./pages/PersonDetailPage.jsx";
 
 import FamilySetupPage from "./pages/FamilySetupPage";
-
+import LoginPage from "./pages/LoginPage.jsx";
 // ======================================================
 // App
 // ======================================================
@@ -48,6 +48,7 @@ export default function App() {
 
 function AppContent() {
   const [role, setRole] = useState("viewer");
+  const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const location = useLocation();
   useEffect(() => {
@@ -55,6 +56,7 @@ function AppContent() {
   
     if (!token) {
       setRole("viewer");
+      setCurrentUser(null);
       setAuthLoading(false);
       return;
     }
@@ -67,6 +69,7 @@ function AppContent() {
       })
       .then((res) => {
         setRole(res.data?.role || "viewer");
+        setCurrentUser(res.data || null);
       })
       .catch((err) => {
 
@@ -77,7 +80,9 @@ function AppContent() {
         }
       
         localStorage.removeItem("token");
+        localStorage.removeItem("currentUser");
         setRole("viewer");
+        setCurrentUser(null);
       })
       .finally(() => {
         setAuthLoading(false);
@@ -110,7 +115,12 @@ function AppContent() {
   return (
     <>
       {!shouldHideNavbar && (
-        <Navbar role={role} />
+        <Navbar
+          role={role}
+          currentUser={currentUser}
+          setRole={setRole}
+          setCurrentUser={setCurrentUser}
+        />
       )}
 
       <div
@@ -127,7 +137,19 @@ function AppContent() {
           {/* HOME */}
           <Route path="/" element={<Home role={role} />} />
           <Route path="/home" element={<Home role={role} />} />
-
+          <Route
+            path="/login"
+            element={
+              role !== "viewer"
+                ? <Navigate to="/" replace />
+                : (
+                    <LoginPage
+                      setRole={setRole}
+                      setCurrentUser={setCurrentUser}
+                    />
+                  )
+            }
+          />
           {/* RELATION FINDER */}
 
           <Route

@@ -11,6 +11,7 @@ from backend.core.exceptions import AppError
 from backend.api.person import router as person_router
 from backend.api.marriage import router as marriage_router
 from backend.api.auth import router as auth_router
+from backend.api.users import router as users_router
 from backend.api.announcement_admin import router as announcement_admin_router
 from backend.api.parent_child import router as parent_child_router
 from backend.api.avatar import router as avatar_router
@@ -33,6 +34,7 @@ app = FastAPI(title="FamilyTree API")
 app.include_router(person_router, prefix="/api/person")
 app.include_router(marriage_router, prefix="/api/marriage")
 app.include_router(auth_router, prefix="/api/auth")
+app.include_router(users_router, prefix="/api/users")
 app.include_router(announcement_admin_router, prefix="/api/admin/announcement")
 app.include_router(parent_child_router, prefix="/api/parent_child")
 app.include_router(avatar_router, prefix="/api/avatar")

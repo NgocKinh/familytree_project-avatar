@@ -41,6 +41,7 @@ function AssignChildToParentForm() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [lockForm, setLockForm] = useState(false);
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     axios.get(`${API_BASE_URL}/person`)
       .then(res => {
@@ -61,15 +62,18 @@ function AssignChildToParentForm() {
   }, []);
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
+    setLoading(true);
+  
     setError("");
     setSuccess("");
-
+  
     if (!childId) {
       setError("❌ Chưa chọn người con.");
+      setLoading(false);
       return;
     }
-
+  
     try {
       // ===============================
       // CASE 1: KHÔNG CÓ HÔN NHÂN
@@ -128,13 +132,19 @@ function AssignChildToParentForm() {
       setSuccess("✅ Đã bổ sung quan hệ Cha/Mẹ & Con thành công.");
       setLockForm(true);
     } catch (err) {
-      console.error("❌ ASSIGN CHILD ERROR:", err.response?.data || err);
-
+      console.error(
+        "❌ ASSIGN CHILD ERROR:",
+        err.response?.data || err
+      );
+    
       setError(
         err.response?.data?.detail ||
         err.response?.data?.error ||
         "❌ Lỗi hệ thống."
       );
+    }
+    finally {
+      setLoading(false);
     }
   };
   return (
@@ -263,9 +273,10 @@ function AssignChildToParentForm() {
           {!lockForm && (
             <button
               type="submit"
+              disabled={loading}
               className="px-4 py-2 bg-blue-600 text-white rounded"
             >
-              💾 Lưu
+              {loading ? "⏳ Đang lưu..." : "💾 Lưu"}
             </button>
           )}
 

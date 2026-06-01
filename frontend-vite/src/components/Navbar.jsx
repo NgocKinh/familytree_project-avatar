@@ -6,7 +6,7 @@
 // ===============================================================
 
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaHome,
   FaUsers,
@@ -20,9 +20,17 @@ import {
 import { hasKey } from "../utils/permissions";
 import { ROLE_KEYS } from "../roleKeys";
 
-const Navbar = ({ role }) => {
+const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
   const location = useLocation();
+  const navigate = useNavigate();
 
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("currentUser");
+    setRole("viewer");
+    setCurrentUser(null);
+    navigate("/login");
+  };
   const roleColors = {
     viewer: "bg-gray-200 text-gray-700",
     member_basic: "bg-blue-100 text-blue-600",
@@ -187,15 +195,33 @@ const Navbar = ({ role }) => {
           )}
         </div>
 
-        {/* Role thật từ JWT */}
+        {/* Login / Logout */}
         <div className="flex items-center gap-3">
-          <span
-            className={`px-2 py-1 rounded text-sm font-semibold ${
-              roleColors[role] || "bg-gray-200 text-gray-700"
-            }`}
-          >
-            {role.toUpperCase()}
-          </span>
+          {role === "viewer" ? (
+            <Link
+              to="/login"
+              className="px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"
+            >
+              Đăng nhập
+            </Link>
+          ) : (
+            <>
+              <span
+                className={`px-2 py-1 rounded text-sm font-semibold ${
+                  roleColors[role] || "bg-gray-200 text-gray-700"
+                }`}
+              >
+                {currentUser?.full_name || currentUser?.username || role.toUpperCase()}
+              </span>
+
+              <button
+                onClick={handleLogout}
+                className="px-3 py-1.5 rounded bg-red-500 hover:bg-red-600 text-white text-sm font-semibold"
+              >
+                Đăng xuất
+              </button>
+            </>
+          )}
         </div>
       </div>
     </nav>

@@ -62,7 +62,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
   const [persons, setPersons] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
-
+  const [loading, setLoading] = useState(false);
   const [mode, setMode] = useState("full");
   const [showSurName, setShowSurName] = useState(true);
 
@@ -179,7 +179,11 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
   // ======================================================================
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
+    setLoading(true);
+    setErrorMsg("");
+    setSuccessMsg("");
+  
     const {
       spouse_a_id,
       spouse_b_id,
@@ -193,16 +197,23 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
       consanguineous,
     } = formData;
 
-    if (!spouse_a_id || !spouse_b_id)
-      return setErrorMsg("⚠️ Vui lòng chọn đầy đủ Vợ và Chồng.");
+    if (!spouse_a_id || !spouse_b_id) {
+      setErrorMsg("⚠️ Vui lòng chọn đầy đủ Vợ và Chồng.");
+      setLoading(false);
+      return;
+    }
 
-    if (spouse_a_id === spouse_b_id)
-      return setErrorMsg("❌ Vợ và Chồng không thể là cùng một người.");
+    if (spouse_a_id === spouse_b_id) {
+      setErrorMsg("❌ Vợ và Chồng không thể là cùng một người.");
+      setLoading(false);
+      return;
+    }
     // Y3: chỉ chặn trùng người khi gender = other
     if (
       husbandGender === null &&
       spouse_a_id === spouse_b_id
     ) {
+      setLoading(false);
       return; // silent block, không popup
     }
 
@@ -216,9 +227,9 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
     const accessB = await checkNearAccess(spouse_b_id);
     
     if (!accessA.allowed && !accessB.allowed) {
-      return setErrorMsg(
-        "❌ Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này."
-      );
+      setErrorMsg("❌ Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này.");
+      setLoading(false);
+      return;
     }
     try {
       let res;
@@ -269,6 +280,8 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
         err.response?.data?.warning ||
         "❌ Không thể lưu quan hệ hôn nhân!";
       setErrorMsg(msg);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -440,12 +453,17 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
 
         {/* Nút */}
         <div className="flex justify-between gap-4 pt-2">
-          <button
-            type="submit"
-            className="flex-1 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-          >
-            💾 Lưu Quan Hệ
-          </button>
+        <button
+          type="submit"
+          disabled={loading}
+          className={`flex-1 text-white px-4 py-2 rounded ${
+            loading
+              ? "bg-green-300 cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-700"
+          }`}
+        >
+          {loading ? "⏳ Đang lưu..." : "💾 Lưu Quan Hệ"}
+        </button>
 
           <button
             type="button"
