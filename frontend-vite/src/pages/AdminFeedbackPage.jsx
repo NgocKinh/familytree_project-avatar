@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import AdminHeader from "../components/admin/AdminHeader";
 function AdminFeedbackPage() {
   const navigate = useNavigate();
 
@@ -68,23 +68,8 @@ function AdminFeedbackPage() {
 
   return (
     <div className="w-full p-4 bg-white">
-      {/* HEADER */}
-      <div className="sticky top-0 z-50 bg-white border-b py-2 mb-4">
-        <div className="grid grid-cols-3 items-center">
-          <button
-            onClick={() => navigate("/")}
-            className="justify-self-start px-4 py-2 rounded bg-gray-700 text-white hover:bg-gray-800"
-          >
-            🏠 Home
-          </button>
-
-          <h2 className="justify-self-center text-2xl font-bold text-blue-600 whitespace-nowrap">
-            📨 Quản Lý Feedback
-          </h2>
-
-          <div />
-        </div>
-      </div>
+      
+      <AdminHeader title="📨 Quản Lý Feedback" />
 
       {loading && (
         <div className="mb-3 text-blue-600">

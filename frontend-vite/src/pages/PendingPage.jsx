@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import AdminHeader from "../components/admin/AdminHeader";
 import {
   getPendingList,
   approvePending,
@@ -91,9 +91,8 @@ export default function PendingPage({ role }) {
   // -------------------------------------------------------------
   return (
     <div className="p-4">
-      <h2 className="text-2xl mb-4 font-bold text-blue-700">
-        📥 Danh sách chờ duyệt
-      </h2>
+      
+      <AdminHeader title="📥 Danh sách chờ duyệt" />
 
       {loading ? (
         <div className="italic text-gray-500">Đang tải...</div>

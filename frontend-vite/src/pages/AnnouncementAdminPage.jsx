@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-
+import AdminHeader from "../components/admin/AdminHeader";
 function AnnouncementAdminPage() {
     const [announcements, setAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -63,9 +63,8 @@ function AnnouncementAdminPage() {
 
     return (
         <div className="max-w-5xl mx-auto p-6">
-            <h1 className="text-3xl font-bold mb-6 text-blue-700">
-                📢 Quản Lý Thông Báo
-            </h1>
+            
+            <AdminHeader title="📢 Quản Lý Thông Báo" />
 
             <div className="bg-white rounded-xl shadow p-6 border">
                 <div className="mb-6 border rounded-xl p-4 bg-blue-50">

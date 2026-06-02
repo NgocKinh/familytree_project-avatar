@@ -59,7 +59,23 @@ def create_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Username đã tồn tại",
         )
+    # ==================================================
+    # 1 PERSON = 1 USER
+    # ==================================================
+    if data.person_id is not None:
 
+        existing_person = (
+            db.query(User)
+            .filter(User.person_id == data.person_id)
+            .first()
+        )
+
+        if existing_person:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Thành viên này đã có tài khoản user"
+            )
+    
     user = User(
         username=data.username,
         password_hash=pwd_context.hash(data.password),
@@ -200,7 +216,7 @@ def reset_password(
     db.commit()
 
     return {"message": "Reset password thành công", "id": user.id}
-        
+
 @router.delete("/{user_id}")
 def delete_user(
     user_id: int,

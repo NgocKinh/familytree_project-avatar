@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import MarriageList from "../components/MarriageList";
 import MarriageForm from "../components/marriage/MarriageForm";
 
-export default function MarriagePage() {
+export default function MarriagePage({ role }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("list");
   const [editId, setEditId] = useState(null);
@@ -78,6 +78,7 @@ export default function MarriagePage() {
         <MarriageList
           key={refreshKey}
           onEdit={handleEdit}
+          role={role}
         />
       ) : (
         <MarriageForm editId={editId} onBack={handleBack} />

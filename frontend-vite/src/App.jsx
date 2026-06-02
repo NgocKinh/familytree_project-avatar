@@ -35,6 +35,7 @@ import PersonDetailPage from "./pages/PersonDetailPage.jsx";
 
 import FamilySetupPage from "./pages/FamilySetupPage";
 import LoginPage from "./pages/LoginPage.jsx";
+import AdminUsersPage from "./pages/AdminUsersPage.jsx";
 // ======================================================
 // App
 // ======================================================
@@ -97,7 +98,9 @@ function AppContent() {
     "/announcement",
     "/internal-notification",
     "/feedback",
-    "/admin/feedback",
+    "/feedback",
+    "/admin",
+    "/pending",
   ];
   
   const shouldHideNavbar =
@@ -206,6 +209,18 @@ function AppContent() {
             }
           />
           <Route
+            path="/admin/users"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={["admin"]}
+                redirectTo="/"
+              >
+                <AdminUsersPage currentUser={currentUser} />
+              </ProtectedRouteV6>
+            }
+          />
+          <Route
             path="/internal-notification"
             element={
               <ProtectedRouteV6
@@ -277,7 +292,7 @@ function AppContent() {
                 allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
                 redirectTo="/"
               >
-                <MarriagePage />
+                <MarriagePage role={role} />
               </ProtectedRouteV6>
             }
           />
@@ -290,7 +305,7 @@ function AppContent() {
                 allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
                 redirectTo="/"
               >
-                <ParentChildPage />
+                <ParentChildPage role={role} />
               </ProtectedRouteV6>
             }
           />

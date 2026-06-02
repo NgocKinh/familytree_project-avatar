@@ -28,7 +28,7 @@ const PersonForm = ({ initialData = {}, onSubmit, role = "viewer", mode = "add" 
     notes: "",
     avatar: "",
   });
-
+  const [loading, setLoading] = useState(false);
   useEffect(() => {
     if (initialData) {
       setFormData((prev) => ({ ...prev, ...initialData }));
@@ -50,18 +50,23 @@ const PersonForm = ({ initialData = {}, onSubmit, role = "viewer", mode = "add" 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+  
+    setLoading(true);
+  
     try {
       if (mode === "edit") {
         await updatePerson(formData.person_id, formData);
       } else {
         await addPerson(formData);
       }
+  
       if (onSubmit) onSubmit(formData);
     } catch (err) {
       console.error("Error submitting form", err);
+    } finally {
+      setLoading(false);
     }
   };
-
 
   return (
     <form
@@ -170,9 +175,21 @@ const PersonForm = ({ initialData = {}, onSubmit, role = "viewer", mode = "add" 
 
       {/* Buttons */}
       <div className="flex justify-center space-x-4 mt-6">
-        <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded">
-          {mode === "edit" ? "Cập nhật" : "Thêm mới"}
-        </button>
+      <button
+        type="submit"
+        disabled={loading}
+        className={`text-white px-4 py-2 rounded ${
+          loading
+            ? "bg-blue-300 cursor-not-allowed"
+            : "bg-blue-500 hover:bg-blue-600"
+        }`}
+      >
+        {loading
+          ? "⏳ Đang lưu..."
+          : mode === "edit"
+          ? "Cập nhật"
+          : "Thêm mới"}
+      </button>
         <button type="reset" className="bg-gray-400 text-white px-4 py-2 rounded">
           Hủy
         </button>

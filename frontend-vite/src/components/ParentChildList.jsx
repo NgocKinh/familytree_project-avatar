@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getParentChildList, deleteParentChild } from "../api/parentChildApi";
 import { formatName } from "../utils/formatName";
 
-function ParentChildList({ onEdit }) {
+function ParentChildList({ onEdit, role }) {
   const [relations, setRelations] = useState([]);
   const [mode, setMode] = useState("full");
   const [showSurName, setShowSurName] = useState(false);
@@ -235,12 +235,14 @@ function ParentChildList({ onEdit }) {
                   >
                     ✏️
                   </button> */}
-                  <button
-                    onClick={() => handleDelete(r.id)}
-                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                  >
-                    🗑️
-                  </button>
+                  {role === "admin" && (
+                    <button
+                      onClick={() => handleDelete(r.id)}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                    >
+                      🗑️
+                    </button>
+                  )}
                 </td>
               </tr>
             ))}

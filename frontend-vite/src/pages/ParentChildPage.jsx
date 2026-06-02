@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import ParentChildList from "../components/ParentChildList";
 import ParentChildForm from "../components/parent_child/ParentChildForm";
 
-export default function ParentChildPage() {
+export default function ParentChildPage({ role }) {
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("list");
@@ -42,8 +42,9 @@ export default function ParentChildPage() {
         <div />
       </div>
     </div>
-      {activeTab === "list" && <ParentChildList onEdit={handleEdit} />}
-
+      {activeTab === "list" && (
+        <ParentChildList onEdit={handleEdit} role={role} />  
+      )}
       {activeTab === "form" && (
         <ParentChildForm editId={editId} onBack={handleBack} />
       )}

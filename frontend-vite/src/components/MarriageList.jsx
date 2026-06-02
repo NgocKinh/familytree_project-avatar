@@ -16,7 +16,7 @@ const getAuthConfig = () => ({
     Authorization: `Bearer ${localStorage.getItem("token")}`,
   },
 });
-export default function MarriageList({ onEdit }) {
+export default function MarriageList({ onEdit, role }) {
   const savePriority = async (marriageId, priority) => {
     try {
       await axios.put(
@@ -279,12 +279,14 @@ export default function MarriageList({ onEdit }) {
                             ✏️
                           </button>
   
-                          <button
-                            onClick={() => setDeleteConfirmId(m.id)}
-                            className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-                          >
-                            🗑️
-                          </button>
+                          {role === "admin" && (
+                            <button
+                              onClick={() => setDeleteConfirmId(m.id)}
+                              className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                            >
+                              🗑️
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>
