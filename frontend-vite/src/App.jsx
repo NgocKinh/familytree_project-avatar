@@ -36,6 +36,7 @@ import PersonDetailPage from "./pages/PersonDetailPage.jsx";
 import FamilySetupPage from "./pages/FamilySetupPage";
 import LoginPage from "./pages/LoginPage.jsx";
 import AdminUsersPage from "./pages/AdminUsersPage.jsx";
+import HelpPage from "./pages/HelpPage.jsx";
 // ======================================================
 // App
 // ======================================================
@@ -101,6 +102,7 @@ function AppContent() {
     "/feedback",
     "/admin",
     "/pending",
+    "/help",
   ];
   
   const shouldHideNavbar =
@@ -349,7 +351,25 @@ function AppContent() {
               </ProtectedRouteV6>
             }
           />
-
+          {/* HELP */}
+          <Route
+            path="/help"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={[
+                  "viewer",
+                  "member_basic",
+                  "member_close",
+                  "co_operator",
+                  "admin",
+                ]}
+                redirectTo="/"
+              >
+                <HelpPage />
+              </ProtectedRouteV6>
+            }
+          />
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" />} />
 
