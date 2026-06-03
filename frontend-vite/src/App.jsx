@@ -47,6 +47,29 @@ export default function App() {
     </Router>
   );
 }
+// ======================================================
+// ACL GROUPS
+// ======================================================
+
+const ALL_LOGIN_ROLES = [
+  "viewer",
+  "member_basic",
+  "member_close",
+  "co_operator",
+  "admin",
+];
+
+const MEMBER_ROLES = [
+  "member_basic",
+  "member_close",
+  "co_operator",
+  "admin",
+];
+
+const ADMIN_AREA_ROLES = [
+  "co_operator",
+  "admin",
+];
 
 function AppContent() {
   const [role, setRole] = useState("viewer");
@@ -145,7 +168,7 @@ function AppContent() {
           <Route
             path="/login"
             element={
-              role !== "viewer"
+              currentUser
                 ? <Navigate to="/" replace />
                 : (
                     <LoginPage
@@ -162,7 +185,8 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
+                allowRoles={MEMBER_ROLES}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <RelationFinderPage />
@@ -179,7 +203,8 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["co_operator", "admin"]}
+                allowRoles={ADMIN_AREA_ROLES}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <AdminPage />
@@ -191,7 +216,8 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["co_operator", "admin"]}
+                allowRoles={ADMIN_AREA_ROLES}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <AnnouncementAdminPage />
@@ -203,7 +229,8 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["co_operator", "admin"]}
+                allowRoles={ADMIN_AREA_ROLES}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <AdminFeedbackPage />
@@ -216,6 +243,7 @@ function AppContent() {
               <ProtectedRouteV6
                 role={role}
                 allowRoles={["admin"]}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <AdminUsersPage currentUser={currentUser} />
@@ -227,8 +255,8 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
-                redirectTo="/"
+                allowRoles={MEMBER_ROLES}
+                currentUser={currentUser}
               >
                 <InternalNotificationPage />
               </ProtectedRouteV6>
@@ -239,7 +267,8 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
+                allowRoles={MEMBER_ROLES}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <FeedbackPage />
@@ -247,7 +276,19 @@ function AppContent() {
             }
           />
           {/* PERSON LIST */}
-          <Route path="/person" element={<PersonList role={role} />} />
+          <Route
+            path="/person"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={ALL_LOGIN_ROLES}
+                currentUser={currentUser}
+                redirectTo="/"
+              >
+                <PersonList role={role} />
+              </ProtectedRouteV6>
+            }
+          />
 
           {/* ADD / EDIT PERSON */}
           <Route
@@ -255,7 +296,8 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
+                allowRoles={MEMBER_ROLES}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <AddPersonPage role={role} />
@@ -268,7 +310,8 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
+                allowRoles={MEMBER_ROLES}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <AddPersonPage role={role} />
@@ -277,13 +320,49 @@ function AppContent() {
           />
 
           {/* DETAIL */}
-          <Route path="/person/detail/:id" element={<PersonDetailPage />} />
+          <Route
+            path="/person/detail/:id"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={ALL_LOGIN_ROLES}
+                currentUser={currentUser}
+                redirectTo="/"
+              >
+                <PersonDetailPage />
+              </ProtectedRouteV6>
+            }
+          />
 
           {/* TREE VIEW */}
-          <Route path="/tree/:personId" element={<TreePage />} />  {/* ✔ PARAM FIXED */}
+          <Route
+            path="/tree/:personId"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={ALL_LOGIN_ROLES}
+                currentUser={currentUser}
+                redirectTo="/"
+              >
+                <TreePage />
+              </ProtectedRouteV6>
+            }
+          />
 
           {/* ANNOUNCEMENT */}
-          <Route path="/announcement" element={<AnnouncementPage />} />
+          <Route
+            path="/announcement"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={ALL_LOGIN_ROLES}
+                currentUser={currentUser}
+                redirectTo="/"
+              >
+                <AnnouncementPage />
+              </ProtectedRouteV6>
+            }
+          />
 
           {/* RELATIONS */}
           <Route
@@ -291,7 +370,8 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
+                allowRoles={MEMBER_ROLES}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <MarriagePage role={role} />
@@ -304,7 +384,8 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
+                allowRoles={MEMBER_ROLES}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <ParentChildPage role={role} />
@@ -317,7 +398,8 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_basic", "member_close", "co_operator", "admin"]}
+                allowRoles={MEMBER_ROLES}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <FamilySetupPage />
@@ -332,6 +414,7 @@ function AppContent() {
               <ProtectedRouteV6
                 role={role}
                 allowRoles={["member_close", "co_operator", "admin"]}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <PendingPage role={role} />
@@ -345,6 +428,7 @@ function AppContent() {
               <ProtectedRouteV6
                 role={role}
                 allowRoles={["member_close", "co_operator", "admin"]}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <PendingReviewPage role={role} />
@@ -364,6 +448,7 @@ function AppContent() {
                   "co_operator",
                   "admin",
                 ]}
+                currentUser={currentUser}
                 redirectTo="/"
               >
                 <HelpPage />

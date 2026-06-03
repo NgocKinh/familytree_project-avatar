@@ -8,16 +8,12 @@ engine = create_engine(DATABASE_URL)
 from sqlalchemy import text
 
 with engine.connect() as conn:
-    print("DATABASE_URL =", DATABASE_URL)
 
     result = conn.execute(text("SELECT DATABASE(), @@hostname, @@port"))
     row = result.fetchone()
-    print("DB CHECK =", row)
 
     result = conn.execute(text("SELECT COUNT(*) FROM users"))
     user_count = result.scalar()
-    print("USER COUNT =", user_count)
-    
 
     # result = conn.execute(text("SELECT COUNT(*) FROM family_relationships"))
 

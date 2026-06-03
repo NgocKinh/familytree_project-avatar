@@ -30,7 +30,7 @@ export default function AdminUsersPage({ currentUser }) {
         username: "",
         password: "",
         full_name: "",
-        role: "viewer",
+        role: "",
         person_id: "",
         is_active: true,
     });
@@ -96,7 +96,7 @@ export default function AdminUsersPage({ currentUser }) {
                 username: "",
                 password: "",
                 full_name: "",
-                role: "viewer",
+                role: "",
                 person_id: "",
                 is_active: true,
             });
@@ -196,7 +196,7 @@ export default function AdminUsersPage({ currentUser }) {
                     name="username"
                     value={form.username}
                     onChange={handleChange}
-                    placeholder="😎 Đặt tên người dùng"
+                    placeholder="😎 Đặt tên người dùng (Username)"
                     className="border rounded px-2 py-1"
                     required
                 />
@@ -216,7 +216,12 @@ export default function AdminUsersPage({ currentUser }) {
                     value={form.role}
                     onChange={handleChange}
                     className="border rounded px-2 py-1"
+                    required
                 >
+                    <option value="" disabled>
+                        🎭 Chọn vai trò
+                    </option>
+
                     {ROLES.map((role) => (
                         <option key={role.value} value={role.value}>
                             {role.label}
@@ -241,8 +246,8 @@ export default function AdminUsersPage({ currentUser }) {
                         <thead className="bg-gray-100">
                             <tr>
                                 <th className="border px-2 py-1">ID</th>
+                                <th className="border px-2 py-1">👤 Thành viên</th>
                                 <th className="border px-2 py-1">Username</th>
-                                <th className="border px-2 py-1">Full name</th>
                                 <th className="border px-2 py-1">Person ID</th>
                                 <th className="border px-2 py-1">Role</th>
                                 <th className="border px-2 py-1">Trạng thái</th>
@@ -254,8 +259,10 @@ export default function AdminUsersPage({ currentUser }) {
                             {users.map((user) => (
                                 <tr key={user.id}>
                                     <td className="border px-2 py-1 text-center">{user.id}</td>
+                                    <td className="border px-2 py-1">
+                                        {persons.find((p) => Number(p.id ?? p.person_id) === Number(user.person_id))?.name || "-"}
+                                    </td>
                                     <td className="border px-2 py-1">{user.username}</td>
-                                    <td className="border px-2 py-1">{user.full_name}</td>
                                     <td className="border px-2 py-1 text-center">
                                         {user.person_id || "-"}
                                     </td>
