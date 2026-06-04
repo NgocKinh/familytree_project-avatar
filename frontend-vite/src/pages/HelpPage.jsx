@@ -13,8 +13,8 @@ export default function HelpPage() {
     {
       icon: "🧩",
       title: "2. Tôi có thể là gì trong hệ ",
-      desc: "viewer chỉ xem cơ bản. member_basic có thể thêm dữ liệu gần. member_close có quyền rộng hơn với người thân gần. co_operator hỗ trợ quản trị. admin có toàn quyền.",
-    },
+      desc: "viewer chỉ xem cơ bản. member_basic có thể thêm dữ liệu theo quyền được cấp và quan hệ gần. co_operator hỗ trợ quản trị. admin có toàn quyền.",
+    },  
     {
       icon: "👤",
       title: "3. Thêm / sửa người",

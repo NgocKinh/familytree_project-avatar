@@ -25,7 +25,6 @@ export default function AddPersonPage({ role }) {
   const [hasNavigated, setHasNavigated] = useState(false);
   // Ai được phép xem Form Chi Tiết?
   const canShowDetail =
-    role === "member_close" ||
     role === "co_operator" ||
     role === "admin";
 
@@ -71,8 +70,8 @@ export default function AddPersonPage({ role }) {
 
     // ==================================================================
     // Quy tắc hiển thị Form Detail:
-    // - member_close trở lên → luôn hiển thị
-    // - member_basic → không hiển thị
+    // - co_operator/admin → luôn hiển thị
+    // - member_basic → chỉ xử lý theo quyền gần ở các form quan hệ
     // ==================================================================
     if (canShowDetail) {
       setShowDetailForm(true);

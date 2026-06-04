@@ -54,14 +54,12 @@ export default function App() {
 const ALL_LOGIN_ROLES = [
   "viewer",
   "member_basic",
-  "member_close",
   "co_operator",
   "admin",
 ];
 
 const MEMBER_ROLES = [
   "member_basic",
-  "member_close",
   "co_operator",
   "admin",
 ];
@@ -413,7 +411,7 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_close", "co_operator", "admin"]}
+                allowRoles={MEMBER_ROLES}
                 currentUser={currentUser}
                 redirectTo="/"
               >
@@ -427,7 +425,7 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={["member_close", "co_operator", "admin"]}
+                allowRoles={MEMBER_ROLES}
                 currentUser={currentUser}
                 redirectTo="/"
               >
@@ -441,13 +439,7 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={[
-                  "viewer",
-                  "member_basic",
-                  "member_close",
-                  "co_operator",
-                  "admin",
-                ]}
+                allowRoles={ALL_LOGIN_ROLES}
                 currentUser={currentUser}
                 redirectTo="/"
               >
