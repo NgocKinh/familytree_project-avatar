@@ -1,7 +1,22 @@
+import os
+import mysql.connector
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
+from urllib.parse import quote_plus
+load_dotenv("backend/.env")
 
-DATABASE_URL = "mysql+mysqlconnector://root:Msand%40167@127.0.0.1:3306/familytreedb"
+DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
+DB_PORT = os.getenv("DB_PORT", "3306")
+DB_USER = os.getenv("DB_USER", "root")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "")
+DB_NAME = os.getenv("DB_NAME", "familytreedb")
+
+DATABASE_URL = (
+    f"mysql+mysqlconnector://{DB_USER}:{quote_plus(DB_PASSWORD)}@"
+    f"{DB_HOST}:{DB_PORT}/{DB_NAME}"
+)
 
 engine = create_engine(DATABASE_URL)
 
@@ -14,8 +29,6 @@ with engine.connect() as conn:
 
     result = conn.execute(text("SELECT COUNT(*) FROM users"))
     user_count = result.scalar()
-
-    # result = conn.execute(text("SELECT COUNT(*) FROM family_relationships"))
 
 SessionLocal = sessionmaker(
     autocommit=False,
@@ -37,9 +50,9 @@ import mysql.connector
 
 def get_connection():
     return mysql.connector.connect(
-        host="127.0.0.1",   # 🔥 đổi dòng này
-        port=3306,          # 🔥 thêm dòng này
-        user="root",
-        password="Msand@167",
-        database="familytreedb"
+        host=DB_HOST,
+        port=int(DB_PORT),
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME
     )

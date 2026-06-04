@@ -115,6 +115,12 @@ def get_all_persons(db: Session = Depends(get_db)):
             "middle_name": p.middle_name,
             "first_name": p.first_name,
             "gender": p.gender,
+            "avatar": safe_avatar_file(
+                p.gender,
+                getattr(p, "avatar", None),
+                p.id
+            ),
+            "updated_at": str(p.updated_at) if p.updated_at else None,
             "birth_date": str(p.birth_date) if p.birth_date else None,
             "death_date": str(p.death_date) if p.death_date else None,
 

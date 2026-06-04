@@ -35,7 +35,8 @@ def resolve_avatar(pid, gender):
     jpg = os.path.join(AVATAR_PATH, f"{pid}.jpg")
 
     if os.path.exists(jpg):
-        return f"/static/avatars/{pid}.jpg"
+        version = int(os.path.getmtime(jpg))
+        return f"/static/avatars/{pid}.jpg?v={version}"
 
     if gender == "male":
         return "/static/avatars/default_male.png"

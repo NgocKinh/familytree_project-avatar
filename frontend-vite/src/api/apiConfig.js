@@ -8,7 +8,9 @@ export const isDev = import.meta.env.MODE === "development";
 
 // Backend URLs
 
-export const API_FASTAPI = "http://localhost:8000/api";
+export const API_FASTAPI =
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:8000/api";
 
 export const API_BASE_URL = API_FASTAPI;
 

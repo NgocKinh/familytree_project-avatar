@@ -20,12 +20,22 @@ export function fallbackAvatar(gender) {
 export function getAvatarURL(person) {
   if (!person) return otherAvatar;
 
-  // ✅ [CHANGE 2]: Chuẩn hóa ID avatar, ưu tiên id trước rồi mới person_id
   const id = person.id ?? person.person_id;
+
+  if (person.avatar) {
+    if (person.avatar.startsWith("http")) {
+      return person.avatar;
+    }
+
+    if (person.avatar.startsWith("/")) {
+      return `${API}${person.avatar}`;
+    }
+
+    return `${API}/static/avatars/${person.avatar}?v=${person.updated_at || id}`;
+  }
 
   if (!id) return fallbackAvatar(person.gender);
 
-  // ✅ [CHANGE 3]: Luôn thử avatar theo ID trước: id.jpg
   return `${API}/static/avatars/${id}.jpg?v=${id}`;
 }
 

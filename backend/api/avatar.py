@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 from backend.db import get_db
 from backend.models.person_model import Person
 import os
-
+from backend.api.tree import TREE_CACHE
 router = APIRouter()
 # ✅ [DEBUG]: Kiểm tra avatar.py có được load không
 
@@ -84,7 +84,8 @@ async def upload_avatar(
     person.avatar = filename
     person.updated_at = func.now()
     db.commit()
-
+    # Clear Tree cache để avatar mới hiện ngay
+    TREE_CACHE.clear()
     return {
         "message": "Avatar uploaded successfully",
         "filename": filename
