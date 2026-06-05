@@ -11,7 +11,7 @@ from backend.api.auth import get_current_user
 router = APIRouter(tags=["Users"])
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
+USER_ROLES = {"viewer", "member_basic", "co_operator", "admin"}
 
 def require_admin(current_user: User):
     if current_user.role != "admin":
@@ -51,7 +51,11 @@ def create_user(
     current_user: User = Depends(get_current_user),
 ):
     require_admin(current_user)
-
+    if data.role not in USER_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Role không hợp lệ",
+        )
     existing = db.query(User).filter(User.username == data.username).first()
 
     if existing:
@@ -121,6 +125,12 @@ def update_user(
         user.full_name = data.full_name
 
     if data.role is not None:
+        if data.role not in USER_ROLES:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Role không hợp lệ",
+            )
+
         user.role = data.role
 
     if data.person_id is not None:

@@ -142,3 +142,134 @@ member_close hiện chỉ còn là
 Dynamic Permission State,
 không còn được sử dụng như User Role thực tế.
 Refactor sẽ thực hiện sau Deploy.
+
+Checkpoint nội dung 05/06/
+✅ Remove member_close from frontend UI
+✅ Clean Navbar ACL
+✅ Clean App.jsx ACL groups
+✅ Clean AddPersonPage permissions
+✅ Update HelpPage roles description
+✅ Archive unused role.js / roleKeys.js
+✅ Frontend build PASS
+✅ No member_close references in src
+📌 CHECKPOINT — Authentication V2 + ACL UI Cleanup + Member_Close Migration
+
+Date: 05/06/2026
+
+Hoàn thành
+Authentication V2
+JWT Login hoạt động ổn định.
+/api/auth/me hoạt động.
+Navbar dùng user thật từ JWT.
+Role Switch đã loại bỏ hoàn toàn.
+Admin/User Management hoạt động.
+ACL UI Cleanup
+Viewer chỉ thấy menu được phép.
+Member Basic thấy thêm các chức năng nhập liệu.
+Co-operator/Admin thấy khu vực quản trị.
+UI User Management đã loại bỏ member_close.
+Dropdown Role chỉ còn:
+viewer
+member_basic
+co_operator
+admin
+Member_Close Migration
+member_close chuyển từ User Role → System Role.
+Không còn xuất hiện trong:
+User Management UI
+Role Dropdown
+Navbar ACL
+User API Create
+User API Update
+Backend Verification
+
+backend/api/users.py
+
+Thêm:
+
+USER_ROLES = {
+    "viewer",
+    "member_basic",
+    "co_operator",
+    "admin",
+}
+
+Kiểm tra Create:
+
+if data.role not in USER_ROLES:
+
+Kiểm tra Update:
+
+if data.role not in USER_ROLES:
+
+Test:
+
+{
+  "role": "member_close"
+}
+
+Kết quả:
+
+{
+  "detail": "Role không hợp lệ"
+}
+
+PASS ✅
+
+backend/api/auth.py
+
+Giữ nguyên:
+
+"effective_role": "member_close"
+
+cho:
+
+self
+
+và:
+
+near relation
+Swagger Verification
+
+Login:
+
+member19
+role = member_basic
+person_id = 19
+
+Test:
+
+{
+  "target_person_id": 19
+}
+
+Kết quả:
+
+{
+  "allowed": true,
+  "effective_role": "member_close",
+  "relationship": "self"
+}
+
+PASS ✅
+
+Trạng thái hiện tại
+User Role:
+- viewer
+- member_basic
+- co_operator
+- admin
+
+System Role:
+- member_close
+Build Status
+npm run build
+
+PASS ✅
+
+Project Status
+Authentication V2 + ACL UI Cleanup completed
+Frontend production build PASS
+Member_Close Migration completed
+Ready for data entry
+Ready for VPS preparation

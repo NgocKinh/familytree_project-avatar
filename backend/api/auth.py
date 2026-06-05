@@ -133,6 +133,7 @@ def login(
             "username": user.username,
             "full_name": user.full_name,
             "role": user.role,
+            "person_id": user.person_id,
         }
     }
 @router.get("/me")
@@ -143,6 +144,7 @@ def me(current_user: User = Depends(get_current_user)):
         "full_name": current_user.full_name,
         "role": current_user.role,
         "is_active": current_user.is_active,
+        "person_id": current_user.person_id,
     }  
 
 @router.post("/check-near-access")
