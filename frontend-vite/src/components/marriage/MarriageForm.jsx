@@ -274,11 +274,16 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
       }
 
     } catch (err) {
+      const data = err.response?.data;
+    
       const msg =
-        err.response?.data?.detail ||
-        err.response?.data?.error ||
-        err.response?.data?.warning ||
+        data?.message ||
+        data?.detail?.message ||
+        data?.detail ||
+        data?.warning ||
+        data?.error ||
         "❌ Không thể lưu quan hệ hôn nhân!";
+    
       setErrorMsg(msg);
     } finally {
       setLoading(false);

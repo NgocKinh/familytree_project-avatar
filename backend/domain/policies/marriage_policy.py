@@ -40,14 +40,14 @@ class DefaultMarriagePolicy(MarriagePolicy):
                 if spouse_a.id in (m.spouse_a_id, m.spouse_b_id):
                     raise AppError(
                         error="ACTIVE_MARRIAGE_EXISTS",
-                        message="Person already has an active marriage",
+                        message="Thành viên này đã có quan hệ hôn nhân đang còn hiệu lực",
                         details={"person_id": spouse_a.id}
                     )
 
                 if spouse_b.id in (m.spouse_a_id, m.spouse_b_id):
                     raise AppError(
                         error="ACTIVE_MARRIAGE_EXISTS",
-                        message="Person already has an active marriage",
+                        message="Thành viên này đã có quan hệ hôn nhân đang còn hiệu lực",
                         details={"person_id": spouse_b.id}
                     )
 

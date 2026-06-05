@@ -137,9 +137,14 @@ function AssignChildToParentForm() {
         err.response?.data || err
       );
     
+      const data = err.response?.data;
+
       setError(
-        err.response?.data?.detail ||
-        err.response?.data?.error ||
+        data?.message ||
+        data?.detail?.message ||
+        data?.detail ||
+        data?.warning ||
+        data?.error ||
         "❌ Lỗi hệ thống."
       );
     }
