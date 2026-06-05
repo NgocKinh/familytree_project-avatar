@@ -14,6 +14,9 @@ from backend.services.parent_child_service import (
 from backend.schemas.parent_child_schema import ParentChildCreate
 from backend.utils.auth_guard import get_current_user, has_near_access_to_any
 from backend.models.user_model import User
+from backend.models.marriage_model import Marriage
+from backend.models.parent_child_model import ParentChild
+from backend.models.person_model import Person
 # ✅ [CHANGE 1]: Bỏ prefix nội bộ vì main.py đã gắn prefix="/api/parent_child"
 router = APIRouter(tags=["ParentChild"])
 
@@ -52,7 +55,30 @@ def get_parents_status(child_id: int, db: Session = Depends(get_db)):
 @router.get("/child/{child_id}/siblings")
 def get_siblings_of_child(child_id: int, db: Session = Depends(get_db)):
     return get_child_siblings(db, child_id)
+# ==========================================================
+# 🔹 GET CHILDREN BY MARRIAGE
+# ==========================================================
+@router.get("/marriage/{marriage_id}/children")
+def get_children_by_marriage(marriage_id: int, db: Session = Depends(get_db)):
+    marriage = db.query(Marriage).filter(Marriage.id == marriage_id).first()
 
+    if not marriage:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy gia đình/hôn nhân",
+        )
+
+    parent_ids = [marriage.spouse_a_id, marriage.spouse_b_id]
+
+    rows = (
+        db.query(Person)
+        .join(ParentChild, ParentChild.child_id == Person.id)
+        .filter(ParentChild.parent_id.in_(parent_ids))
+        .all()
+    )
+
+    return rows
+    
 # ==========================================================
 # 🔹 ASSIGN PARENT
 # ==========================================================

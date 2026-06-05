@@ -108,53 +108,60 @@ function AssignParentForm() {
       const missingBirthOrder = (people) =>
         people.some(p => !hasBirthOrder(p));
 
-      // CASE 1: không có ngày sinh
-      if (!child.birth_date) {
-
-        if (siblings.length === 0) {
-          setBirthConflictWarning("");
-          return;
-        }
-      
-        if (!missingBirthOrder([child, ...siblings])) {
-          setBirthConflictWarning("");
-          return;
-        }
-      
-        setBirthConflictWarning(
-          "⚠ Người con này chưa có ngày sinh và đã có anh/chị/em trong gia đình. Vui lòng bấm Cập nhập Birth Order để xác định anh/chị/em."
-        );
-      
-        return;
-      }
-
-      // CASE 2: có sibling trùng ngày sinh
+      // CASE 1: trong nhóm anh/chị/em có ít nhất 1 người không có năm sinh
       const getBirthYear = (birthDate) => {
         if (!birthDate) return null;
         return String(birthDate).slice(0, 4);
       };
+
+      const familyGroup = [child, ...siblings];
+
+      if (siblings.length > 0) {
+        const hasMissingBirthYear = familyGroup.some(
+          (p) => !getBirthYear(p.birth_date)
+        );
+
+        if (hasMissingBirthYear) {
+          if (!missingBirthOrder(familyGroup)) {
+            setBirthConflictWarning("");
+            return;
+          }
+
+          setBirthConflictWarning(
+            "⚠ Trong nhóm anh/chị/em có người chưa có năm sinh. Vui lòng bấm Cập nhật Birth Order để xác định thứ tự sinh."
+          );
+
+          return;
+        }
+      }
+
+      // CASE 2: có ít nhất 2 người trùng năm sinh
       const childBirthYear = getBirthYear(child.birth_date);
+
       const sameYearSiblings = siblings.filter((s) => {
         const siblingBirthYear = getBirthYear(s.birth_date);
-        return siblingBirthYear && siblingBirthYear === childBirthYear;
+        return (
+          childBirthYear &&
+          siblingBirthYear &&
+          siblingBirthYear === childBirthYear
+        );
       });
-      console.log("childBirthYear:", childBirthYear);
-      console.log("sameYearSiblings:", sameYearSiblings);
-      console.log("child:", child);
-      console.log("siblings:", siblings);
+
       if (sameYearSiblings.length > 0) {
-      
-        if (!missingBirthOrder([child, ...sameYearSiblings])) {
+        const sameYearGroup = [child, ...sameYearSiblings];
+
+        if (!missingBirthOrder(sameYearGroup)) {
           setBirthConflictWarning("");
           return;
         }
-      
+
         setBirthConflictWarning(
-          "⚠ Có anh/chị/em trùng năm sinh. Vui lòng bấm nút Cập nhập Birth Order để xác định thứ tự sinh."
+          "⚠ Có anh/chị/em trùng năm sinh. Vui lòng bấm Cập nhật Birth Order để xác định thứ tự sinh."
         );
-      
+
         return;
       }
+
       // KHÔNG conflict
       setBirthConflictWarning("");
 
@@ -165,6 +172,77 @@ function AssignParentForm() {
       setBirthConflictWarning("");
     }
   };
+  const checkBirthConflictByMarriage = async (childId, marriageId) => {
+    try {
+      const childRes = await axios.get(
+        `${API_BASE_URL}/person/${childId}`
+      );
+  
+      const childrenRes = await axios.get(
+        `${API_BASE_URL}/parent_child/marriage/${marriageId}/children`
+      );
+  
+      const child = childRes.data;
+      const siblings = childrenRes.data || [];
+  
+      const hasBirthOrder = (p) =>
+        Number.isInteger(p.birth_order) &&
+        p.birth_order > 0;
+  
+      const missingBirthOrder = (people) =>
+        people.some(p => !hasBirthOrder(p));
+  
+      const getBirthYear = (birthDate) => {
+        if (!birthDate) return null;
+        return String(birthDate).slice(0, 4);
+      };
+  
+      const familyGroup = [child, ...siblings];
+  
+      if (siblings.length > 0) {
+        const hasMissingBirthYear = familyGroup.some(
+          (p) => !getBirthYear(p.birth_date)
+        );
+  
+        if (hasMissingBirthYear && missingBirthOrder(familyGroup)) {
+          setBirthConflictWarning(
+            "⚠ Trong nhóm anh/chị/em có người chưa có năm sinh. Vui lòng bấm Cập nhật Birth Order trước khi lưu."
+          );
+          return true;
+        }
+      }
+  
+      const childBirthYear = getBirthYear(child.birth_date);
+  
+      const sameYearSiblings = siblings.filter((s) => {
+        const siblingBirthYear = getBirthYear(s.birth_date);
+        return (
+          childBirthYear &&
+          siblingBirthYear &&
+          siblingBirthYear === childBirthYear
+        );
+      });
+  
+      if (sameYearSiblings.length > 0) {
+        const sameYearGroup = [child, ...sameYearSiblings];
+  
+        if (missingBirthOrder(sameYearGroup)) {
+          setBirthConflictWarning(
+            "⚠ Có anh/chị/em trùng năm sinh. Vui lòng bấm Cập nhật Birth Order trước khi lưu."
+          );
+          return true;
+        }
+      }
+  
+      setBirthConflictWarning("");
+      return false;
+  
+    } catch (err) {
+      console.error("Marriage BO check error:", err);
+      setBirthConflictWarning("");
+      return false;
+    }
+  };
   const openBirthOrderPanel = async () => {
 
     if (!childId) return;
@@ -173,17 +251,27 @@ function AssignParentForm() {
 
       setBirthOrderLoading(true);
 
-      const res = await axios.get(
-        `${API_BASE_URL}/parent_child/child/${childId}/siblings`
-      );
-
-      const siblings = res.data || [];
-
       const childRes = await axios.get(
         `${API_BASE_URL}/person/${childId}`
       );
 
       const child = childRes.data;
+
+      let siblings = [];
+
+      if (!noMarriage && marriageId) {
+        const childrenRes = await axios.get(
+          `${API_BASE_URL}/parent_child/marriage/${marriageId}/children`
+        );
+
+        siblings = childrenRes.data || [];
+      } else {
+        const siblingsRes = await axios.get(
+          `${API_BASE_URL}/parent_child/child/${childId}/siblings`
+        );
+
+        siblings = siblingsRes.data || [];
+      }
       console.log("BO CHECK child:", child);
       const rows = [
         child,
@@ -322,8 +410,16 @@ function AssignParentForm() {
       // ===============================
       else {
         const m = marriages.find(x => String(x.id) === String(marriageId));
-        if (!m) {
-          setError("❌ Không tìm thấy hôn nhân.");
+        const needBirthOrder =
+          await checkBirthConflictByMarriage(
+            childId,
+            marriageId
+          );
+
+        if (needBirthOrder) {
+          setError(
+            "⚠ Vui lòng cập nhật Birth Order trước khi đưa người con vào gia đình."
+          );
           return;
         }
         try {
@@ -342,7 +438,7 @@ function AssignParentForm() {
             `${API_BASE_URL}/parent_child/assign`,
             {
               child_id: Number(childId),
-              parent_id: m.spouse_a_id,
+              parent_id: m.spouse_b_id,
               type: "mother"
             },
             getAuthConfig()

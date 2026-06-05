@@ -282,6 +282,7 @@ def get_family(pid: int):
                 c.middle_name,
                 c.first_name,
                 c.gender,
+                c.birth_order,
                 YEAR(c.birth_date) AS birth_year,
                 YEAR(c.death_date) AS death_year
             FROM parent_child pc1
@@ -295,7 +296,10 @@ def get_family(pid: int):
 
         children_common = sorted(
             [build_person(r) for r in rows],
-            key=lambda x: x.get("birth_year") or 9999
+            key=lambda x: (
+                x.get("birth_order") or 9999,
+                x.get("birth_year") or 9999
+            )
         )
 
     cur.close()

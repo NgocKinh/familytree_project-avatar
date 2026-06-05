@@ -265,7 +265,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
         resetForm();
       }
 
-      setSuccessMsg(res.message || "✅ Lưu quan hệ hôn nhân thành công!");
+      setSuccessMsg(res.message || "✅ Lưu quan hệ hôn nhân thành công!Trở về đầu Form nhập mới hoặc HOME");
 
       if (editId && onBack) {
         setTimeout(() => {

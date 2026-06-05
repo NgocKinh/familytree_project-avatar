@@ -351,7 +351,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
             className="border p-2 w-full"
           />
         </div>
-        {/* Optional Birth Order */}
+        {/* Optional Birth Order
         {!form.birth_date && (
           <div className="mb-2">
             <label>🔢 Thứ tự sinh (Birth Order):</label>
@@ -372,7 +372,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
               hoặc anh/chị/em trùng ngày sinh.
             </p>
           </div>
-        )}
+        )} */}
         <div className="mb-2">
           <label>🕯 Ngày mất:</label>
           <input

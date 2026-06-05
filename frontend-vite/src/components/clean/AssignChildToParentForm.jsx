@@ -107,7 +107,18 @@ function AssignChildToParentForm() {
           setError("❌ Không tìm thấy hôn nhân.");
           return;
         }
+        const needBirthOrder =
+          await checkBirthConflictByMarriage(
+            childId,
+            marriageId
+          );
 
+        if (needBirthOrder) {
+          setError(
+            "⚠ Vui lòng cập nhật Birth Order trước khi đưa người con vào gia đình."
+          );
+          return;
+        }
         await axios.post(
           `${API_BASE_URL}/parent_child/assign`,
           {
