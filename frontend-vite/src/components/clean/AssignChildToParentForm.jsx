@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../api/apiConfig";
 import PersonDropdown from "../common/PersonDropdown";
 import MarriageDropdown from "../common/MarriageDropdown";
 import { formatName } from "../../utils/formatName";
+import BirthOrderPanel from "../birth_order/BirthOrderPanel";
 import { useNavigate } from "react-router-dom";
-
+import useBirthOrder from "../birth_order/useBirthOrder";
 function AssignChildToParentForm() {
   const navigate = useNavigate();
 
@@ -42,6 +43,11 @@ function AssignChildToParentForm() {
   const [success, setSuccess] = useState("");
   const [lockForm, setLockForm] = useState(false);
   const [loading, setLoading] = useState(false);
+  
+  const birthOrder = useBirthOrder({
+    persons,
+    getAuthConfig,
+  });
   useEffect(() => {
     axios.get(`${API_BASE_URL}/person`)
       .then(res => {
@@ -60,6 +66,18 @@ function AssignChildToParentForm() {
       .then(res => setMarriages(res.data || []))
       .catch(() => setMarriages([]));
   }, []);
+  const checkParentStatus = async (id) => {
+    try {
+      const res = await axios.get(
+        `${API_BASE_URL}/parent_child/status/${id}`,
+        getAuthConfig()
+      );
+
+    } catch (err) {
+      console.error("❌ Check parent status error:", err);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
   
@@ -73,7 +91,16 @@ function AssignChildToParentForm() {
       setLoading(false);
       return;
     }
-  
+    
+    const boResult = await birthOrder.checkBeforeSave(
+      childId,
+      noMarriage ? null : marriageId
+    );
+
+    if (boResult.opened) {
+      setLoading(false);
+      return;
+    }
     try {
       // ===============================
       // CASE 1: KHÔNG CÓ HÔN NHÂN
@@ -107,18 +134,7 @@ function AssignChildToParentForm() {
           setError("❌ Không tìm thấy hôn nhân.");
           return;
         }
-        const needBirthOrder =
-          await checkBirthConflictByMarriage(
-            childId,
-            marriageId
-          );
-
-        if (needBirthOrder) {
-          setError(
-            "⚠ Vui lòng cập nhật Birth Order trước khi đưa người con vào gia đình."
-          );
-          return;
-        }
+        
         await axios.post(
           `${API_BASE_URL}/parent_child/assign`,
           {
@@ -128,7 +144,7 @@ function AssignChildToParentForm() {
           },
           getAuthConfig()
         );
-
+        
         await axios.post(
           `${API_BASE_URL}/parent_child/assign`,
           {
@@ -180,7 +196,43 @@ function AssignChildToParentForm() {
           {error}
         </div>
       )}
+      {birthOrder.birthConflictWarning && (
+        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-800">
+          {birthOrder.birthConflictWarning}
 
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => birthOrder.openPanelByChild(childId)}
+              className="px-3 py-1 bg-amber-500 text-white rounded hover:bg-amber-600"
+            >
+              🔢 Cập nhật Birth Order
+            </button>
+          </div>
+        </div>
+      )}
+
+      {birthOrder.showBirthOrderPanel && (
+        <BirthOrderPanel
+          birthOrderPanelRef={birthOrder.birthOrderPanelRef}
+          birthOrderRows={birthOrder.birthOrderRows}
+          setBirthOrderRows={birthOrder.setBirthOrderRows}
+          saveBirthOrders={async () => {
+            const result = await birthOrder.saveBirthOrders();
+          
+            if (result.ok) {
+              setSuccess(result.message);
+              setError("");
+              setLockForm(true);
+            } else {
+              setError(result.message);
+            }
+          }}
+          setShowBirthOrderPanel={birthOrder.setShowBirthOrderPanel}
+          setError={setError}
+          displayName={(name) => name}
+        />
+      )}
         <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block font-semibold">
@@ -268,44 +320,86 @@ function AssignChildToParentForm() {
           />
         </div>
 
-        <div className="flex justify-between pt-4">
-          <button
-            type="button"
-            className="px-4 py-2 bg-gray-400 text-white rounded"
-            onClick={() => {
-              setParentId("");
-              setType("");
-              setMarriageId("");
-              setChildId("");
-              setNoMarriage(true);
-              setError("");
-              setSuccess("");
-              setLockForm(false);
-            }}
-          >
-            ❌ Hủy
-          </button>
+          <div className="flex items-center justify-between pt-4">
 
-          {!lockForm && (
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-4 py-2 bg-blue-600 text-white rounded"
-            >
-              {loading ? "⏳ Đang lưu..." : "💾 Lưu"}
-            </button>
-          )}
+            <div>
+              <button
+                type="button"
+                onClick={() => birthOrder.openPanelByChild(childId)}
+                className="px-4 py-2 bg-gray-300 text-white-700 rounded hover:bg-purple-600"
+              >
+                🔢 Birth Order
+              </button>
+            </div>
 
-          {lockForm && (
-            <button
-              type="button"
-              onClick={() => navigate("/")}
-              className="px-4 py-2 bg-gray-600 text-white rounded"
-            >
-              ⬅ Quay về Home
-            </button>
-          )}
-        </div>
+            <div className="flex gap-2">
+
+              <button
+                type="button"
+                className="px-4 py-2 bg-gray-400 text-white rounded"
+                onClick={() => {
+                  setParentId("");
+                  setType("");
+                  setMarriageId("");
+                  setChildId("");
+                  setNoMarriage(true);
+                  setError("");
+                  setSuccess("");
+                  setLockForm(false);
+                }}
+              >
+                ❌ Hủy
+              </button>
+
+              {!lockForm && (
+                <button
+                  type="submit"
+                  disabled={loading || birthOrder.showBirthOrderPanel}
+                  className={`px-4 py-2 text-white rounded ${
+                    loading || birthOrder.showBirthOrderPanel
+                      ? "bg-blue-300 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  }`}
+                >
+                  {
+                    birthOrder.showBirthOrderPanel
+                      ? "🔒 Hoàn tất BO trước"
+                      : loading
+                        ? "⏳ Đang lưu..."
+                        : "💾 Lưu"
+                  }
+                </button>
+              )}
+
+              {lockForm && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setChildId("");
+                      setError("");
+                      setSuccess("");
+                      setLockForm(false);
+                      birthOrder.setShowBirthOrderPanel(false);
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    ➕ Thêm
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate("/")}
+                    className="px-4 py-2 bg-gray-600 text-white rounded"
+                  >
+                    🏠 Home
+                  </button>
+                </>
+              )}
+
+            </div>
+
+          </div>
       </form>
     </div>
   );

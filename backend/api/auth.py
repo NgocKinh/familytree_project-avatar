@@ -65,13 +65,13 @@ def get_current_user(
         if user_id is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token không hợp lệ",
+                detail="Đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
             )
 
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token không hợp lệ hoặc đã hết hạn",
+            detail="Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
         )
 
     user = db.query(User).filter(User.id == int(user_id)).first()
@@ -79,7 +79,7 @@ def get_current_user(
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Không tìm thấy user",
+            detail="Tài khoản không tồn tại hoặc đã bị xoá.",
         )
 
     if not user.is_active:

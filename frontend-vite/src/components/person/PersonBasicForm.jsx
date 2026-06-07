@@ -55,7 +55,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
   const [showAvatarEditor, setShowAvatarEditor] = useState(false);
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [duplicateMessage, setDuplicateMessage] = useState("");
-
+  const [pendingPayload, setPendingPayload] = useState(null);
   // =========================
   // RESET FORM
   // =========================
@@ -159,7 +159,15 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
   // =========================
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    const payload = {
+      ...form,
+      birth_date: parseVNDate(form.birth_date),
+      death_date: parseVNDate(form.death_date),
+      birth_date_precision: detectPrecision(form.birth_date),
+      birth_order: form.birth_order ? Number(form.birth_order) : null,
+      death_date_precision: detectPrecision(form.death_date),
+      role,
+    };
     // ✅ [CHANGE]: disable duplicate check hoàn toàn
     try {
       const dupRes = await checkDuplicatePerson({
@@ -176,6 +184,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
         if (realMatches.length > 0) {
           console.log("🔥 DUPLICATE FOUND", realMatches);
           setDuplicateMessage(JSON.stringify(realMatches, null, 2));
+          setPendingPayload(payload);
           setShowPendingModal(true);
           return;
         }
@@ -186,40 +195,33 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
       return;
     }
 
-    const payload = {
-      ...form,
-      birth_date: parseVNDate(form.birth_date),
-      death_date: parseVNDate(form.death_date),
-      birth_date_precision: detectPrecision(form.birth_date),
-      birth_order: form.birth_order
-        ? Number(form.birth_order)
-        : null,
-      death_date_precision: detectPrecision(form.death_date),
-      role,
-    };
-
     try {
-      
       if (isEdit) {
         console.log("🔥 BEFORE API");
         await updatePerson(realId, payload);
+    
         alert("✅ Cập nhật thành công!");
       } else {
         const res = await addPerson(payload);
+    
         console.log("🔥 ADD RESPONSE:", res);
-
-        alert("✅ Thêm thành công!");
-        navigate("/person");
+    
+        alert(
+          "✅ Thêm thành công! Bạn có thể kiểm tra, chỉnh sửa rồi bấm Lưu lại nếu cần."
+        );
       }
     
       if (onSaved) onSaved();
     
+      return true;
     } catch (err) {
       console.error("❌ Submit error:", err);
+    
       alert("❌ Không thể lưu dữ liệu!");
+    
+      return false;
     }
   };
-
   // =========================
   // SEND TO PENDING
   // =========================
@@ -235,7 +237,26 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
       alert("Không gửi được Pending!");
     }
   };
-
+  const saveAnyway = async () => {
+    try {
+      if (!pendingPayload) return;
+  
+      const res = await addPerson(pendingPayload);
+  
+      alert("✅ Đã lưu người mới.");
+  
+      setShowPendingModal(false);
+      setPendingPayload(null);
+      resetForm();
+  
+      if (onSaved) onSaved(res);
+  
+      navigate("/");
+    } catch (err) {
+      console.error("❌ Save anyway error:", err);
+      alert("❌ Không thể lưu người mới!");
+    }
+  };
   // =========================
   // UI
   // =========================
@@ -351,28 +372,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
             className="border p-2 w-full"
           />
         </div>
-        {/* Optional Birth Order
-        {!form.birth_date && (
-          <div className="mb-2">
-            <label>🔢 Thứ tự sinh (Birth Order):</label>
-
-            <input
-              autoComplete="off"
-              type="number"
-              min="1"
-              name="birth_order"
-              value={form.birth_order || ""}
-              onChange={handleChange}
-              className="border p-2 w-full"
-              placeholder="1 = anh/chị lớn nhất"
-            />
-
-            <p className="text-xs text-gray-500 mt-1">
-              Chỉ dùng khi không có ngày sinh
-              hoặc anh/chị/em trùng ngày sinh.
-            </p>
-          </div>
-        )} */}
+        
         <div className="mb-2">
           <label>🕯 Ngày mất:</label>
           <input
@@ -386,6 +386,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
         </div>
 
         <div className="mt-3 flex gap-3">
+
           <button
             type="submit"
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
@@ -394,44 +395,77 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
           </button>
 
           {!isEdit && (
-            <button
-              type="button"
-              onClick={resetForm}
-              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-            >
-              ➕ Hủy và Thêm Mới
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={async () => {
+                  const fakeEvent = {
+                    preventDefault: () => {}
+                  };
+
+                  await handleSubmit(fakeEvent);
+
+                  resetForm();
+                }}
+                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+              >
+                💾➕ Lưu và Thêm Mới
+              </button>
+
+              <button
+                type="button"
+                onClick={resetForm}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+              >
+                ❌ Hủy / Làm Mới
+              </button>
+            </>
           )}
+
         </div>
       </form>
 
-      {/* MODAL PENDING */}
-      {showPendingModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-          <div className="bg-white p-6 rounded shadow w-[400px]">
-            <h3 className="text-xl font-bold mb-2 text-red-600">
-              ⚠️ Trùng thành viên
-            </h3>
-            <p className="mb-3">{duplicateMessage}</p>
+      {/* MODAL DUPLICATE WARNING */}
+        {showPendingModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+            <div className="bg-white p-6 rounded shadow w-[400px]">
+              <h3 className="text-xl font-bold mb-2 text-amber-600">
+                ⚠️ Có thể trùng thành viên
+              </h3>
 
-            <div className="text-right space-x-2">
-              <button
-                onClick={() => setShowPendingModal(false)}
-                className="px-3 py-1 bg-gray-300 rounded"
-              >
-                Hủy
-              </button>
+              <p className="mb-3">
+                Hệ thống tìm thấy thành viên có họ tên và giới tính giống nhau.
+                Nếu đây là cùng một người, hãy bấm Hủy để kiểm tra lại.
+                Nếu là người khác nhau, bạn vẫn có thể lưu người mới.
+              </p>
 
-              <button
-                onClick={sendToPending}
-                className="px-3 py-1 bg-yellow-600 text-white rounded"
-              >
-                🟡 Gửi Pending
-              </button>
+              <pre className="text-xs bg-gray-100 p-2 rounded overflow-auto max-h-48 mb-3">
+                {duplicateMessage}
+              </pre>
+
+              <div className="text-right space-x-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPendingModal(false);
+                    setPendingPayload(null);
+                  }}
+                  className="px-3 py-1 bg-gray-300 rounded"
+                >
+                  Hủy
+                </button>
+
+                <button
+                  type="button"
+                  onClick={saveAnyway}
+                  className="px-3 py-1 bg-blue-600 text-white rounded"
+                >
+                  ✅ Vẫn lưu người mới
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-}
+        )}
+      </div>
+    );
+  }

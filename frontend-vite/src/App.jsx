@@ -95,17 +95,23 @@ function AppContent() {
         setCurrentUser(res.data || null);
       })
       .catch((err) => {
-
         if (err?.response?.status === 401) {
-          alert(
-            "Phiên đăng nhập đã hết hạn.\n\nVui lòng đăng nhập lại."
-          );
+          alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+      
+          localStorage.removeItem("token");
+          setCurrentUser(null);
+          setRole("viewer");
+      
+          window.location.replace("/");
+          return;
         }
       
+        console.error("Lỗi kiểm tra đăng nhập:", err);
+      
         localStorage.removeItem("token");
-        localStorage.removeItem("currentUser");
-        setRole("viewer");
         setCurrentUser(null);
+        setRole("viewer");
+        window.location.replace("/");
       })
       .finally(() => {
         setAuthLoading(false);

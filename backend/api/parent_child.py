@@ -37,7 +37,7 @@ def get_one(rid: int, db: Session = Depends(get_db)):
 
     if not data:
         from backend.core.exceptions import NotFoundException
-        raise NotFoundException("Relation not found")
+        raise NotFoundException("Không tìm thấy quan hệ cha-con này")
 
     return data
 
@@ -106,7 +106,7 @@ def assign_parent(
     )
 
     return {
-        "message": "Parent assigned successfully",
+        "message": "Đã lưu quan hệ cha-con thành công",
         "id": pc.id
     }
 
@@ -117,4 +117,4 @@ def assign_parent(
 def delete_relation(rid: int, db: Session = Depends(get_db)):
     delete_parent_child(db, rid)
 
-    return {"message": "Deleted successfully"}
+    return {"message": "Đã xóa quan hệ cha-con thành công"}

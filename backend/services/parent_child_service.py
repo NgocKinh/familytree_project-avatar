@@ -187,10 +187,10 @@ def get_child_siblings(db: Session, child_id: int):
 def assign_parent_clean(db: Session, child_id: int, parent_id: int, ptype: str):
 
     if ptype not in ("father", "mother"):
-        raise BadRequestException("Invalid parent type")
+        raise BadRequestException("Vai trò cha/mẹ không hợp lệ")
 
     if child_id == parent_id:
-        raise BadRequestException("Parent and child cannot be the same")
+        raise BadRequestException("Một người không thể vừa là cha/mẹ vừa là con của chính mình")
 
     # 1️⃣ Check child
     child = db.query(Person).filter(
@@ -199,7 +199,7 @@ def assign_parent_clean(db: Session, child_id: int, parent_id: int, ptype: str):
     ).first()
 
     if not child:
-        raise NotFoundException("Child not found")
+        raise NotFoundException("Không tìm thấy người con này")
 
     # 2️⃣ Check parent + gender
     parent = db.query(Person).filter(
@@ -208,17 +208,17 @@ def assign_parent_clean(db: Session, child_id: int, parent_id: int, ptype: str):
     ).first()
 
     if not parent:
-        raise NotFoundException("Parent not found")
+        raise NotFoundException("Không tìm thấy người cha/mẹ này")
 
     gender = (parent.gender or "").lower()
 
     ptype = (ptype or "").strip().lower()
 
     if ptype == "father" and gender != "male":
-        raise BadRequestException("Father must be male")
+        raise BadRequestException("Người được chọn làm Cha phải có giới tính Nam")
 
     if ptype == "mother" and gender != "female":
-        raise BadRequestException("Mother must be female")
+        raise BadRequestException("Người được chọn làm Mẹ phải có giới tính Nữ")
 
     # 3️⃣ Check duplicate (business rule: 1 father / 1 mother)
     exists = db.query(ParentChild).filter(
@@ -227,7 +227,15 @@ def assign_parent_clean(db: Session, child_id: int, parent_id: int, ptype: str):
     ).first()
 
     if exists:
-        raise BadRequestException(f"Child already has a {ptype.lower()}")
+        if ptype == "father":
+            raise BadRequestException(
+                "Người con này đã có cha. Nếu muốn thêm mẹ, vui lòng chọn vai trò Mẹ."
+            )
+
+        if ptype == "mother":
+            raise BadRequestException(
+                "Người con này đã có mẹ. Nếu muốn thêm cha, vui lòng chọn vai trò Cha."
+            )
 
     # 🔥 Extra duplicate check (same relation)
     dup = db.query(ParentChild).filter(
@@ -237,7 +245,7 @@ def assign_parent_clean(db: Session, child_id: int, parent_id: int, ptype: str):
     ).first()
 
     if dup:
-        raise BadRequestException("Relationship already exists")
+        raise BadRequestException("Quan hệ cha-con này đã tồn tại")
 
     # 4️⃣ Insert + transaction safety
     try:
@@ -279,7 +287,7 @@ def delete_parent_child(db: Session, rid: int):
     pc = db.query(ParentChild).filter(ParentChild.id == rid).first()
 
     if not pc:
-        raise NotFoundException("Relationship not found")
+        raise NotFoundException("Không tìm thấy quan hệ cha-con này")
 
     db.delete(pc)
     db.commit()

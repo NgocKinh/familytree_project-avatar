@@ -5,6 +5,8 @@ import PersonDropdown from "../common/PersonDropdown";
 import MarriageDropdown from "../common/MarriageDropdown";
 import { formatName } from "../../utils/formatName";
 import { useNavigate } from "react-router-dom";
+import BirthOrderPanel from "../birth_order/BirthOrderPanel";
+import useBirthOrder from "../birth_order/useBirthOrder";
 function AssignParentForm() {
   const getAuthConfig = () => {
     const token = localStorage.getItem("token");
@@ -43,11 +45,10 @@ function AssignParentForm() {
   const [hasFather, setHasFather] = useState(false);
   const [hasMother, setHasMother] = useState(false);
   const [lockForm, setLockForm] = useState(false);
-  const [birthConflictWarning, setBirthConflictWarning] = useState("");
-  const [showBirthOrderPanel, setShowBirthOrderPanel] = useState(false);
-  const [birthOrderRows, setBirthOrderRows] = useState([]);
-  const [birthOrderLoading, setBirthOrderLoading] = useState(false);
-  const birthOrderPanelRef = useRef(null);
+  const birthOrder = useBirthOrder({
+    persons,
+    getAuthConfig,
+  });
   useEffect(() => {
     axios.get(`${API_BASE_URL}/person`)
       .then(res => {
@@ -70,336 +71,90 @@ function AssignParentForm() {
 
   const checkParentStatus = async (id) => {
     try {
-      const res = await axios.get(`${API_BASE_URL}/parent_child/child/${id}/parents-status`);
-      const { has_father, has_mother } = res.data;
-
+      const res = await axios.get(
+        `${API_BASE_URL}/parent_child/child/${id}/parents-status`,
+        getAuthConfig()
+      );
+  
+      const father = res.data?.father;
+      const mother = res.data?.mother;
+  
+      const has_father = !!father;
+      const has_mother = !!mother;
+  
       setHasFather(has_father);
       setHasMother(has_mother);
-
+  
       if (has_father && has_mother) {
-        setError("Người này đã có đủ cha mẹ. Không thể thêm. Bấm Hủy ❌ để trở về.");
+        setError(
+          "❌ Người con này đã có đủ Cha và Mẹ. Không thể thêm vào gia đình khác."
+        );
         setLockForm(true);
       } else {
         setLockForm(false);
       }
-    } catch {
-      setError("❌ Không kiểm tra được trạng thái cha mẹ.");
+    } catch (err) {
+      console.error(
+        "Check parent status error:",
+        err.response?.data || err
+      );
+  
+      setError(
+        "❌ Không kiểm tra được trạng thái Cha/Mẹ của người con."
+      );
+  
       setLockForm(true);
     }
   };
-  const checkBirthConflict = async (childId) => {
-    try {
 
-      const childRes = await axios.get(
-        `${API_BASE_URL}/person/${childId}`
-      );
-
-      const siblingsRes = await axios.get(
-        `${API_BASE_URL}/parent_child/child/${childId}/siblings`
-      );
-
-      const child = childRes.data;
-      const siblings = siblingsRes.data || [];
-      console.log("BO CHECK siblings:", siblings);
-      const hasBirthOrder = (p) =>
-        Number.isInteger(p.birth_order) &&
-        p.birth_order > 0;
-      
-      const missingBirthOrder = (people) =>
-        people.some(p => !hasBirthOrder(p));
-
-      // CASE 1: trong nhóm anh/chị/em có ít nhất 1 người không có năm sinh
-      const getBirthYear = (birthDate) => {
-        if (!birthDate) return null;
-        return String(birthDate).slice(0, 4);
-      };
-
-      const familyGroup = [child, ...siblings];
-
-      if (siblings.length > 0) {
-        const hasMissingBirthYear = familyGroup.some(
-          (p) => !getBirthYear(p.birth_date)
-        );
-
-        if (hasMissingBirthYear) {
-          if (!missingBirthOrder(familyGroup)) {
-            setBirthConflictWarning("");
-            return;
-          }
-
-          setBirthConflictWarning(
-            "⚠ Trong nhóm anh/chị/em có người chưa có năm sinh. Vui lòng bấm Cập nhật Birth Order để xác định thứ tự sinh."
-          );
-
-          return;
-        }
-      }
-
-      // CASE 2: có ít nhất 2 người trùng năm sinh
-      const childBirthYear = getBirthYear(child.birth_date);
-
-      const sameYearSiblings = siblings.filter((s) => {
-        const siblingBirthYear = getBirthYear(s.birth_date);
-        return (
-          childBirthYear &&
-          siblingBirthYear &&
-          siblingBirthYear === childBirthYear
-        );
-      });
-
-      if (sameYearSiblings.length > 0) {
-        const sameYearGroup = [child, ...sameYearSiblings];
-
-        if (!missingBirthOrder(sameYearGroup)) {
-          setBirthConflictWarning("");
-          return;
-        }
-
-        setBirthConflictWarning(
-          "⚠ Có anh/chị/em trùng năm sinh. Vui lòng bấm Cập nhật Birth Order để xác định thứ tự sinh."
-        );
-
-        return;
-      }
-
-      // KHÔNG conflict
-      setBirthConflictWarning("");
-
-    } catch (err) {
-
-      console.error("Birth conflict check error:", err);
-
-      setBirthConflictWarning("");
-    }
-  };
-  const checkBirthConflictByMarriage = async (childId, marriageId) => {
-    try {
-      const childRes = await axios.get(
-        `${API_BASE_URL}/person/${childId}`
-      );
-  
-      const childrenRes = await axios.get(
-        `${API_BASE_URL}/parent_child/marriage/${marriageId}/children`
-      );
-  
-      const child = childRes.data;
-      const siblings = childrenRes.data || [];
-  
-      const hasBirthOrder = (p) =>
-        Number.isInteger(p.birth_order) &&
-        p.birth_order > 0;
-  
-      const missingBirthOrder = (people) =>
-        people.some(p => !hasBirthOrder(p));
-  
-      const getBirthYear = (birthDate) => {
-        if (!birthDate) return null;
-        return String(birthDate).slice(0, 4);
-      };
-  
-      const familyGroup = [child, ...siblings];
-  
-      if (siblings.length > 0) {
-        const hasMissingBirthYear = familyGroup.some(
-          (p) => !getBirthYear(p.birth_date)
-        );
-  
-        if (hasMissingBirthYear && missingBirthOrder(familyGroup)) {
-          setBirthConflictWarning(
-            "⚠ Trong nhóm anh/chị/em có người chưa có năm sinh. Vui lòng bấm Cập nhật Birth Order trước khi lưu."
-          );
-          return true;
-        }
-      }
-  
-      const childBirthYear = getBirthYear(child.birth_date);
-  
-      const sameYearSiblings = siblings.filter((s) => {
-        const siblingBirthYear = getBirthYear(s.birth_date);
-        return (
-          childBirthYear &&
-          siblingBirthYear &&
-          siblingBirthYear === childBirthYear
-        );
-      });
-  
-      if (sameYearSiblings.length > 0) {
-        const sameYearGroup = [child, ...sameYearSiblings];
-  
-        if (missingBirthOrder(sameYearGroup)) {
-          setBirthConflictWarning(
-            "⚠ Có anh/chị/em trùng năm sinh. Vui lòng bấm Cập nhật Birth Order trước khi lưu."
-          );
-          return true;
-        }
-      }
-  
-      setBirthConflictWarning("");
-      return false;
-  
-    } catch (err) {
-      console.error("Marriage BO check error:", err);
-      setBirthConflictWarning("");
-      return false;
-    }
-  };
-  const openBirthOrderPanel = async () => {
-
-    if (!childId) return;
-
-    try {
-
-      setBirthOrderLoading(true);
-
-      const childRes = await axios.get(
-        `${API_BASE_URL}/person/${childId}`
-      );
-
-      const child = childRes.data;
-
-      let siblings = [];
-
-      if (!noMarriage && marriageId) {
-        const childrenRes = await axios.get(
-          `${API_BASE_URL}/parent_child/marriage/${marriageId}/children`
-        );
-
-        siblings = childrenRes.data || [];
-      } else {
-        const siblingsRes = await axios.get(
-          `${API_BASE_URL}/parent_child/child/${childId}/siblings`
-        );
-
-        siblings = siblingsRes.data || [];
-      }
-      console.log("BO CHECK child:", child);
-      const rows = [
-        child,
-        ...siblings
-      ].sort((a, b) => {
-      
-        // 1. sort theo BO
-        const boA = a.birth_order ?? 9999;
-        const boB = b.birth_order ?? 9999;
-      
-        if (boA !== boB) {
-          return boA - boB;
-        }
-      
-        // 2. sort theo birth_date
-        const dateA = a.birth_date || "";
-        const dateB = b.birth_date || "";
-      
-        if (dateA !== dateB) {
-          return dateA.localeCompare(dateB);
-        }
-      
-        // 3. sort theo tên
-        const nameA = displayName(
-          a.name ||
-          a.full_name ||
-          `${a.sur_name || ""} ${a.last_name || ""} ${a.middle_name || ""} ${a.first_name || ""}`.trim()
-        );
-      
-        const nameB = displayName(
-          b.name ||
-          b.full_name ||
-          `${b.sur_name || ""} ${b.last_name || ""} ${b.middle_name || ""} ${b.first_name || ""}`.trim()
-        );
-      
-        return nameA.localeCompare(nameB);
-      
-      });
-      
-      setBirthOrderRows(rows);
-
-      setShowBirthOrderPanel(true);
-      setTimeout(() => {
-        birthOrderPanelRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start"
-        });
-      }, 100);
-    } catch (err) {
-
-      console.error("Open BO panel error:", err);
-
-    } finally {
-
-      setBirthOrderLoading(false);
-
-    }
-  };
-  const hasDuplicateBirthOrder = () => {
-
-    const values = birthOrderRows
-      .map(p => p.birth_order)
-      .filter(v => v !== null && v !== undefined && v !== "");
-  
-    return new Set(values).size !== values.length;
-  
-  };
-  const saveBirthOrders = async () => {
-    if (hasDuplicateBirthOrder()) {
-      setError("❌ Birth Order không được trùng nhau trong cùng nhóm anh/chị/em.\n Sửa BO hoặc chọn thao tác khác");
-      return;
-    }
-    try {
-  
-      await axios.put(
-        `${API_BASE_URL}/person/birth-order/bulk`,
-        {
-          items: birthOrderRows.map((p) => ({
-            person_id: p.id || p.person_id,
-            birth_order: p.birth_order
-          }))
-        },
-        getAuthConfig()
-      );
-  
-      await checkBirthConflict(childId);
-  
-      setShowBirthOrderPanel(false);
-  
-    } catch (err) {
-  
-      console.error("Save BO error:", err);
-  
-      setError("❌ Không lưu được Birth Order");
-  
-    }
-  };
   // -----------------------------
   // SUBMIT
   // -----------------------------
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e, options = {}) => {
+    e?.preventDefault?.();
   
+    const skipBirthOrderCheck = options.skipBirthOrderCheck === true;
+
     setLoading(true);
     setError("");
     setSuccess("");
-  
+
     try {
-  
+
       if (!childId) {
         setError("❌ Chưa chọn người con.");
         return;
-      }  
+      }
       // ===============================
       // CASE 1: KHÔNG CÓ HÔN NHÂN
       // ===============================
       if (noMarriage) {
         if (!parentId || !type) {
-          setError("❌ Thiếu cha/mẹ hoặc vai trò.");
+          setError("❌ Vui lòng chọn Cha/Mẹ và vai trò cần thêm.");
           return;
         }
-
+      
+        if (hasFather && hasMother) {
+          setError("❌ Người con này đã có đủ Cha và Mẹ.");
+          return;
+        }
+      
+        if (type === "father" && hasFather) {
+          setError("❌ Người con này đã có Cha. Nếu muốn bổ sung, vui lòng chọn vai trò Mẹ.");
+          return;
+        }
+      
+        if (type === "mother" && hasMother) {
+          setError("❌ Người con này đã có Mẹ. Nếu muốn bổ sung, vui lòng chọn vai trò Cha.");
+          return;
+        }
+      
         await axios.post(
           `${API_BASE_URL}/parent_child/assign`,
           {
             child_id: Number(childId),
             parent_id: Number(parentId),
-            type: type
+            type: type,
           },
           getAuthConfig()
         );
@@ -409,20 +164,46 @@ function AssignParentForm() {
       // CASE 2: CÓ HÔN NHÂN → AUTO CHA + MẸ
       // ===============================
       else {
-        const m = marriages.find(x => String(x.id) === String(marriageId));
-        const needBirthOrder =
-          await checkBirthConflictByMarriage(
-            childId,
-            marriageId
-          );
 
-        if (needBirthOrder) {
+        // Đã có đủ cha và mẹ
+        if (hasFather && hasMother) {
           setError(
-            "⚠ Vui lòng cập nhật Birth Order trước khi đưa người con vào gia đình."
+            "❌ Người con này đã có đủ Cha và Mẹ. Không thể thêm vào gia đình khác."
           );
           return;
         }
+
+        // Đã có cha nhưng chưa có mẹ
+        if (hasFather && !hasMother) {
+          setError(
+            "❌ Người con này đã có Cha. Nếu muốn bổ sung Mẹ, vui lòng chọn 'Không thuộc gia đình nào' rồi chọn vai trò Mẹ."
+          );
+          return;
+        }
+
+        // Đã có mẹ nhưng chưa có cha
+        if (!hasFather && hasMother) {
+          setError(
+            "❌ Người con này đã có Mẹ. Nếu muốn bổ sung Cha, vui lòng chọn 'Không thuộc gia đình nào' rồi chọn vai trò Cha."
+          );
+          return;
+        }
+
+        const m = marriages.find(
+          x => String(x.id) === String(marriageId)
+        );
+
+        const boResult = skipBirthOrderCheck
+          ? { opened: false }
+          : await birthOrder.checkBeforeSave(childId, marriageId);
+
+        if (boResult.opened) {
+          setLoading(false);
+          return;
+        }
+
         try {
+
           // CHA
           await axios.post(
             `${API_BASE_URL}/parent_child/assign`,
@@ -433,6 +214,7 @@ function AssignParentForm() {
             },
             getAuthConfig()
           );
+
           // MẸ
           await axios.post(
             `${API_BASE_URL}/parent_child/assign`,
@@ -443,23 +225,29 @@ function AssignParentForm() {
             },
             getAuthConfig()
           );
+
         } catch (err) {
-          console.error("❌ BACKEND ERROR:", err.response?.data);
-        
+
+          console.error(
+            "❌ BACKEND ERROR:",
+            err.response?.data
+          );
+
           const data = err.response?.data;
-        
+
           setError(
             data?.message ||
             data?.detail?.message ||
             data?.detail ||
             data?.warning ||
             data?.error ||
-            "Lỗi hệ thống"
+            "❌ Không thể bổ sung người con vào gia đình này."
           );
-        
+
           return;
         }
       }
+
       setSuccess("✅ Đã bổ sung cha/mẹ thành công.");
       // 🔄 Reset form về trạng thái ban đầu sau khi lưu thành công
 
@@ -473,7 +261,7 @@ function AssignParentForm() {
 
     } catch (err) {
       console.error("❌ ASSIGN ERROR:", err.response?.data || err);
-    
+
       const data = err.response?.data;
 
       setError(
@@ -484,7 +272,7 @@ function AssignParentForm() {
         data?.error ||
         "❌ Lỗi hệ thống."
       );
-    
+
     } finally {
       setLoading(false);
     }
@@ -497,16 +285,25 @@ function AssignParentForm() {
     <div className="max-w-xl mx-auto p-4 bg-white shadow rounded">
 
       {success && <div className="text-green-600 mb-2">{success}</div>}
-      {birthConflictWarning && (
+      {birthOrder.birthConflictWarning && (
         <div className="text-yellow-700 bg-yellow-100 p-2 rounded mb-2">
 
           <div className="flex flex-col gap-2">
 
-            <span>{birthConflictWarning}</span>
+            <span>{birthOrder.birthConflictWarning}</span>
 
             <button
               type="button"
-              onClick={openBirthOrderPanel}
+              onClick={() => {
+                if (!noMarriage && marriageId) {
+                  birthOrder.openPanelByMarriage(
+                    childId,
+                    marriageId
+                  );
+                } else {
+                  birthOrder.openPanelByChild(childId);
+                }
+              }}
               className="w-fit px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
             >
               Cập nhật Birth Order
@@ -536,7 +333,7 @@ function AssignParentForm() {
 
               if (!id) return;
               checkParentStatus(id);
-              checkBirthConflict(id);
+              birthOrder.checkBeforeSave(id);
             }}
             persons={persons}
             placeholder="-- Gõ tên hoặc kéo xuống Chọn người con --"
@@ -666,22 +463,69 @@ function AssignParentForm() {
             </div>
           )
         }
-
+        {error && (
+            <div className="text-red-600 mb-2 whitespace-pre-line">
+              {error}
+            </div>
+          )}
+        {birthOrder.showBirthOrderPanel && (
+            <BirthOrderPanel
+              birthOrderPanelRef={birthOrder.birthOrderPanelRef}
+              birthOrderRows={birthOrder.birthOrderRows}
+              setBirthOrderRows={birthOrder.setBirthOrderRows}
+              saveBirthOrders={async () => {
+                const result = await birthOrder.saveBirthOrders();
+              
+                if (result.ok) {
+                  setSuccess(result.message);
+                  setError("");
+              
+                  await handleSubmit(null, { skipBirthOrderCheck: true });
+                } else {
+                  setError(result.message);
+                }
+              }}
+              setShowBirthOrderPanel={birthOrder.setShowBirthOrderPanel}
+              setError={setError}
+              displayName={displayName}
+            />
+          )}
         {/* ================================================= */}
         {/* BUTTONS */}
         {/* ================================================= */}
-        <div className="flex justify-between pt-4">
-          {/* NÚT HỦY */}
+        <div className="flex gap-2 pt-4">
+
+          <button
+            type="button"
+            onClick={() => {
+              if (!noMarriage && marriageId) {
+                birthOrder.openPanelByMarriage(childId, marriageId);
+              } else {
+                birthOrder.openPanelByChild(childId);
+              }
+            }}
+            disabled={!childId || birthOrder.birthOrderLoading}
+            className={`px-4 py-2 text-white rounded ${
+              !childId || birthOrder.birthOrderLoading
+                ? "bg-gray-300 cursor-not-allowed"
+                : birthOrder.showBirthOrderPanel
+                ? "bg-purple-600 hover:bg-purple-700"
+                : "bg-gray-500 hover:bg-gray-600"
+            }`}
+          >
+            {birthOrder.birthOrderLoading ? "⏳ Đang tải..." : "🔢 Birth Order"}
+          </button>
+
           <button
             type="button"
             className="px-4 py-2 bg-gray-400 text-white rounded"
             onClick={() => {
-              setParentId('');
-              setType('');
-              setMarriageId('');
+              setParentId("");
+              setType("");
+              setMarriageId("");
               setNoMarriage(true);
-              setError('');
-              setSuccess('');
+              setError("");
+              setSuccess("");
               setHasFather(false);
               setHasMother(false);
               setLockForm(false);
@@ -689,8 +533,25 @@ function AssignParentForm() {
           >
             ❌ Hủy
           </button>
-
-          {/* 🔵 [CHANGE]: Ẩn Lưu khi đã lockForm (đã lưu xong) */}
+          <button
+            type="button"
+            onClick={() => {
+              setChildId("");
+              setParentId("");
+              setType("");
+              setMarriageId("");
+              setNoMarriage(true);
+              setError("");
+              setSuccess("");
+              setHasFather(false);
+              setHasMother(false);
+              setLockForm(false);
+              birthOrder.setShowBirthOrderPanel(false);
+            }}
+            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
+          >
+            ➕ Thêm
+          </button> 
           {!lockForm && (
             <button
               type="submit"
@@ -701,115 +562,22 @@ function AssignParentForm() {
                   : "bg-blue-600 hover:bg-blue-700"
               }`}
             >
-              {loading ? "⏳ Đang kiểm tra quyền..." : "💾 Lưu"}
+              {loading ? "⏳ Đang kiểm tra quyền..." : "💾 Lưu Gia Đình"}
             </button>
           )}
+
           {lockForm && (
             <button
               type="button"
               onClick={() => navigate("/")}
               className="px-4 py-2 bg-gray-600 text-white rounded"
             >
-              ⬅ Quay về Home
+              🏠 Home
             </button>
           )}
         </div>
-        {error && (
-          <div className="text-red-600 mb-2 whitespace-pre-line">
-            {error}
-          </div>
-        )}
-        {showBirthOrderPanel && (
-          <div
-            ref={birthOrderPanelRef}
-            className="mt-4 border rounded p-4 bg-gray-50"
-          >
-
-            <h3 className="font-bold mb-4">
-              Cập nhật Birth Order
-            </h3>
-
-            <div className="space-y-2">
-
-              {birthOrderRows.map((p) => (
-
-                <div
-                  key={p.id}
-                  className="flex items-center justify-between gap-4"
-                >
-
-                  <div className="flex-1">
-                  {displayName(
-                    p.name ||
-                    p.full_name ||
-                    p.fullname ||
-                    [p.sur_name, p.last_name, p.middle_name, p.first_name]
-                      .filter(Boolean)
-                      .join(" ")
-                  )}
-                  </div>
-
-                  <div className="flex-1 text-sm text-gray-600">
-                    {p.birth_date || "Chưa có ngày sinh"}
-                  </div>
-
-                  <input
-                    type="number"
-                    min={1}
-                    value={p.birth_order || ""}
-                    onChange={(e) => {
-                      setError("");
-                      const value = e.target.value;
-
-                      setBirthOrderRows(rows =>
-                        rows.map(r =>
-                          r.id === p.id
-                            ? {
-                              ...r,
-                              birth_order:
-                                value === ""
-                                  ? null
-                                  : Number(value)
-                            }
-                            : r
-                        )
-                      );
-
-                    }}
-                    className="w-24 border rounded p-1"
-                    placeholder="BO"
-                  />
-
-                </div>
-              ))}
-
-            </div>
-
-              <div className="flex gap-2 mt-4">
-
-                <button
-                  type="button"
-                  onClick={saveBirthOrders}
-                  className="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600"
-                >
-                  💾 Lưu BO
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowBirthOrderPanel(false)}
-                  className="px-4 py-2 bg-gray-500 text-white rounded"
-                >
-                  Đóng
-                </button>
-
-              </div>
-
-          </div>
-        )}
       </form >
     </div >
   );
 }
-
 export default AssignParentForm;

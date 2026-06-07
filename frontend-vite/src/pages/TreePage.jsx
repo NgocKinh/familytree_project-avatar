@@ -218,7 +218,7 @@ export default function TreePage() {
         onClick={() => navigate("/")}
         className="absolute top-4 left-4 bg-white px-3 py-1 rounded shadow hover:bg-gray-100"
       >
-        ⬅ Trang chủ
+        🏠 Home
       </button>
 
       {/* ================= Parents ================= */}
