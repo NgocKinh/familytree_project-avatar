@@ -126,10 +126,10 @@ function AppContent() {
     "/announcement",
     "/internal-notification",
     "/feedback",
-    "/feedback",
     "/admin",
     "/pending",
     "/help",
+    "/family-setup",
   ];
   
   const shouldHideNavbar =

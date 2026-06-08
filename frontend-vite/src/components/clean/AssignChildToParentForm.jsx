@@ -43,7 +43,7 @@ function AssignChildToParentForm() {
   const [success, setSuccess] = useState("");
   const [lockForm, setLockForm] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+  const [boConfirmed, setBoConfirmed] = useState(false);
   const birthOrder = useBirthOrder({
     persons,
     getAuthConfig,
@@ -92,14 +92,16 @@ function AssignChildToParentForm() {
       return;
     }
     
-    const boResult = await birthOrder.checkBeforeSave(
-      childId,
-      noMarriage ? null : marriageId
-    );
-
-    if (boResult.opened) {
-      setLoading(false);
-      return;
+    if (!boConfirmed) {
+      const boResult = await birthOrder.checkBeforeSave(
+        childId,
+        noMarriage ? null : marriageId
+      );
+    
+      if (boResult.opened) {
+        setLoading(false);
+        return;
+      }
     }
     try {
       // ===============================
@@ -204,7 +206,7 @@ function AssignChildToParentForm() {
             <button
               type="button"
               onClick={() => birthOrder.openPanelByChild(childId)}
-              className="px-3 py-1 bg-amber-500 text-white rounded hover:bg-amber-600"
+              className="px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700"
             >
               🔢 Cập nhật Birth Order
             </button>
@@ -221,9 +223,9 @@ function AssignChildToParentForm() {
             const result = await birthOrder.saveBirthOrders();
           
             if (result.ok) {
-              setSuccess(result.message);
+              setSuccess("✅ Đã cập nhật Birth Order. Bấm Lưu để hoàn tất quan hệ Cha/Mẹ & Con.");
               setError("");
-              setLockForm(true);
+              setBoConfirmed(true);
             } else {
               setError(result.message);
             }
@@ -280,7 +282,7 @@ function AssignChildToParentForm() {
                 setParentId(id);
                 setError("");
                 setSuccess("");
-
+                setBoConfirmed(false);
                 const selectedParent = persons.find(
                   (p) => String(p.person_id ?? p.id) === String(id)
                 );
@@ -325,8 +327,13 @@ function AssignChildToParentForm() {
             <div>
               <button
                 type="button"
+                disabled={!childId || lockForm}
                 onClick={() => birthOrder.openPanelByChild(childId)}
-                className="px-4 py-2 bg-gray-300 text-white-700 rounded hover:bg-purple-600"
+                className={`px-4 py-2 rounded text-white ${
+                  !childId || lockForm
+                    ? "bg-gray-300 cursor-not-allowed"
+                    : "bg-purple-600 hover:bg-purple-700"
+                }`}
               >
                 🔢 Birth Order
               </button>

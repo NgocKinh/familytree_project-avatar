@@ -157,7 +157,7 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
         }
 
       } else {
-        setBirthOrderRows(rows);
+        setBirthOrderRows(sortBirthOrderRows(rows));
       }
 
       setShowBirthOrderPanel(true);
@@ -259,7 +259,7 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
           return { opened: false };
         }
       
-        setBirthOrderRows(rows);
+        setBirthOrderRows(sortBirthOrderRows(rows));
       
         if (hasChildMissingBirthYear) {
           setBirthConflictWarning(
@@ -275,7 +275,7 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
           );
         }
       } else {
-        setBirthOrderRows(rows);
+        setBirthOrderRows(sortBirthOrderRows(rows));
       }
   
       setShowBirthOrderPanel(true);

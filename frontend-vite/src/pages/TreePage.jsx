@@ -47,11 +47,11 @@ function Person({ person, go, size = 60 }) {
   const onClick = person?.person_id ? () => go(person.person_id) : undefined;
 
   return (
-    <div className="flex flex-col items-center w-[130px]">
+    <div className="flex flex-col items-center w-[150px]">
 
       <Avatar person={person} size={size} onClick={onClick} />
 
-      <p className="mt-2 font-medium text-center whitespace-nowrap overflow-hidden text-ellipsis">
+      <p className="mt-2 text-sm font-medium text-center leading-tight break-words w-full">
         {name}
       </p>
 
