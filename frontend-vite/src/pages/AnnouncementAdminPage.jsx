@@ -7,35 +7,38 @@ function AnnouncementAdminPage() {
     const [loading, setLoading] = useState(true);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [editId, setEditId] = useState(null);
+    const [eventType, setEventType] = useState("");
+    const [isActive, setIsActive] = useState("");
     const fetchAnnouncements = async () => {
         try {
             const token = localStorage.getItem("token");
 
             const res = await fetch(makeApiUrl("/admin/announcement/list"), {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
             });
-          
+
             if (res.status === 401) {
-              handleAuthError({ response: { status: 401 } });
-              return;
+                handleAuthError({ response: { status: 401 } });
+                return;
             }
-          
+
             const json = await res.json();
-          
+
             if (json.success) {
-              setAnnouncements(json.data || []);
+                setAnnouncements(json.data || []);
             }
-          } catch (err) {
+        } catch (err) {
             if (handleAuthError(err)) {
-              return;
+                return;
             }
-          
+
             console.error("❌ Lỗi tải announcements:", err);
-          } finally {
+        } finally {
             setLoading(false);
-          }
+        }
     };
 
     useEffect(() => {
@@ -43,57 +46,103 @@ function AnnouncementAdminPage() {
     }, []);
     const handleCreate = async () => {
         try {
-          const token = localStorage.getItem("token");
-      
-          const res = await fetch(
-            makeApiUrl("/admin/announcement/create"),
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-              body: JSON.stringify({
-                title,
-                description,
-                event_type: "custom",
-                calendar_type: "solar",
-                solar_date: null,
-                lunar_day: null,
-                lunar_month: null,
-                lunar_year: null,
-                repeat_type: "none",
-                person_id: null,
-                is_active: true,
-              }),
+            const token = localStorage.getItem("token");
+
+            const res = await fetch(
+                makeApiUrl("/admin/announcement/create"),
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        title,
+                        description,
+                        event_type: "custom",
+                        calendar_type: "solar",
+                        solar_date: null,
+                        lunar_day: null,
+                        lunar_month: null,
+                        lunar_year: null,
+                        repeat_type: "none",
+                        person_id: null,
+                        is_active: true,
+                    }),
+                }
+            );
+
+            if (res.status === 401) {
+                handleAuthError({ response: { status: 401 } });
+                return;
             }
-          );
-      
-          if (res.status === 401) {
-            handleAuthError({ response: { status: 401 } });
-            return;
-          }
-      
-          const json = await res.json();
-      
-          if (json.success) {
-            setTitle("");
-            setDescription("");
-      
-            fetchAnnouncements();
-          }
+
+            const json = await res.json();
+
+            if (json.success) {
+                setTitle("");
+                setDescription("");
+
+                fetchAnnouncements();
+            }
         } catch (err) {
-          if (handleAuthError(err)) {
-            return;
-          }
-      
-          console.error("❌ Create failed:", err);
+            if (handleAuthError(err)) {
+                return;
+            }
+
+            console.error("❌ Create failed:", err);
         }
-      };
+    };
+
+    const handleEdit = (item) => {
+        setTitle(item.title || "");
+        setDescription(item.description || "");
+        setEventType(item.event_type || "");
+        setIsActive(item.is_active ?? true);
+        setEditId(item.id);
+    };
+    const handleUpdate = async () => {
+        const token = localStorage.getItem("token");
+      
+        await fetch(makeApiUrl(`/admin/announcement/${editId}`), {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            title,
+            description,
+            event_type: "custom",
+            calendar_type: "solar",
+            solar_date: null,
+            lunar_day: null,
+            lunar_month: null,
+            lunar_year: null,
+            repeat_type: "none",
+            person_id: null,
+            is_active: true,
+          }),
+        });
+      
+        setEditId(null);
+        setTitle("");
+        setDescription("");
+        fetchAnnouncements();
+    };
+    const handleDelete = async (id) => {
+        if (!window.confirm("Bạn có chắc muốn xóa thông báo này không?")) return;
+
+        await fetch(`http://localhost:8000/api/admin/announcement/${id}`, {
+            method: "DELETE",
+        });
+
+        fetchAnnouncements();
+    };
 
     return (
         <div className="max-w-5xl mx-auto p-6">
-            
+
             <AdminHeader title="📢 Quản Lý Thông Báo" />
 
             <div className="bg-white rounded-xl shadow p-6 border">
@@ -119,10 +168,10 @@ function AnnouncementAdminPage() {
                     />
 
                     <button
-                        onClick={handleCreate}
+                        onClick={editId ? handleUpdate : handleCreate}
                         className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
                     >
-                        Lưu thông báo
+                        {editId ? "Cập nhật thông báo" : "Lưu thông báo"}
                     </button>
                 </div>
                 {loading ? (
@@ -144,9 +193,29 @@ function AnnouncementAdminPage() {
                                     {item.description}
                                 </p>
 
-                                <p className="text-xs text-gray-400 mt-2">
-                                    Type: {item.event_type} | Active: {item.is_active ? "Yes" : "No"}
-                                </p>
+                                <div className="flex justify-between items-center mt-3">
+                                    <p className="text-xs text-gray-400">
+                                        Type: {item.event_type} | Active: {item.is_active ? "Yes" : "No"}
+                                    </p>
+
+                                    <div className="flex gap-2">
+                                        <button
+                                        type="button"
+                                        onClick={() => handleEdit(item)}
+                                        className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                                        >
+                                        ✏️ Sửa
+                                        </button>
+
+                                        <button
+                                        type="button"
+                                        onClick={() => handleDelete(item.id)}
+                                        className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                        >
+                                        🗑️ Xóa
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         ))}
                     </div>

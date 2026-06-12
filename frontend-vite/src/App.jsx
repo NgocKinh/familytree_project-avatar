@@ -143,7 +143,7 @@ function AppContent() {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [currentUser]);
+  }, []);
   const hideNavbarRoutes = [
     "/person",
     "/parent_child",

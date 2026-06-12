@@ -286,3 +286,21 @@ Checkpoint Authentication V2.5
 - Updated treeApi
 - Updated Announcement/Admin/Internal pages
 - Build PASS
+
+FamilyTree Project
+==================
+
+Authentication V2.5
+Deploy Preparation Phase 1
+Deploy Preparation Phase 2
+
+✓ Frontend build PASS
+✓ Backend startup PASS
+✓ URL centralization
+✓ Avatar URL centralization
+✓ DB ENV
+✓ JWT ENV
+✓ CORS ENV
+✓ .env protected by .gitignore
+✓ Working tree clean
+
