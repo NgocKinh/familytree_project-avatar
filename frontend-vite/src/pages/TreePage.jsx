@@ -166,17 +166,17 @@ export default function TreePage() {
 
   const childrenSorted = useMemo(() => {
     return [...children_common].sort((a, b) => {
-      const boA = a.birth_order ?? 9999;
-      const boB = b.birth_order ?? 9999;
-
-      if (boA !== boB) {
-        return boA - boB;
-      }
-
       const yearA = a.birth_year ?? 9999;
       const yearB = b.birth_year ?? 9999;
-
-      return yearA - yearB;
+  
+      if (yearA !== yearB) {
+        return yearA - yearB;
+      }
+  
+      const boA = a.birth_order ?? 9999;
+      const boB = b.birth_order ?? 9999;
+  
+      return boA - boB;
     });
   }, [children_common]);
 

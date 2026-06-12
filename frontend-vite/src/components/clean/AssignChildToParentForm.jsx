@@ -4,6 +4,7 @@ import { API_BASE_URL } from "../../api/apiConfig";
 import PersonDropdown from "../common/PersonDropdown";
 import MarriageDropdown from "../common/MarriageDropdown";
 import { formatName } from "../../utils/formatName";
+import { handleAuthError } from "../../utils/authErrorHandler";
 import BirthOrderPanel from "../birth_order/BirthOrderPanel";
 import { useNavigate } from "react-router-dom";
 import useBirthOrder from "../birth_order/useBirthOrder";
@@ -74,6 +75,9 @@ function AssignChildToParentForm() {
       );
 
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
       console.error("❌ Check parent status error:", err);
     }
   };
@@ -92,18 +96,18 @@ function AssignChildToParentForm() {
       return;
     }
     
-    if (!boConfirmed) {
-      const boResult = await birthOrder.checkBeforeSave(
-        childId,
-        noMarriage ? null : marriageId
-      );
-    
-      if (boResult.opened) {
-        setLoading(false);
-        return;
-      }
-    }
     try {
+      if (!boConfirmed) {
+        const boResult = await birthOrder.checkBeforeSave(
+          childId,
+          noMarriage ? null : marriageId
+        );
+      
+        if (boResult.opened) {
+          setLoading(false);
+          return;
+        }
+      }
       // ===============================
       // CASE 1: KHÔNG CÓ HÔN NHÂN
       // ===============================
@@ -161,6 +165,9 @@ function AssignChildToParentForm() {
       setSuccess("✅ Đã bổ sung quan hệ Cha/Mẹ & Con thành công.");
       setLockForm(true);
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
       console.error(
         "❌ ASSIGN CHILD ERROR:",
         err.response?.data || err
@@ -174,7 +181,7 @@ function AssignChildToParentForm() {
         data?.detail ||
         data?.warning ||
         data?.error ||
-        "❌ Lỗi hệ thống."
+        "❌ Không thể bổ sung người con vào gia đình. Vui lòng kiểm tra lại dữ liệu và thử lại."
       );
     }
     finally {

@@ -14,7 +14,7 @@ import {
 } from "../../api/personApi";
 
 import { getAvatarURL, fallbackAvatar, handleAvatarError } from "../../utils/avatarEngine";
-
+import { handleAuthError } from "../../utils/authErrorHandler";
 import {
   formatDateVN,
   parseVNDate,
@@ -56,6 +56,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
   const [showPendingModal, setShowPendingModal] = useState(false);
   const [duplicateMessage, setDuplicateMessage] = useState("");
   const [pendingPayload, setPendingPayload] = useState(null);
+  const [savedOnce, setSavedOnce] = useState(false);
   // =========================
   // RESET FORM
   // =========================
@@ -75,6 +76,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
     // 🔵 [ADDED]
     setAvatarPreview(null);
     setDuplicateMessage("");
+    setSavedOnce(false);
   };
 
   // =========================
@@ -112,6 +114,9 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
       });
 
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
       console.error("❌ Load error:", err);
     } finally {
       setLoading(false);
@@ -157,8 +162,21 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
   // =========================
   // SUBMIT
   // =========================
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, mode = "save") => {
     e.preventDefault();
+    if (!form.last_name?.trim()) {
+      alert("❌ Vui lòng nhập Tên họ.");
+      return false;
+    }
+    
+    if (!form.first_name?.trim()) {
+      alert("❌ Vui lòng nhập Tên chính.");
+      return false;
+    }
+    if (!form.gender) {
+      alert("❌ Vui lòng chọn Giới tính.");
+      return false;
+    }
     const payload = {
       ...form,
       birth_date: parseVNDate(form.birth_date),
@@ -191,6 +209,9 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
       }
     
     } catch (err) {
+      if (handleAuthError(err)) {
+        return false;
+      }
       console.error("❌ Duplicate API ERROR:", err);
       return;
     }
@@ -198,26 +219,44 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
     try {
       if (isEdit) {
         console.log("🔥 BEFORE API");
+    
         await updatePerson(realId, payload);
     
         alert("✅ Cập nhật thành công!");
-      } else {
-        const res = await addPerson(payload);
     
-        console.log("🔥 ADD RESPONSE:", res);
+        if (onSaved) {
+          onSaved();
+        }
     
-        alert(
-          "✅ Thêm thành công! Bạn có thể kiểm tra, chỉnh sửa rồi bấm Lưu lại nếu cần."
-        );
+        return true;
       }
     
-      if (onSaved) onSaved();
+      const res = await addPerson(payload);
+    
+      console.log("🔥 ADD RESPONSE:", res);
+    
+      if (mode === "save_add_new") {
+        alert("✅ Đã lưu. Tiếp tục nhập người mới.");
+        return true;
+      }
+    
+      alert(`✅ Đã lưu thành công.
+    
+    Bạn có thể:
+    • Bấm Home để thoát.
+    • Bấm Thêm Thành Viên Mới để nhập người khác.`);
+    
+      setSavedOnce(true);
     
       return true;
+    
     } catch (err) {
+      if (handleAuthError(err)) {
+        return false;
+      }
       console.error("❌ Submit error:", err);
     
-      alert("❌ Không thể lưu dữ liệu!");
+      alert("❌ Không thể lưu thông tin thành viên. Vui lòng kiểm tra lại dữ liệu và thử lại.");
     
       return false;
     }
@@ -233,6 +272,9 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
       resetForm();
       navigate("/pending");
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
       console.error(err);
       alert("Không gửi được Pending!");
     }
@@ -253,6 +295,9 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
   
       navigate("/");
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
       console.error("❌ Save anyway error:", err);
       alert("❌ Không thể lưu người mới!");
     }
@@ -312,7 +357,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
         </div>
       )}
       {/* FORM */}
-      <form onSubmit={handleSubmit} autoComplete="off">
+      <form onSubmit={handleSubmit} autoComplete="off" noValidate>
         <input
           type="text"
           name="fake-username"
@@ -340,7 +385,6 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
               value={form[name]}
               onChange={handleChange}
               className="border p-2 w-full"
-              required={name === "last_name" || name === "first_name"}
             />
           </div>
         ))}
@@ -352,7 +396,6 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
             value={form.gender}
             onChange={handleChange}
             className="border p-2 w-full"
-            required
           >
             <option value="">-- chọn --</option>
             <option value="male">Nam</option>
@@ -387,40 +430,66 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
 
         <div className="mt-3 flex gap-3">
 
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
-          >
-            💾 Lưu
-          </button>
+        {!savedOnce ? (
+          <>
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded"
+            >
+              💾 Lưu
+            </button>
 
-          {!isEdit && (
-            <>
-              <button
-                type="button"
-                onClick={async () => {
-                  const fakeEvent = {
-                    preventDefault: () => {}
-                  };
+            {!isEdit && (
+              <>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const fakeEvent = {
+                      preventDefault: () => {}
+                    };
 
-                  await handleSubmit(fakeEvent);
+                    const ok = await handleSubmit(fakeEvent, "save_add_new");
 
-                  resetForm();
-                }}
-                className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
-              >
-                💾➕ Lưu và Thêm Mới
-              </button>
+                    if (ok) {
+                      resetForm();
+                    }
+                  }}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+                >
+                  💾➕ Lưu và Thêm Mới
+                </button>
 
-              <button
-                type="button"
-                onClick={resetForm}
-                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
-              >
-                ❌ Hủy / Làm Mới
-              </button>
-            </>
-          )}
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+                >
+                  ❌ Hủy / Làm Mới
+                </button>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            <button
+              type="button"
+              onClick={() => {
+                resetForm();
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded"
+            >
+              ➕ Thêm Thành Viên Mới
+            </button>
+
+            <button
+              type="button"
+              onClick={() => navigate("/")}
+              className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded"
+            >
+              🏠 Home
+            </button>
+          </>
+        )}
 
         </div>
       </form>

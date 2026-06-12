@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getPersonBasicList } from "../../api/personBasicApi";
+import { handleAuthError } from "../../utils/authErrorHandler";
 import {
   addParentChild,
   getParentChildList,
@@ -47,6 +48,9 @@ export default function ParentChildForm({ role = "admin", editId = null, onBack 
         setPersons(personData.filter(p => Number(p.delete_status) === 0));
 
       } catch (err) {
+        if (handleAuthError(err)) {
+          return;
+        }
         console.error("❌ Lỗi tải danh sách person:", err);
         setErrorMsg("Không thể tải danh sách thành viên!");
       }
@@ -55,6 +59,9 @@ export default function ParentChildForm({ role = "admin", editId = null, onBack 
         const relationData = await getParentChildList();
         setRelations(relationData);
       } catch (err) {
+        if (handleAuthError(err)) {
+          return;
+        }
         console.error("❌ Lỗi tải danh sách quan hệ:", err);
       }
     }
@@ -80,6 +87,9 @@ export default function ParentChildForm({ role = "admin", editId = null, onBack 
         });
       }
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
       console.error("❌ Lỗi load dữ liệu cũ:", err);
       setErrorMsg("Không thể tải dữ liệu quan hệ cần chỉnh sửa!");
     }
@@ -170,8 +180,13 @@ export default function ParentChildForm({ role = "admin", editId = null, onBack 
 
       if (editId && onBack) onBack(); // quay lại danh sách sau khi sửa
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
       console.error("❌ Lỗi khi lưu quan hệ:", err);
-      setErrorMsg("❌ Không thể lưu quan hệ (kiểm tra backend).");
+      setErrorMsg(
+        "❌ Không thể lưu quan hệ Cha/Mẹ - Con. Vui lòng kiểm tra lại dữ liệu và thử lại."
+      );
       setSuccessMsg("");
     }
   };

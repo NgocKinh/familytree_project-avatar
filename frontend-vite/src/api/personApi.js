@@ -7,7 +7,7 @@
 // =======================================================
 
 import axios from "axios";
-
+import { handleAuthError } from "../utils/authErrorHandler";
 // ============================================
 // BASE URL
 // ============================================
@@ -39,6 +39,9 @@ export const getPersonList = async () => {
 
     return [];
   } catch (err) {
+    if (handleAuthError(err)) {
+      return [];
+    }
     console.error("❌ API ERROR:", err);
 
     // 🔁 retry 1 lần
@@ -55,6 +58,9 @@ export const getPersonList = async () => {
 
       return [];
     } catch (err2) {
+      if (handleAuthError(err)) {
+        return [];
+      }
       console.error("💥 RETRY FAIL:", err2);
       return [];
     }
@@ -67,20 +73,47 @@ export const getAllPersons = getPersonList;
 // ============================================
 // SOFT DELETE (tạm giữ nếu backend chưa đổi)
 // ============================================
-export const softDeletePerson = (id) =>
-  axios.put(`${API_URL}/delete_soft/${id}`);
+export const softDeletePerson = async (id) => {
+  try {
+    return await axios.put(`${API_URL}/delete_soft/${id}`);
+  } catch (err) {
+    if (handleAuthError(err)) {
+      return null;
+    }
+
+    throw err;
+  }
+};
 
 // ============================================
 // RESTORE
 // ============================================
-export const restorePerson = (id) =>
-  axios.put(`${API_URL}/restore/${id}`);
+export const restorePerson = async (id) => {
+  try {
+    return await axios.put(`${API_URL}/restore/${id}`);
+  } catch (err) {
+    if (handleAuthError(err)) {
+      return null;
+    }
+
+    throw err;
+  }
+};
 
 // ============================================
 // HARD DELETE
 // ============================================
-export const hardDeletePerson = (id) =>
-  axios.delete(`${API_URL}/delete_permanent/${id}`);
+export const hardDeletePerson = async (id) => {
+  try {
+    return await axios.delete(`${API_URL}/delete_permanent/${id}`);
+  } catch (err) {
+    if (handleAuthError(err)) {
+      return null;
+    }
+
+    throw err;
+  }
+};
 
 // ============================================
 // GET DETAIL
@@ -90,6 +123,9 @@ export const getPersonById = async (id) => {
     const res = await axios.get(`${API_URL}/${id}`);
     return res.data;
   } catch (err) {
+    if (handleAuthError(err)) {
+      return null;
+    }
     console.error(`❌ Lỗi khi lấy chi tiết ID=${id}:`, err);
     throw err;
   }
@@ -105,6 +141,10 @@ export const addPerson = async (data) => {
     });
     return res.data;
   } catch (err) {
+    if (handleAuthError(err)) {
+      return null;
+    }
+  
     console.error("❌ Lỗi thêm người mới:", err);
     throw err;
   }
@@ -120,6 +160,9 @@ export const updatePerson = async (id, data) => {
     });
     return res.data;
   } catch (err) {
+    if (handleAuthError(err)) {
+      return null;
+    }
     console.error(`❌ Lỗi cập nhật ID=${id}:`, err);
     throw err;
   }
@@ -147,6 +190,9 @@ export const uploadAvatar = async (personId, file) => {
 
     return res.data;
   } catch (err) {
+    if (handleAuthError(err)) {
+      return null;
+    }
     console.error("❌ Lỗi upload avatar:", err);
     throw err;
   }

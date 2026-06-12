@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../components/admin/AdminHeader";
+import { handleAuthError } from "../utils/authErrorHandler";
 function AdminFeedbackPage() {
   const navigate = useNavigate();
 
@@ -12,6 +13,12 @@ function AdminFeedbackPage() {
   const loadFeedbacks = async () => {
     try {
       const res = await fetch("http://127.0.0.1:8000/api/feedback/list");
+
+      if (res.status === 401) {
+        handleAuthError({ response: { status: 401 } });
+        return;
+      }
+
       const data = await res.json();
 
       if (data.success) {
@@ -31,12 +38,18 @@ function AdminFeedbackPage() {
     setSaving(true);
 
     try {
+      const token = localStorage.getItem("token");
+      if (res.status === 401) {
+        handleAuthError({ response: { status: 401 } });
+        return;
+      }
       const res = await fetch(
         `http://127.0.0.1:8000/api/feedback/${selectedFeedback.feedback_id}`,
         {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             status: selectedFeedback.status,
@@ -44,7 +57,10 @@ function AdminFeedbackPage() {
           }),
         }
       );
-
+      if (res.status === 401) {
+        handleAuthError({ response: { status: 401 } });
+        return;
+      }
       const data = await res.json();
 
       if (data.success) {

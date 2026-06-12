@@ -4,6 +4,7 @@ import { API_BASE_URL } from "../../api/apiConfig";
 import PersonDropdown from "../common/PersonDropdown";
 import MarriageDropdown from "../common/MarriageDropdown";
 import { formatName } from "../../utils/formatName";
+import { handleAuthError } from "../../utils/authErrorHandler";
 import { useNavigate } from "react-router-dom";
 import BirthOrderPanel from "../birth_order/BirthOrderPanel";
 import useBirthOrder from "../birth_order/useBirthOrder";
@@ -227,7 +228,9 @@ function AssignParentForm() {
           );
 
         } catch (err) {
-
+          if (handleAuthError(err)) {
+            return;
+          }
           console.error(
             "❌ BACKEND ERROR:",
             err.response?.data
@@ -260,19 +263,23 @@ function AssignParentForm() {
       setLockForm(true);
 
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
+    
       console.error("❌ ASSIGN ERROR:", err.response?.data || err);
-
+    
       const data = err.response?.data;
-
+    
       setError(
         data?.message ||
         data?.detail?.message ||
         data?.detail ||
         data?.warning ||
         data?.error ||
-        "❌ Lỗi hệ thống."
+        "❌ Không thể bổ sung Cha/Mẹ cho người con. Vui lòng kiểm tra lại dữ liệu và thử lại."
       );
-
+    
     } finally {
       setLoading(false);
     }

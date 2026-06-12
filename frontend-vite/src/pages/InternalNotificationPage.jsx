@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-
+import { handleAuthError } from "../utils/authErrorHandler";
 function InternalNotificationPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -7,6 +7,10 @@ function InternalNotificationPage() {
   const fetchNotifications = async () => {
     try {
       const res = await fetch("http://localhost:8000/api/admin/announcement/list");
+      if (res.status === 401) {
+        handleAuthError({ response: { status: 401 } });
+        return;
+      }
       const json = await res.json();
 
       if (json.success) {
@@ -14,6 +18,9 @@ function InternalNotificationPage() {
         setNotifications(activeItems);
       }
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
       console.error("❌ Lỗi tải thông báo nội bộ:", err);
     } finally {
       setLoading(false);

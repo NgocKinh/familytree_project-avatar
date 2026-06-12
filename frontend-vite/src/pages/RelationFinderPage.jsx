@@ -3,6 +3,7 @@ import axios from "axios";
 import { makeApiUrl } from "../api/apiConfig";
 import PersonDropdown from "../components/common/PersonDropdown";
 import { useNavigate } from "react-router-dom";
+import { handleAuthError } from "../utils/authErrorHandler";
 function RelationFinderPage() {
   console.log("RelationFinderPage RENDER");
   const navigate = useNavigate();
@@ -56,6 +57,10 @@ function RelationFinderPage() {
 
         setPersons(sortedPersons);
       } catch (err) {
+        if (handleAuthError(err)) {
+          return;
+        }
+      
         console.error("❌ Lỗi khi tải danh sách:", err);
         setError("Không thể tải danh sách thành viên.");
       }
@@ -108,6 +113,10 @@ function RelationFinderPage() {
       console.log("RELATION RESPONSE", res.data);
       setResult(res.data);
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
+    
       console.error("❌ Lỗi khi phân tích quan hệ:", err);
       setError("Đã xảy ra lỗi khi truy vấn máy chủ.");
     } finally {

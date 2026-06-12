@@ -9,18 +9,17 @@
 // ======================================================================
 
 import React, { useEffect, useState } from "react";
-import { formatName } from "../../utils/formatName";
 import {
   addMarriage,
   getMarriageById,
   updateMarriage,
 } from "../../api/marriageApi";
-
 import { getPersonBasicList } from "../../api/personBasicApi";
 import { checkNearAccess } from "../../api/authApi";
 // Utils ngày tháng
 import { formatDateVN, parseVNDate, detectPrecision } from "../../utils/formatDate";
-
+import { formatName } from "../../utils/formatName";
+import { handleAuthError } from "../../utils/authErrorHandler";
 // Component dropdown avatar chuẩn mới
 import PersonSelectWithAvatarV2 from "../common/PersonSelectWithAvatarV2";
 
@@ -99,6 +98,9 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
 
         setPersons(sorted);
       } catch (err) {
+        if (handleAuthError(err)) {
+          return;
+        }
         console.error(err);
         setErrorMsg("❌ Không thể tải danh sách thành viên!");
       }
@@ -136,6 +138,9 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
         consanguineous: data.consanguineous ?? 0,
       });
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
       setErrorMsg("❌ Không thể tải dữ liệu hôn nhân cần chỉnh sửa!");
     }
   };
@@ -223,15 +228,15 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
     // Dynamic Close Member Check
     // ======================================================
     
-    const accessA = await checkNearAccess(spouse_a_id);
-    const accessB = await checkNearAccess(spouse_b_id);
-    
-    if (!accessA.allowed && !accessB.allowed) {
-      setErrorMsg("❌ Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này.");
-      setLoading(false);
-      return;
-    }
     try {
+      const accessA = await checkNearAccess(spouse_a_id);
+      const accessB = await checkNearAccess(spouse_b_id);
+      
+      if (!accessA.allowed && !accessB.allowed) {
+        setErrorMsg("❌ Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này.");
+        setLoading(false);
+        return;
+      }
       let res;
       if (editId) {
         console.log("🟦 EDIT ID:", editId);
@@ -274,6 +279,9 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
       }
 
     } catch (err) {
+      if (handleAuthError(err)) {
+        return;
+      }
       const data = err.response?.data;
     
       const msg =

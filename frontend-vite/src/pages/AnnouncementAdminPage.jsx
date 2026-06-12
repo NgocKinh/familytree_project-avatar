@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import AdminHeader from "../components/admin/AdminHeader";
+import { handleAuthError } from "../utils/authErrorHandler";
 function AnnouncementAdminPage() {
     const [announcements, setAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -7,17 +8,33 @@ function AnnouncementAdminPage() {
     const [description, setDescription] = useState("");
     const fetchAnnouncements = async () => {
         try {
-            const res = await fetch("http://localhost:8000/api/admin/announcement/list");
-            const json = await res.json();
+            const token = localStorage.getItem("token");
 
-            if (json.success) {
-                setAnnouncements(json.data || []);
+            const res = await fetch("http://localhost:8000/api/admin/announcement/list", {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+            });
+          
+            if (res.status === 401) {
+              handleAuthError({ response: { status: 401 } });
+              return;
             }
-        } catch (err) {
+          
+            const json = await res.json();
+          
+            if (json.success) {
+              setAnnouncements(json.data || []);
+            }
+          } catch (err) {
+            if (handleAuthError(err)) {
+              return;
+            }
+          
             console.error("❌ Lỗi tải announcements:", err);
-        } finally {
+          } finally {
             setLoading(false);
-        }
+          }
     };
 
     useEffect(() => {
@@ -25,41 +42,53 @@ function AnnouncementAdminPage() {
     }, []);
     const handleCreate = async () => {
         try {
-            const res = await fetch(
-                "http://localhost:8000/api/admin/announcement/create",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        title,
-                        description,
-                        event_type: "custom",
-                        calendar_type: "solar",
-                        solar_date: null,
-                        lunar_day: null,
-                        lunar_month: null,
-                        lunar_year: null,
-                        repeat_type: "none",
-                        person_id: null,
-                        is_active: true,
-                    }),
-                }
-            );
-
-            const json = await res.json();
-
-            if (json.success) {
-                setTitle("");
-                setDescription("");
-
-                fetchAnnouncements();
+          const token = localStorage.getItem("token");
+      
+          const res = await fetch(
+            "http://localhost:8000/api/admin/announcement/create",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify({
+                title,
+                description,
+                event_type: "custom",
+                calendar_type: "solar",
+                solar_date: null,
+                lunar_day: null,
+                lunar_month: null,
+                lunar_year: null,
+                repeat_type: "none",
+                person_id: null,
+                is_active: true,
+              }),
             }
+          );
+      
+          if (res.status === 401) {
+            handleAuthError({ response: { status: 401 } });
+            return;
+          }
+      
+          const json = await res.json();
+      
+          if (json.success) {
+            setTitle("");
+            setDescription("");
+      
+            fetchAnnouncements();
+          }
         } catch (err) {
-            console.error("❌ Create failed:", err);
+          if (handleAuthError(err)) {
+            return;
+          }
+      
+          console.error("❌ Create failed:", err);
         }
-    };
+      };
 
     return (
         <div className="max-w-5xl mx-auto p-6">

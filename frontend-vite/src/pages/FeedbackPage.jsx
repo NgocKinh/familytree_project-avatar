@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { handleAuthError } from "../utils/authErrorHandler";
 function FeedbackPage() {
   const navigate = useNavigate();
 
@@ -58,7 +58,10 @@ function FeedbackPage() {
           body: JSON.stringify(form),
         }
       );
-
+      if (res.status === 401) {
+        handleAuthError({ response: { status: 401 } });
+        return;
+      }
       const data = await res.json();
 
       if (data.success) {

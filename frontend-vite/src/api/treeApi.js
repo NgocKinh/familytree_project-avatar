@@ -4,7 +4,7 @@
 
 import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
-
+import { handleAuthError } from "../utils/authErrorHandler";
 const API_BASE = "http://localhost:8000/api/tree";
 
 export async function getFamilyTree(id) {
@@ -28,6 +28,9 @@ export async function getFamilyTree(id) {
       children_mother_separate: data.children_mother_separate || [],
     };
   } catch (err) {
+    if (handleAuthError(err)) {
+      return null;
+    }
     console.error("❌ Lỗi API getFamilyTree:", err);
     throw err;
   }

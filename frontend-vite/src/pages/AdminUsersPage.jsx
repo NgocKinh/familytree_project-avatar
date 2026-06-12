@@ -11,6 +11,7 @@ import axios from "axios";
 import { API_BASE_URL } from "../api/apiConfig";
 import PersonDropdown from "../components/common/PersonDropdown";
 import { formatName } from "../utils/formatName";
+import { handleAuthError } from "../utils/authErrorHandler";
 import AdminHeader from "../components/admin/AdminHeader";
 const ROLES = [
     { value: "viewer", label: "👁 Người xem" },
@@ -43,7 +44,10 @@ export default function AdminUsersPage({ currentUser }) {
             const data = await getUsers();
             setUsers(data);
         } catch (err) {
-            setError(err.message || "Không tải được danh sách user");
+            if (handleAuthError(err)) {
+                return;
+              }
+            setError(err.message || "Không tải được danh sách tài khoản");
         } finally {
             setLoading(false);
         }
@@ -61,7 +65,10 @@ export default function AdminUsersPage({ currentUser }) {
 
             setPersons(normalized);
         } catch (err) {
-            console.error("Không tải được danh sách person:", err);
+            if (handleAuthError(err)) {
+                return;
+              }
+            console.error("Không tải được danh sách thành viên:", err);
             setPersons([]);
         }
     }
@@ -90,7 +97,7 @@ export default function AdminUsersPage({ currentUser }) {
                 person_id: form.person_id ? Number(form.person_id) : null,
             });
 
-            setMessage("✅ Tạo user thành công");
+            setMessage("✅ Tạo tài khoản thành công");
 
             setForm({
                 username: "",
@@ -103,7 +110,10 @@ export default function AdminUsersPage({ currentUser }) {
 
             await loadUsers();
         } catch (err) {
-            setError(err.message || "Không tạo được user");
+            if (handleAuthError(err)) {
+                return;
+              }
+            setError(err.message || "Không tạo được tài khoản");
         }
     }
 
@@ -113,10 +123,13 @@ export default function AdminUsersPage({ currentUser }) {
 
         try {
             await updateUser(user.id, { role: newRole });
-            setMessage("✅ Cập nhật role thành công");
+            setMessage("✅ Cập nhật vai trò thành công");
             await loadUsers();
         } catch (err) {
-            setError(err.message || "Không cập nhật role");
+            if (handleAuthError(err)) {
+                return;
+              }
+            setError(err.message || "Không cập nhật vai trò");
         }
     }
 
@@ -127,21 +140,24 @@ export default function AdminUsersPage({ currentUser }) {
         try {
             if (user.is_active) {
                 await lockUser(user.id);
-                setMessage("✅ Đã khóa user");
+                setMessage("✅ Đã khóa tài khoản.");
             } else {
                 await unlockUser(user.id);
-                setMessage("✅ Đã mở khóa user");
+                setMessage("✅ Đã mở khóa tài khoản.");
             }
 
             await loadUsers();
         } catch (err) {
-            setError(err.message || "Không đổi trạng thái user");
+            if (handleAuthError(err)) {
+                return;
+              }
+            setError(err.message || "❌ Không thể thay đổi trạng thái khóa/mở khóa tài khoản.");
         }
     }
 
     async function handleResetPassword(user) {
         const newPassword = window.prompt(
-            `Nhập password mới cho user: ${user.username}`
+            `Nhập password mới cho tài khoản: ${user.username}`
         );
 
         if (!newPassword) return;
@@ -151,9 +167,12 @@ export default function AdminUsersPage({ currentUser }) {
 
         try {
             await resetPassword(user.id, newPassword);
-            setMessage("✅ Reset password thành công");
+            setMessage("✅ Đặt lại mật khẩu thành công.");
         } catch (err) {
-            setError(err.message || "Không reset được password");
+            if (handleAuthError(err)) {
+                return;
+              }
+            setError(err.message || "❌ Không thể đặt lại mật khẩu.");
         }
     }
 

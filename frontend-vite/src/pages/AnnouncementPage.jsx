@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-
+import { handleAuthError } from "../utils/authErrorHandler";
 /**
  * ==========================================================
  * 📄 AnnouncementPage.jsx (v1.2 - gồm cả sự kiện sắp tới 7 ngày)
@@ -19,11 +19,18 @@ function AnnouncementPage() {
           fetch("http://localhost:8000/api/announcement/today"),
           fetch("http://localhost:8000/api/announcement/upcoming?days=7"),
         ]);
+        if (todayRes.status === 401 || upcomingRes.status === 401) {
+          handleAuthError({ response: { status: 401 } });
+          return;
+        }
         const todayJson = await todayRes.json();
         const upcomingJson = await upcomingRes.json();
         setTodayData(todayJson);
         setUpcomingData(upcomingJson);
       } catch (e) {
+        if (handleAuthError(e)) {
+          return;
+        }
         console.error("❌ Lỗi tải dữ liệu:", e);
       } finally {
         setLoading(false);

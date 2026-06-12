@@ -68,12 +68,34 @@ const ADMIN_AREA_ROLES = [
   "co_operator",
   "admin",
 ];
+function getTokenExpireTime(token) {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
 
+    if (!payload.exp) {
+      return null;
+    }
+
+    return payload.exp * 1000;
+  } catch (err) {
+    return null;
+  }
+}
 function AppContent() {
   const [role, setRole] = useState("viewer");
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const location = useLocation();
+  const logoutByInvalidSession = () => {
+    alert("Phiên đăng nhập không hợp lệ. Cần đăng nhập lại.");
+  
+    localStorage.removeItem("token");
+  
+    setCurrentUser(null);
+    setRole("viewer");
+  
+    window.location.href = "/";
+  };
   useEffect(() => {
     const token = localStorage.getItem("token");
   
@@ -83,7 +105,17 @@ function AppContent() {
       setAuthLoading(false);
       return;
     }
-  
+    const expireTime = getTokenExpireTime(token);
+
+    if (!expireTime || expireTime <= Date.now()) {
+      logoutByInvalidSession();
+      setAuthLoading(false);
+      return;
+    }
+
+    const timeoutId = setTimeout(() => {
+      logoutByInvalidSession();
+    }, expireTime - Date.now());
     axios
       .get(`${API_BASE_URL}/auth/me`, {
         headers: {
@@ -95,28 +127,23 @@ function AppContent() {
         setCurrentUser(res.data || null);
       })
       .catch((err) => {
+        console.error("Lỗi kiểm tra đăng nhập:", err);
+      
         if (err?.response?.status === 401) {
           alert("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
-      
-          localStorage.removeItem("token");
-          setCurrentUser(null);
-          setRole("viewer");
-      
-          window.location.replace("/");
-          return;
         }
-      
-        console.error("Lỗi kiểm tra đăng nhập:", err);
       
         localStorage.removeItem("token");
         setCurrentUser(null);
         setRole("viewer");
-        window.location.replace("/");
       })
       .finally(() => {
         setAuthLoading(false);
       });
-  }, []);
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [currentUser]);
   const hideNavbarRoutes = [
     "/person",
     "/parent_child",
