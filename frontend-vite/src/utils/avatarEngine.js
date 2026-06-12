@@ -1,9 +1,9 @@
 import maleAvatar from "../assets/default_male.png";
 import femaleAvatar from "../assets/default_female.png";
 import otherAvatar from "../assets/default_other.png";
-
+import { API_BASE_URL } from "../api/apiConfig";
 // ✅ [CHANGE 1]: Dùng FastAPI backend hiện tại
-const API = "http://localhost:8000";
+const API = API_BASE_URL.replace("/api", "");
 
 /* fallback avatar */
 export function fallbackAvatar(gender) {

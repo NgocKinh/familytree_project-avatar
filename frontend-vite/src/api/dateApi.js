@@ -3,8 +3,8 @@
 // ======================================================================
 
 import axios from "axios";
-
-const API_BASE = "http://localhost:8000";
+import { API_BASE_URL } from "./apiConfig";
+const API_BASE = API_BASE_URL.replace("/api", "");
 
 // 🔹 Convert solar → lunar using backend Flask API
 export async function convertSolarToLunar(solarDate) {

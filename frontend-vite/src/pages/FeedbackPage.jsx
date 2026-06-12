@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { handleAuthError } from "../utils/authErrorHandler";
+import { makeApiUrl } from "../api/apiConfig";
 function FeedbackPage() {
   const navigate = useNavigate();
 
@@ -49,7 +50,7 @@ function FeedbackPage() {
   
     try {
       const res = await fetch(
-        "http://127.0.0.1:8000/api/feedback/create",
+        makeApiUrl("/feedback/create"),
         {
           method: "POST",
           headers: {

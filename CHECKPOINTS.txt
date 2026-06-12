@@ -273,3 +273,16 @@ Frontend production build PASS
 Member_Close Migration completed
 Ready for data entry
 Ready for VPS preparation
+
+Checkpoint Authentication V2.5
+
+- Added authErrorHandler
+- Added apiClient foundation
+- Added 401 handling for fetch APIs
+- Added 401 handling for axios APIs
+- Updated pendingApi
+- Updated personApi
+- Updated personDetailApi
+- Updated treeApi
+- Updated Announcement/Admin/Internal pages
+- Build PASS

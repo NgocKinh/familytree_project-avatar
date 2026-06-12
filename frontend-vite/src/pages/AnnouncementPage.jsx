@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { handleAuthError } from "../utils/authErrorHandler";
+import { makeApiUrl } from "../api/apiConfig";
 /**
  * ==========================================================
  * 📄 AnnouncementPage.jsx (v1.2 - gồm cả sự kiện sắp tới 7 ngày)
@@ -16,8 +17,8 @@ function AnnouncementPage() {
     const fetchData = async () => {
       try {
         const [todayRes, upcomingRes] = await Promise.all([
-          fetch("http://localhost:8000/api/announcement/today"),
-          fetch("http://localhost:8000/api/announcement/upcoming?days=7"),
+          fetch(makeApiUrl("/announcement/today")),
+          fetch(makeApiUrl("/announcement/upcoming?days=7")),
         ]);
         if (todayRes.status === 401 || upcomingRes.status === 401) {
           handleAuthError({ response: { status: 401 } });

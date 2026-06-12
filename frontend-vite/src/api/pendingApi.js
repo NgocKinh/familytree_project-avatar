@@ -2,8 +2,8 @@
 // File: src/api/pendingApi.js
 // =======================================================================
 import { handleAuthError } from "../utils/authErrorHandler";
-
-const BASE = "http://127.0.0.1:8000/api/person_pending";
+import { API_BASE_URL } from "./apiConfig";
+const BASE = `${API_BASE_URL}/person_pending`;
 
 function getAuthHeaders(extraHeaders = {}) {
   const token = localStorage.getItem("token");

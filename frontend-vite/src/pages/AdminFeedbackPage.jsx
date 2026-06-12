@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import AdminHeader from "../components/admin/AdminHeader";
 import { handleAuthError } from "../utils/authErrorHandler";
+import { makeApiUrl } from "../api/apiConfig";
 function AdminFeedbackPage() {
   const navigate = useNavigate();
-
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedFeedback, setSelectedFeedback] = useState(null);
@@ -12,7 +12,7 @@ function AdminFeedbackPage() {
 
   const loadFeedbacks = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/feedback/list");
+      const res = await fetch(makeApiUrl("/feedback/list"));
 
       if (res.status === 401) {
         handleAuthError({ response: { status: 401 } });
@@ -39,12 +39,8 @@ function AdminFeedbackPage() {
 
     try {
       const token = localStorage.getItem("token");
-      if (res.status === 401) {
-        handleAuthError({ response: { status: 401 } });
-        return;
-      }
       const res = await fetch(
-        `http://127.0.0.1:8000/api/feedback/${selectedFeedback.feedback_id}`,
+        makeApiUrl(`/feedback/${selectedFeedback.feedback_id}`),
         {
           method: "PUT",
           headers: {

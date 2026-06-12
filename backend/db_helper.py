@@ -2,10 +2,12 @@
 # db_helper.py
 # Mô-đun quản lý kết nối MySQL trung tâm
 # ============================================
-
 import mysql.connector
 from mysql.connector import Error
+import os
+from dotenv import load_dotenv
 
+load_dotenv("backend/.env")
 # ============================================
 # 🔸 Hàm tạo kết nối MySQL
 # ============================================
@@ -16,10 +18,11 @@ def get_connection():
     """
     try:
         conn = mysql.connector.connect(
-            host="localhost",
-            user="root",
-            password="Msand@167",   # ⚠️ thay bằng mật khẩu thật của bạn
-            database = "familytreedb",    # familytreedb
+            host=os.getenv("DB_HOST", "127.0.0.1"),
+            port=int(os.getenv("DB_PORT", "3306")),
+            user=os.getenv("DB_USER", "root"),
+            password=os.getenv("DB_PASSWORD", ""),
+            database=os.getenv("DB_NAME", "familytreedb"),
             autocommit=True
         )
         return conn
@@ -67,5 +70,3 @@ def execute_query(query, values=None, fetch=False):
         raise
     finally:
         close_connection(conn, cursor)
-
-

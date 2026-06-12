@@ -80,14 +80,15 @@ app.mount(
 # CORS
 # ======================================================
 ENV = os.environ.get("ENV", "development")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5173")
 
 if ENV == "development":
     origins = [
         "http://localhost:5173",
-        "http://127.0.0.1:5173"
+        "http://127.0.0.1:5173",
     ]
 else:
-    origins = ["https://familytree.example.com"]
+    origins = [FRONTEND_URL]
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,6 +1,6 @@
 import axios from "axios";
-
-const API_URL = "http://localhost:8000/api/auth";
+import { makeApiUrl } from "./apiConfig";
+const API_URL = makeApiUrl("/auth");
 
 export async function checkNearAccess(targetPersonId) {
   const token = localStorage.getItem("token");

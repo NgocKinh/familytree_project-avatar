@@ -7,7 +7,8 @@
 //   - Có alias getPersonDetail để PersonDetailForm dùng
 // =============================================================
 import { handleAuthError } from "../utils/authErrorHandler";
-const BASE_URL = "http://localhost:8000/api/person";
+import { API_BASE_URL } from "./apiConfig";
+const BASE_URL = `${API_BASE_URL}/person`;
 function getAuthHeaders(extraHeaders = {}) {
   const token = localStorage.getItem("token");
 

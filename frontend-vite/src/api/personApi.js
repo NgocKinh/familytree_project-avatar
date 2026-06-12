@@ -5,9 +5,9 @@
 //   - Giữ nguyên cấu trúc file cũ
 //   - Không phá UI hiện tại
 // =======================================================
-
 import axios from "axios";
 import { handleAuthError } from "../utils/authErrorHandler";
+import { API_BASE_URL } from "./apiConfig";
 // ============================================
 // BASE URL
 // ============================================
@@ -15,9 +15,9 @@ import { handleAuthError } from "../utils/authErrorHandler";
 // const PERSON_URL = "http://127.0.0.1:5000/api/person";
 
 // ✅ FastAPI
-const API_URL = "http://localhost:8000/api/person";
-const AVATAR_URL = "http://localhost:8000/api/avatar/upload";
-
+const API_URL = `${API_BASE_URL}/person`;
+const AVATAR_URL = `${API_BASE_URL}/avatar/upload`;
+const BACKEND_BASE_URL = API_BASE_URL.replace("/api", "");
 // ============================================
 // LẤY DANH SÁCH PERSON
 // ============================================
@@ -58,7 +58,7 @@ export const getPersonList = async () => {
 
       return [];
     } catch (err2) {
-      if (handleAuthError(err)) {
+      if (handleAuthError(err2)) {
         return [];
       }
       console.error("💥 RETRY FAIL:", err2);
@@ -208,5 +208,5 @@ export const getAvatarURL = (person) => {
   const gender = person.gender || "other";
 
   // ưu tiên avatar thật
-  return `http://localhost:8000/static/avatars/${id}.jpg?t=${Date.now()}`;
+  return `${BACKEND_BASE_URL}/static/avatars/${id}.jpg?t=${Date.now()}`;
 };

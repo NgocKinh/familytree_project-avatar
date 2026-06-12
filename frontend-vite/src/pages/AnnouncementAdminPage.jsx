@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import AdminHeader from "../components/admin/AdminHeader";
 import { handleAuthError } from "../utils/authErrorHandler";
+import { makeApiUrl } from "../api/apiConfig";
 function AnnouncementAdminPage() {
     const [announcements, setAnnouncements] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -10,7 +11,7 @@ function AnnouncementAdminPage() {
         try {
             const token = localStorage.getItem("token");
 
-            const res = await fetch("http://localhost:8000/api/admin/announcement/list", {
+            const res = await fetch(makeApiUrl("/admin/announcement/list"), {
             headers: {
                 Authorization: `Bearer ${token}`,
             },
@@ -45,7 +46,7 @@ function AnnouncementAdminPage() {
           const token = localStorage.getItem("token");
       
           const res = await fetch(
-            "http://localhost:8000/api/admin/announcement/create",
+            makeApiUrl("/admin/announcement/create"),
             {
               method: "POST",
               headers: {

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { handleAuthError } from "../utils/authErrorHandler";
+import { makeApiUrl } from "../api/apiConfig";
 function InternalNotificationPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/admin/announcement/list");
+      const res = await fetch(makeApiUrl("/admin/announcement/list"));
       if (res.status === 401) {
         handleAuthError({ response: { status: 401 } });
         return;

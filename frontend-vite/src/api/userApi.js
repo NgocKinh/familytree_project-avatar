@@ -4,8 +4,8 @@
 //   - API client cho Authentication V2 - User Management
 //   - Tất cả request đều dùng JWT token
 // ===============================================================
-
-const API_BASE = "http://127.0.0.1:8000/api/users";
+import { API_BASE_URL } from "./apiConfig";
+const API_BASE = `${API_BASE_URL}/users`;
 
 function getAuthHeaders() {
   const token = localStorage.getItem("token");

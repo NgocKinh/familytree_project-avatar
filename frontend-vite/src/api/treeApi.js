@@ -5,7 +5,7 @@
 import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
 import { handleAuthError } from "../utils/authErrorHandler";
-const API_BASE = "http://localhost:8000/api/tree";
+const API_BASE = `${API_BASE_URL}/tree`;
 
 export async function getFamilyTree(id) {
   if (!id) {

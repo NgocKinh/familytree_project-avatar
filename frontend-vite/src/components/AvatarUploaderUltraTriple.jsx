@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react"
-
+import { API_BASE_URL } from "../api/apiConfig";
 export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated }) {
 
   const inputRef = useRef(null)
@@ -14,13 +14,12 @@ export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated })
   // ✅ [CHANGE 7]: Luôn tạo cache-buster khi mở form
   const [reload,setReload] = useState(Date.now())
   const uploadLock = useRef(false)
-
+  const BACKEND_BASE_URL = API_BASE_URL.replace("/api", "");
   // ✅ [CHANGE 1]: Đồng bộ FastAPI port 8000
-  const avatarUrl =
-    `http://localhost:8000/static/avatars/${personId}.jpg?t=${reload}`
+  const avatarUrl = `${BACKEND_BASE_URL}/static/avatars/${personId}.jpg?t=${reload}`;
 
   // ✅ [CHANGE 3]: fallback theo hệ thống hiện tại
-  const fallback = "http://localhost:8000/static/avatars/default_other.png"
+  const fallback = `${BACKEND_BASE_URL}/static/avatars/default_other.png`;
   // ===============================
   // LOAD CURRENT AVATAR
   // ===============================
@@ -228,7 +227,7 @@ export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated })
     form.append("file", blob, "avatar.jpg");
   
     const res = await fetch(
-      `http://localhost:8000/api/avatar/upload/${personId}`,
+      `${API_BASE_URL}/avatar/upload/${personId}`,
       { method: "POST", body: form }
     );
   
