@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-
+import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
@@ -13,9 +13,9 @@ from backend.domain.engine_v2.relationship_resolver import resolver_relationship
 
 router = APIRouter(tags=["Auth"])
 
-SECRET_KEY = "CHANGE_ME_FAMILYTREE_SECRET_KEY"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 8
+SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME_FAMILYTREE_SECRET_KEY")
+ALGORITHM = os.getenv("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60 * 8))
 NEAR_RELATION_BASICS = {
     "self",
     "spouse",
