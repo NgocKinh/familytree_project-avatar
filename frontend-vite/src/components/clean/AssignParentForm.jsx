@@ -33,7 +33,7 @@ function AssignParentForm() {
   const [childId, setChildId] = useState("");
   const [noMarriage, setNoMarriage] = useState(true);
   const [marriageId, setMarriageId] = useState("");
-
+  const [checkingAccess, setCheckingAccess] = useState(false);
   const [parentId, setParentId] = useState("");
   const [type, setType] = useState("");
 
@@ -77,11 +77,15 @@ function AssignParentForm() {
         getAuthConfig()
       );
   
-      const father = res.data?.father;
-      const mother = res.data?.mother;
-  
-      const has_father = !!father;
-      const has_mother = !!mother;
+      const has_father =
+        res.data?.has_father === true ||
+        res.data?.hasFather === true ||
+        !!res.data?.father;
+
+      const has_mother =
+        res.data?.has_mother === true ||
+        res.data?.hasMother === true ||
+        !!res.data?.mother;
   
       setHasFather(has_father);
       setHasMother(has_mother);
@@ -130,23 +134,32 @@ function AssignParentForm() {
       // CASE 1: KHÔNG CÓ HÔN NHÂN
       // ===============================
       if (noMarriage) {
-        if (!parentId || !type) {
-          setError("❌ Vui lòng chọn Cha/Mẹ và vai trò cần thêm.");
-          return;
-        }
-      
         if (hasFather && hasMother) {
           setError("❌ Người con này đã có đủ Cha và Mẹ.");
           return;
         }
       
-        if (type === "father" && hasFather) {
-          setError("❌ Người con này đã có Cha. Nếu muốn bổ sung, vui lòng chọn vai trò Mẹ.");
+        if (hasFather && !hasMother && type !== "mother") {
+          setError("❌ Người con này đã có Cha. Vui lòng chọn vai trò Mẹ và chọn tên Mẹ cần bổ sung.");
           return;
         }
       
-        if (type === "mother" && hasMother) {
-          setError("❌ Người con này đã có Mẹ. Nếu muốn bổ sung, vui lòng chọn vai trò Cha.");
+        if (!hasFather && hasMother && type !== "father") {
+          setError("❌ Người con này đã có Mẹ. Vui lòng chọn vai trò Cha và chọn tên Cha cần bổ sung.");
+          return;
+        }
+      
+        if (!parentId) {
+          setError("❌ Vui lòng chọn tên Cha/Mẹ cần bổ sung.");
+          return;
+        }
+        
+        const boResult = skipBirthOrderCheck
+          ? { opened: false }
+          : await birthOrder.checkBeforeSave(childId, null);
+        
+        if (boResult.opened) {
+          setLoading(false);
           return;
         }
       
@@ -284,7 +297,51 @@ function AssignParentForm() {
       setLoading(false);
     }
   };
+  const checkNearAccessNow = async (nextChildId) => {
+    if (!nextChildId) return;
+    setCheckingAccess(true);
+    try {
+      const token = localStorage.getItem("token");
+  
+      const res = await fetch("http://127.0.0.1:8000/api/auth/check-near-access", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          target_person_id: Number(nextChildId),
+          action: "relation:create",
+        }),
+      });
+  
+      const result = await res.json();
+  
+      if (res.status === 401) {
+        setError("Phiên đăng nhập không hợp lệ. Cần đăng nhập lại.");
+        return false;
+      }
+      
+      if (res.status === 403) {
+        setError(result?.detail || "Bạn không có quyền thêm/chỉnh sửa quan hệ cha con này");
+        return false;
+      }
+      
+      if (result.allowed === false) {
+        setError(result.reason || "Bạn không có quyền thêm/chỉnh sửa quan hệ cha con này");
+        return false;
+      }
+  
+      setError("");
+      return true;
 
+      } catch (err) {
+        setError("Không kiểm tra được quyền truy cập.");
+        return false;
+      } finally {
+        setCheckingAccess(false);
+      }
+  };
   // =========================================================
   // RENDER
   // =========================================================
@@ -330,17 +387,22 @@ function AssignParentForm() {
           <PersonDropdown
             label={null}
             value={childId}
-            onChange={(id) => {
+            onChange={async (id) => {
               setChildId(id);
               setError("");
               setSuccess("");
               setHasFather(false);
               setHasMother(false);
               setLockForm(false);
-
+            
               if (!id) return;
-              checkParentStatus(id);
-              birthOrder.checkBeforeSave(id);
+            
+              const accessOk = await checkNearAccessNow(id);
+            
+              if (!accessOk) return;
+            
+              await checkParentStatus(id);
+
             }}
             persons={persons}
             placeholder="-- Gõ tên hoặc kéo xuống Chọn người con --"
@@ -362,10 +424,15 @@ function AssignParentForm() {
                   disabled={lockForm}
                   onChange={() => {
                     const nextNoMarriage = !noMarriage;
-
-                    // ❌ Có đúng 1 bên cha/mẹ mà chuyển sang "thuộc gia đình" → chặn
-                    if (!nextNoMarriage && (hasFather ^ hasMother)) {
-                      setError("❌ Người này chỉ có 1 bên cha/mẹ, không thể gán theo gia đình.");
+                  
+                    // ❌ Đã có đúng 1 bên Cha/Mẹ thì không được chuyển sang chọn Gia đình
+                    if (!nextNoMarriage && hasFather && !hasMother) {
+                      setError('❌ Người con này đã có Cha. Vui lòng giữ tùy chọn "Không thuộc gia đình nào", chọn vai trò Mẹ và chọn tên Mẹ cần bổ sung.');
+                      return;
+                    }
+                  
+                    if (!nextNoMarriage && !hasFather && hasMother) {
+                      setError('❌ Người con này đã có Mẹ. Vui lòng giữ tùy chọn "Không thuộc gia đình nào", chọn vai trò Cha và chọn tên Cha cần bổ sung.');
                       return;
                     }
 
@@ -416,6 +483,7 @@ function AssignParentForm() {
                     onChange={() => {
                       setType("father");
                       setParentId("");   // reset chọn Cha/Mẹ khi đổi vai trò
+                      setError("");
                     }}
                     disabled={lockForm || hasFather}
                   />
@@ -431,6 +499,7 @@ function AssignParentForm() {
                     onChange={() => {
                       setType("mother");
                       setParentId("");   // reset cho đồng bộ
+                      setError("");
                     }}
                     disabled={lockForm || hasMother}
                   />
@@ -454,7 +523,10 @@ function AssignParentForm() {
               <PersonDropdown
                 label={null}
                 value={parentId}
-                onChange={setParentId}
+                onChange={(id) => {
+                  setParentId(id);
+                  setError("");
+                }}
                 persons={persons}
                 disabled={lockForm}
                 filterFn={(p) => {
@@ -470,7 +542,12 @@ function AssignParentForm() {
             </div>
           )
         }
-        {error && (
+          {checkingAccess && (
+            <div className="text-blue-600 mb-2">
+              ⏳ Đang kiểm tra quyền truy cập...
+            </div>
+          )}
+          {error && (
             <div className="text-red-600 mb-2 whitespace-pre-line">
               {error}
             </div>
@@ -484,7 +561,6 @@ function AssignParentForm() {
                 const result = await birthOrder.saveBirthOrders();
               
                 if (result.ok) {
-                  setSuccess(result.message);
                   setError("");
               
                   await handleSubmit(null, { skipBirthOrderCheck: true });
@@ -526,39 +602,25 @@ function AssignParentForm() {
           <button
             type="button"
             className="px-4 py-2 bg-gray-400 text-white rounded"
-            onClick={() => {
+            onClick={async () => {
               setParentId("");
               setType("");
               setMarriageId("");
               setNoMarriage(true);
               setError("");
               setSuccess("");
-              setHasFather(false);
-              setHasMother(false);
-              setLockForm(false);
+            
+              if (childId) {
+                await checkParentStatus(childId);
+              } else {
+                setHasFather(false);
+                setHasMother(false);
+                setLockForm(false);
+              }
             }}
           >
             ❌ Hủy
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setChildId("");
-              setParentId("");
-              setType("");
-              setMarriageId("");
-              setNoMarriage(true);
-              setError("");
-              setSuccess("");
-              setHasFather(false);
-              setHasMother(false);
-              setLockForm(false);
-              birthOrder.setShowBirthOrderPanel(false);
-            }}
-            className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
-          >
-            ➕ Thêm
-          </button> 
           {!lockForm && (
             <button
               type="submit"
@@ -572,6 +634,32 @@ function AssignParentForm() {
               {loading ? "⏳ Đang kiểm tra quyền..." : "💾 Lưu Gia Đình"}
             </button>
           )}
+          <button
+            type="button"
+            disabled={!!error}
+            onClick={() => {
+              if (error) return;
+
+              setChildId("");
+              setParentId("");
+              setType("");
+              setMarriageId("");
+              setNoMarriage(true);
+              setError("");
+              setSuccess("");
+              setHasFather(false);
+              setHasMother(false);
+              setLockForm(false);
+              birthOrder.setShowBirthOrderPanel(false);
+            }}
+            className={`px-4 py-2 text-white rounded ${
+              error
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-green-600 hover:bg-green-700"
+            }`}
+          >
+            ➕ Thêm mới
+          </button> 
 
           {lockForm && (
             <button
