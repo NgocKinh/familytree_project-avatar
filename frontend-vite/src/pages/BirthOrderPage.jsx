@@ -9,6 +9,7 @@ export default function BirthOrderPage() {
   const navigate = useNavigate();
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [error, setError] = useState("");
+  const [parents, setParents] = useState(null);
   const getAuthConfig = () => {
     const token = localStorage.getItem("token");
     return {
@@ -50,13 +51,27 @@ export default function BirthOrderPage() {
       return false;
     }
   };
+
   const birthOrder = useBirthOrder({
     persons: [],
     getAuthConfig,
   });
 
+  const loadParents = async () => {
+    try {
+      const res = await fetch(
+        `${API_BASE_URL}/parent_child/child/${childId}/parents-status`,
+        getAuthConfig()
+      );
+  
+      const data = await res.json();
+      setParents(data);
+    } catch (err) {
+      setParents(null);
+    }
+  };
+
   const openPanel = async () => {
-    console.log("OPEN PANEL CALLED");
     if (!childId) {
       setError("Không xác định được người con.");
       return;
@@ -68,7 +83,7 @@ export default function BirthOrderPage() {
       setCheckingAccess(false);
       return;
     }
-  
+    await loadParents();
     await birthOrder.openPanelByChild(childId);
     setCheckingAccess(false);
   };
@@ -90,7 +105,13 @@ export default function BirthOrderPage() {
           ⬅️ Quay lại
         </button>
       </div>
-
+      {parents && (
+        <div className="mb-4 p-3 border rounded bg-gray-50 text-gray-700">
+          <div className="font-semibold mb-1">Gia đình:</div>
+          <div>Cha: {parents.father?.name || parents.father_name || "Chưa có"}</div>
+          <div>Mẹ: {parents.mother?.name || parents.mother_name || "Chưa có"}</div>
+        </div>
+      )}
       {checkingAccess && (
         <p className="text-blue-600 mb-4">
           ⏳ Đang kiểm tra quyền truy cập...
