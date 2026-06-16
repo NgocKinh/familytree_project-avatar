@@ -196,15 +196,16 @@ def update_marriage(
     if not marriage:
         raise HTTPException(404, "Marriage not found")
 
-    if not has_near_access_to_any(
-        current_user,
-        [marriage.spouse_a_id, marriage.spouse_b_id],
-        "relation:update"
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này",
-        )
+    if current_user.role not in ["admin", "co_operator"]:
+        if not has_near_access_to_any(
+            current_user,
+            [marriage.spouse_a_id, marriage.spouse_b_id],
+            "relation:update"
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này",
+            )
 
     update_data = data.dict(exclude_unset=True)
 

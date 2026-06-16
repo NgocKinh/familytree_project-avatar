@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { getParentChildList, deleteParentChild } from "../api/parentChildApi";
 import { formatName } from "../utils/formatName";
-
+import { useNavigate } from "react-router-dom";
 function ParentChildList({ onEdit, role }) {
+  const navigate = useNavigate();
   const [relations, setRelations] = useState([]);
   const [mode, setMode] = useState("full");
   const [showSurName, setShowSurName] = useState(false);
@@ -11,7 +12,7 @@ function ParentChildList({ onEdit, role }) {
   const [searchMatchIds, setSearchMatchIds] = useState([]);
   const [searchCurrentIndex, setSearchCurrentIndex] = useState(0);
   const [searchResultCount, setSearchResultCount] = useState(0);
-
+  
   useEffect(() => {
     loadData();
   }, []);
@@ -21,12 +22,12 @@ function ParentChildList({ onEdit, role }) {
     console.log("🔥 PARENT_CHILD DATA:", data);
     setRelations(data);
   };
-  
+
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xóa mối quan hệ này không?")) {
       return;
     }
-  
+
     try {
       await deleteParentChild(id);
       await loadData();
@@ -50,53 +51,53 @@ function ParentChildList({ onEdit, role }) {
   };
   const handleSearch = () => {
     const keyword = searchTerm.trim().toLowerCase();
-  
+
     if (!keyword) return;
-  
+
     const matches = relations.filter((r) => {
       const parentName = renderPersonName(r.parent, r.parent_name).toLowerCase();
       const childName = renderPersonName(r.child, r.child_name).toLowerCase();
-  
+
       return (
         parentName.includes(keyword) ||
         childName.includes(keyword)
       );
     });
-  
+
     if (matches.length === 0) {
       alert("Không tìm thấy kết quả.");
       return;
     }
-  
+
     const ids = matches.map((r) => r.id);
-  
+
     setSearchResultCount(matches.length);
     setSearchMatchIds(ids);
     setSearchCurrentIndex(0);
     setHighlightIds(ids);
   };
-  
+
   const handleShowNext = () => {
     if (searchMatchIds.length === 0) return;
-  
+
     const id = searchMatchIds[searchCurrentIndex];
-  
+
     setHighlightIds([id]);
-  
+
     const element = document.getElementById(`relation-${id}`);
-  
+
     if (element) {
       const y =
         element.getBoundingClientRect().top +
         window.scrollY -
         180;
-    
+
       window.scrollTo({
         top: y,
         behavior: "smooth",
       });
     }
-  
+
     setSearchCurrentIndex((prev) =>
       prev + 1 >= searchMatchIds.length ? 0 : prev + 1
     );
@@ -185,39 +186,38 @@ function ParentChildList({ onEdit, role }) {
       </div>
       {/* Bảng dữ liệu */}
       <div className="-mt-2">
-      <table className="min-w-full border border-gray-300">
-        <thead className="sticky top-[96px] z-40 bg-gray-100 text-gray-700">
-          <tr>
-            <th className="border px-4 py-2">#</th>
-            <th className="border px-4 py-2">Cha/Mẹ</th>
-            <th className="border px-4 py-2">Con</th>
-            <th className="border px-4 py-2">Loại</th>
-            <th className="border px-4 py-2">Ghi chú</th>
-            <th className="border px-4 py-2 text-center">Thao tác</th>
-          </tr>
-        </thead>
+        <table className="min-w-full border border-gray-300">
+          <thead className="sticky top-[96px] z-40 bg-gray-100 text-gray-700">
+            <tr>
+              <th className="border px-4 py-2">#</th>
+              <th className="border px-4 py-2">Cha/Mẹ</th>
+              <th className="border px-4 py-2">Con</th>
+              <th className="border px-4 py-2">Loại</th>
+              <th className="border px-4 py-2">Ghi chú</th>
+              <th className="border px-4 py-2 text-center">Thao tác</th>
+            </tr>
+          </thead>
           <tbody>
             {relations.map((r, index) => (
               <tr
                 id={`relation-${r.id}`}
                 key={r.id}
-                className={`hover:bg-gray-50 ${
-                  highlightIds.includes(r.id)
+                className={`hover:bg-gray-50 ${highlightIds.includes(r.id)
                     ? "bg-yellow-100"
                     : ""
-                }`}
+                  }`}
               >
                 <td className="border px-4 py-2 text-center">{index + 1}</td>
 
                 {/* Cột Cha/Mẹ */}
-                  <td className="border px-4 py-2">
-                    {renderPersonName(r.parent, r.parent_name)}
-                  </td>
+                <td className="border px-4 py-2">
+                  {renderPersonName(r.parent, r.parent_name)}
+                </td>
 
-                  {/* Cột Con */}
-                  <td className="border px-4 py-2">
-                    {renderPersonName(r.child, r.child_name)}
-                  </td>
+                {/* Cột Con */}
+                <td className="border px-4 py-2">
+                  {renderPersonName(r.child, r.child_name)}
+                </td>
 
                 {/* Loại */}
                 <td className="border px-4 py-2 text-center">
@@ -225,32 +225,60 @@ function ParentChildList({ onEdit, role }) {
                 </td>
 
                 {/* Ghi chú */}
-                <td className="border px-4 py-2">{r.notes || ""}</td>
+                  <td className="border px-4 py-2">
+                    {r.notes || ""}
+                  </td>
 
-                {/* Nút thao tác */}
-                <td className="border px-4 py-2 text-center space-x-2">
-                  {/* <button
-                    onClick={() => onEdit(r.id)}
-                    className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded"
-                  >
-                    ✏️
-                  </button> */}
-                  {role === "admin" && (
+                {/* Thao tác */}
+                <td className="border px-4 py-2">
+                  <div className="flex justify-end gap-2">
                     <button
-                      onClick={() => handleDelete(r.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                      onClick={() => onEdit(r.id)}
+                      className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded"
+                      title="Sửa quan hệ cha/con"
                     >
-                      🗑️
+                      ✏️
                     </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
+
+                    <button
+                      type="button"
+                      title="Sắp xếp thứ tự anh/chị/em trong gia đình"
+                      onClick={() => {
+                        const childId =
+                          r.child_id ||
+                          r.child?.person_id ||
+                          r.child?.id;
+
+                        if (!childId) {
+                          alert("Không xác định được ID người con để mở BO.");
+                          return;
+                        }
+
+                        navigate(`/birth-order/${childId}`);
+                      }}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded"
+                    >
+                      👨‍👩‍👧‍👦
+                    </button>
+
+                    {role === "admin" && (
+                      <button
+                        onClick={() => handleDelete(r.id)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
+                        title="Xóa quan hệ cha/con"
+                      >
+                        🗑️
+                      </button>
+                    )}
+                    </div>
+                    </td>
+                  </tr>
+                  ))}
+                </tbody>
+              </table>
+          </div>
+        </div>
+      );
 }
 
-export default ParentChildList;
+      export default ParentChildList;

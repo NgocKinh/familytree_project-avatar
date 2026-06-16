@@ -1,10 +1,26 @@
 from fastapi import Depends, HTTPException, status
-
-from backend.api.auth import get_current_user, NEAR_RELATION_BASICS
+from backend.api.auth import get_current_user
 from backend.models.user_model import User
 from backend.permissions import ROLE_KEYS
 from backend.domain.engine_v2.relationship_resolver import resolver_relationship
-
+NEAR_RELATION_VIEW = {
+    "self",
+    "spouse",
+    "parent",
+    "child",
+    "sibling",
+    "grandparent",
+    "grandchild",
+    "uncle_aunt",
+    "nephew_niece",
+}
+NEAR_RELATION_EDIT = {
+    "self",
+    "spouse",
+    "parent",
+    "child",
+    "sibling",
+}
 def has_permission(role: str, permission_key: str) -> bool:
     if not role:
         return False
@@ -33,7 +49,11 @@ def require_permission(permission_key: str):
 # Dùng chung cho Marriage, ParentChild, FamilySetup
 # ==========================================================
 
-def is_near_person(current_user: User, target_person_id: int) -> bool:
+def is_near_person(
+    current_user: User,
+    target_person_id: int,
+    permission_key: str = "relation:create",
+) -> bool:
     if current_user.person_id is None:
         return False
 
@@ -54,8 +74,10 @@ def is_near_person(current_user: User, target_person_id: int) -> bool:
             or result.get("relationship")
         )
 
-    return relation_basic in NEAR_RELATION_BASICS
+    if permission_key in {"relation:create", "relation:update", "birth_order:update"}:
+        return relation_basic in NEAR_RELATION_EDIT
 
+    return relation_basic in NEAR_RELATION_VIEW
 
 def has_near_access_to_any(
     current_user: User,
@@ -69,7 +91,11 @@ def has_near_access_to_any(
         return False
 
     for target_person_id in target_person_ids:
-        if is_near_person(current_user, int(target_person_id)):
+        if is_near_person(
+            current_user,
+            int(target_person_id),
+            permission_key,
+        ):
             return True
 
     return False

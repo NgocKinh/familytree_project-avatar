@@ -298,7 +298,11 @@ function AssignParentForm() {
     }
   };
   const checkNearAccessNow = async (nextChildId) => {
-    if (!nextChildId) return;
+    if (!nextChildId) {
+      setCheckingAccess(false);
+      return false;
+    }
+  
     setCheckingAccess(true);
     try {
       const token = localStorage.getItem("token");
@@ -355,23 +359,6 @@ function AssignParentForm() {
           <div className="flex flex-col gap-2">
 
             <span>{birthOrder.birthConflictWarning}</span>
-
-            <button
-              type="button"
-              onClick={() => {
-                if (!noMarriage && marriageId) {
-                  birthOrder.openPanelByMarriage(
-                    childId,
-                    marriageId
-                  );
-                } else {
-                  birthOrder.openPanelByChild(childId);
-                }
-              }}
-              className="w-fit px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-            >
-              Cập nhật Birth Order
-            </button>
 
           </div>
 
@@ -577,27 +564,6 @@ function AssignParentForm() {
         {/* BUTTONS */}
         {/* ================================================= */}
         <div className="flex gap-2 pt-4">
-
-          <button
-            type="button"
-            onClick={() => {
-              if (!noMarriage && marriageId) {
-                birthOrder.openPanelByMarriage(childId, marriageId);
-              } else {
-                birthOrder.openPanelByChild(childId);
-              }
-            }}
-            disabled={!childId || birthOrder.birthOrderLoading}
-            className={`px-4 py-2 text-white rounded ${
-              !childId || birthOrder.birthOrderLoading
-                ? "bg-gray-300 cursor-not-allowed"
-                : birthOrder.showBirthOrderPanel
-                ? "bg-purple-600 hover:bg-purple-700"
-                : "bg-gray-500 hover:bg-gray-600"
-            }`}
-          >
-            {birthOrder.birthOrderLoading ? "⏳ Đang tải..." : "🔢 Birth Order"}
-          </button>
 
           <button
             type="button"

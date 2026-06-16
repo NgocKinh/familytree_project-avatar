@@ -19,7 +19,7 @@ export default function BirthOrderPanel({
       </h3>
 
       <div className="space-y-2">
-        {birthOrderRows.map((p) => (
+        {(birthOrderRows || []).map((p) => (
           <div
             key={p.id}
             className="flex items-center justify-between gap-4"

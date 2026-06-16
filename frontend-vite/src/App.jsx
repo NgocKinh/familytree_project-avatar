@@ -37,6 +37,7 @@ import FamilySetupPage from "./pages/FamilySetupPage";
 import LoginPage from "./pages/LoginPage.jsx";
 import AdminUsersPage from "./pages/AdminUsersPage.jsx";
 import HelpPage from "./pages/HelpPage.jsx";
+import BirthOrderPage from "./pages/BirthOrderPage";
 // ======================================================
 // App
 // ======================================================
@@ -452,7 +453,10 @@ function AppContent() {
               </ProtectedRouteV6>
             }
           />
-
+          <Route
+            path="/birth-order/:childId"
+            element={<BirthOrderPage />}
+          />
           <Route
             path="/pending/review/:id"
             element={

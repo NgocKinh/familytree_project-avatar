@@ -8,8 +8,6 @@ function AnnouncementAdminPage() {
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [editId, setEditId] = useState(null);
-    const [eventType, setEventType] = useState("");
-    const [isActive, setIsActive] = useState("");
     const fetchAnnouncements = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -97,8 +95,6 @@ function AnnouncementAdminPage() {
     const handleEdit = (item) => {
         setTitle(item.title || "");
         setDescription(item.description || "");
-        setEventType(item.event_type || "");
-        setIsActive(item.is_active ?? true);
         setEditId(item.id);
     };
     const handleUpdate = async () => {

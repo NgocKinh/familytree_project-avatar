@@ -27,6 +27,13 @@ NEAR_RELATION_BASICS = {
     "uncle_aunt",
     "nephew_niece",
 }
+NEAR_RELATION_EDIT = {
+    "self",
+    "spouse",
+    "parent",
+    "child",
+    "sibling",
+}
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
@@ -165,7 +172,7 @@ def check_near_access(
     if current_user.person_id is None:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Tài khoản chưa liên kết với Person",
+            detail="Tài khoản chưa được liên kết với thành viên gia phả. Vui lòng liên hệ quản trị viên.",
         )
 
     if current_user.person_id == data.target_person_id:
@@ -192,14 +199,17 @@ def check_near_access(
             or result.get("relationship")
         )
 
-    allowed = relation_basic in NEAR_RELATION_BASICS
+    if data.action in ["relation:create", "relation:update", "birth_order:update"]:
+        allowed = relation_basic in NEAR_RELATION_EDIT
+    else:
+        allowed = relation_basic in NEAR_RELATION_BASICS
 
     return {
-        "allowed": allowed,
-        "effective_role": "member_close" if allowed else current_user.role,
-        "reason": "Có quan hệ gần" if allowed else "Bạn không có quan hệ gần với người này",
-        "current_person_id": current_user.person_id,
-        "target_person_id": data.target_person_id,
-        "relation_basic": relation_basic,
-        "relationship": result,
-    }  
+    "allowed": allowed,
+    "effective_role": "member_close" if allowed else current_user.role,
+    "reason": "Có quan hệ gần" if allowed else "Không có mối quan hệ gần với người được thêm hoặc chỉnh sửa",
+    "current_person_id": current_user.person_id,
+    "target_person_id": data.target_person_id,
+    "relation_basic": relation_basic,
+    "relationship": result,
+}  

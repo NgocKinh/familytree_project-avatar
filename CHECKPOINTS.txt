@@ -182,91 +182,61 @@ Navbar ACL
 User API Create
 User API Update
 Backend Verification
-
 backend/api/users.py
-
 Thêm:
-
 USER_ROLES = {
     "viewer",
     "member_basic",
     "co_operator",
     "admin",
 }
-
 Kiểm tra Create:
-
 if data.role not in USER_ROLES:
-
 Kiểm tra Update:
-
 if data.role not in USER_ROLES:
-
 Test:
-
 {
   "role": "member_close"
 }
-
 Kết quả:
-
 {
   "detail": "Role không hợp lệ"
 }
-
 PASS ✅
-
 backend/api/auth.py
-
 Giữ nguyên:
-
 "effective_role": "member_close"
-
 cho:
-
 self
-
 và:
-
 near relation
 Swagger Verification
-
 Login:
-
 member19
 role = member_basic
 person_id = 19
-
 Test:
-
 {
   "target_person_id": 19
 }
-
 Kết quả:
-
 {
   "allowed": true,
   "effective_role": "member_close",
   "relationship": "self"
 }
-
 PASS ✅
-
 Trạng thái hiện tại
 User Role:
 - viewer
 - member_basic
 - co_operator
 - admin
-
 System Role:
 - member_close
 Build Status
 npm run build
-
 PASS ✅
-
 Project Status
 Authentication V2 + ACL UI Cleanup completed
 Frontend production build PASS
@@ -304,3 +274,37 @@ Deploy Preparation Phase 2
 ✓ .env protected by .gitignore
 ✓ Working tree clean
 
+PRE-DEPLOY FUNCTIONAL TEST
+
+✓ Frontend build thành công
+✓ Backend startup thành công
+✓ Swagger hoạt động
+✓ Authentication V2.5
+✓ JWT login/logout
+✓ ACL Viewer
+✓ ACL Member Basic
+✓ ACL Admin
+✓ User Management
+✓ Feedback Admin
+✓ Announcement Admin CRUD
+✓ Marriage Module
+✓ ParentChild Module
+✓ FamilySetup Module
+✓ Auth /me loop fixed
+✓ Git checkpoint
+2026-06-12
+Pre-Deploy Functional Test Completed
+- Fixed missing dependencies:
+  python-dotenv
+  python-jose
+  python-multipart
+  lunarcalendar
+- Fixed App.jsx auth/me infinite loop
+- Completed Announcement Admin CRUD:
+  Create
+  Read
+  Update
+  Delete
+- Authentication, ACL, Admin modules tested successfully
+Git:
+0c1f4f7 Complete announcement admin CRUD

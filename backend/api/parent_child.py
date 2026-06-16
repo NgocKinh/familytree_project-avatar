@@ -88,15 +88,16 @@ def assign_parent(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if not has_near_access_to_any(
-        current_user,
-        [data.child_id, data.parent_id],
-        "relation:create"
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Bạn không có quyền thêm/chỉnh sửa quan hệ cha con này",
-        )
+    if current_user.role not in ["admin", "co_operator"]:
+        if not has_near_access_to_any(
+            current_user,
+            [data.child_id, data.parent_id],
+            "relation:create"
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Bạn không có quyền thêm/chỉnh sửa quan hệ cha con này",
+            )
 
     pc = assign_parent_clean(
         db,
