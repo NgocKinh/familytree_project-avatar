@@ -42,7 +42,7 @@ export default function BirthOrderPanel({
             <input
               type="number"
               min={1}
-              value={p.birth_order || ""}
+              value={p.birth_order ?? ""}
               onChange={(e) => {
                 setError("");
                 const value = e.target.value;
@@ -60,7 +60,7 @@ export default function BirthOrderPanel({
                 );
               }}
               className="w-24 border rounded p-1"
-              placeholder="BO"
+              placeholder="Nhập số"
             />
           </div>
         ))}

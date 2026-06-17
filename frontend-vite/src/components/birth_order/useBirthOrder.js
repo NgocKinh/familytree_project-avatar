@@ -226,7 +226,10 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
       });
   
       const rows = Array.from(rowsMap.values());
-  
+      console.log("BO marriageId:", marriageId);
+      console.log("BO existingChildren:", existingChildren);
+      console.log("BO child:", child);
+      console.log("BO rows:", rows);
       if (rows.length <= 1) {
         return {
           opened: false,

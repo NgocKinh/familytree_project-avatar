@@ -6,7 +6,6 @@ import MarriageDropdown from "../common/MarriageDropdown";
 import { formatName } from "../../utils/formatName";
 import { handleAuthError } from "../../utils/authErrorHandler";
 import { useNavigate } from "react-router-dom";
-import BirthOrderPanel from "../birth_order/BirthOrderPanel";
 import useBirthOrder from "../birth_order/useBirthOrder";
 function AssignParentForm() {
   const getAuthConfig = () => {
@@ -157,8 +156,10 @@ function AssignParentForm() {
         const boResult = skipBirthOrderCheck
           ? { opened: false }
           : await birthOrder.checkBeforeSave(childId, null);
-        
+
         if (boResult.opened) {
+          birthOrder.setShowBirthOrderPanel(false);
+          navigate(`/birth-order/${childId}`);
           setLoading(false);
           return;
         }
@@ -206,12 +207,23 @@ function AssignParentForm() {
         const m = marriages.find(
           x => String(x.id) === String(marriageId)
         );
-
+        console.log("AP marriageId before BO:", marriageId);
         const boResult = skipBirthOrderCheck
           ? { opened: false }
           : await birthOrder.checkBeforeSave(childId, marriageId);
 
         if (boResult.opened) {
+          birthOrder.setShowBirthOrderPanel(false);
+          localStorage.setItem(
+            "pendingBirthOrderAction",
+            JSON.stringify({
+              source: "AssignParentForm",
+              mode: "assign_child_to_marriage",
+              childId,
+              marriageId,
+            })
+          );
+          navigate(`/birth-order/${childId}/${marriageId}`);
           setLoading(false);
           return;
         }
@@ -539,27 +551,7 @@ function AssignParentForm() {
               {error}
             </div>
           )}
-        {birthOrder.showBirthOrderPanel && (
-            <BirthOrderPanel
-              birthOrderPanelRef={birthOrder.birthOrderPanelRef}
-              birthOrderRows={birthOrder.birthOrderRows}
-              setBirthOrderRows={birthOrder.setBirthOrderRows}
-              saveBirthOrders={async () => {
-                const result = await birthOrder.saveBirthOrders();
-              
-                if (result.ok) {
-                  setError("");
-              
-                  await handleSubmit(null, { skipBirthOrderCheck: true });
-                } else {
-                  setError(result.message);
-                }
-              }}
-              setShowBirthOrderPanel={birthOrder.setShowBirthOrderPanel}
-              setError={setError}
-              displayName={displayName}
-            />
-          )}
+        
         {/* ================================================= */}
         {/* BUTTONS */}
         {/* ================================================= */}

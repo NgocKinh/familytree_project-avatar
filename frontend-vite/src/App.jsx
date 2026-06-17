@@ -455,7 +455,29 @@ function AppContent() {
           />
           <Route
             path="/birth-order/:childId"
-            element={<BirthOrderPage />}
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={MEMBER_ROLES}
+                currentUser={currentUser}
+                redirectTo="/"
+              >
+                <BirthOrderPage />
+              </ProtectedRouteV6>
+            }
+          />
+          <Route
+            path="/birth-order/:childId/:marriageId"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={MEMBER_ROLES}
+                currentUser={currentUser}
+                redirectTo="/"
+              >
+                <BirthOrderPage />
+              </ProtectedRouteV6>
+            }
           />
           <Route
             path="/pending/review/:id"

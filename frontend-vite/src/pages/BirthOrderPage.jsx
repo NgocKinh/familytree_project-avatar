@@ -5,7 +5,7 @@ import BirthOrderPanel from "../components/birth_order/BirthOrderPanel";
 import useBirthOrder from "../components/birth_order/useBirthOrder";
 
 export default function BirthOrderPage() {
-  const { childId } = useParams();
+  const { childId, marriageId } = useParams();
   const navigate = useNavigate();
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [error, setError] = useState("");
@@ -59,6 +59,22 @@ export default function BirthOrderPage() {
 
   const loadParents = async () => {
     try {
+      if (marriageId) {
+        const res = await fetch(
+          `${API_BASE_URL}/marriage/${marriageId}`,
+          getAuthConfig()
+        );
+  
+        const data = await res.json();
+  
+        setParents({
+          father_name: data.spouse_a_name || data.husband_name || data.father_name,
+          mother_name: data.spouse_b_name || data.wife_name || data.mother_name,
+        });
+  
+        return;
+      }
+  
       const res = await fetch(
         `${API_BASE_URL}/parent_child/child/${childId}/parents-status`,
         getAuthConfig()
@@ -70,7 +86,55 @@ export default function BirthOrderPage() {
       setParents(null);
     }
   };
-
+  const assignPendingChildToMarriage = async () => {
+    const raw = localStorage.getItem("pendingBirthOrderAction");
+    if (!raw) return false;
+  
+    const pending = JSON.parse(raw);
+  
+    if (
+      pending.source !== "AssignParentForm" ||
+      pending.mode !== "assign_child_to_marriage"
+    ) {
+      return false;
+    }
+  
+    const marriageRes = await fetch(
+      `${API_BASE_URL}/marriage/${pending.marriageId}`,
+      getAuthConfig()
+    );
+  
+    const marriage = await marriageRes.json();
+  
+    await fetch(`${API_BASE_URL}/parent_child/assign`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthConfig().headers,
+      },
+      body: JSON.stringify({
+        child_id: Number(pending.childId),
+        parent_id: Number(marriage.spouse_a_id),
+        type: "father",
+      }),
+    });
+  
+    await fetch(`${API_BASE_URL}/parent_child/assign`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...getAuthConfig().headers,
+      },
+      body: JSON.stringify({
+        child_id: Number(pending.childId),
+        parent_id: Number(marriage.spouse_b_id),
+        type: "mother",
+      }),
+    });
+  
+    localStorage.removeItem("pendingBirthOrderAction");
+    return true;
+  };
   const openPanel = async () => {
     if (!childId) {
       setError("Không xác định được người con.");
@@ -84,7 +148,12 @@ export default function BirthOrderPage() {
       return;
     }
     await loadParents();
-    await birthOrder.openPanelByChild(childId);
+
+    if (marriageId) {
+      await birthOrder.openPanelByMarriage(childId, marriageId);
+    } else {
+      await birthOrder.openPanelByChild(childId);
+    }
     setCheckingAccess(false);
   };
   useEffect(() => {
@@ -132,17 +201,30 @@ export default function BirthOrderPage() {
             setBirthOrderRows={birthOrder.setBirthOrderRows}
             saveBirthOrders={async () => {
               const result = await birthOrder.saveBirthOrders();
-
+            
               if (!result.ok) {
-                alert(result.message || "Không lưu được BO.");
+                setError(result.message || "Không lưu được thứ tự anh/chị/em.");
                 return;
               }
-
-              alert("✅ Đã lưu thứ tự anh/chị/em.");
-              birthOrder.setShowBirthOrderPanel(false);
+            
+              try {
+                const assigned = await assignPendingChildToMarriage();
+            
+                if (assigned) {
+                  alert("✅ Đã lưu thứ tự anh/chị/em và lưu gia đình.");
+                  localStorage.removeItem("pendingBirthOrderAction");
+                  navigate("/family-setup");
+                  return;
+                }
+            
+                alert("✅ Đã lưu thứ tự anh/chị/em.");
+                birthOrder.setShowBirthOrderPanel(false);
+              } catch (err) {
+                setError("Đã lưu thứ tự anh/chị/em nhưng chưa lưu được quan hệ gia đình.");
+              }
             }}
             setShowBirthOrderPanel={birthOrder.setShowBirthOrderPanel}
-            setError={(msg) => alert(msg)}
+            setError={setError}
             displayName={(name = "") => name.replaceAll("|", " ")}
           />
         )}
