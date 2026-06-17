@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { API_BASE_URL } from "../api/apiConfig";
 import BirthOrderPanel from "../components/birth_order/BirthOrderPanel";
 import useBirthOrder from "../components/birth_order/useBirthOrder";
@@ -7,6 +7,8 @@ import useBirthOrder from "../components/birth_order/useBirthOrder";
 export default function BirthOrderPage() {
   const { childId, marriageId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const pendingAction = location.state || null;
   const [checkingAccess, setCheckingAccess] = useState(true);
   const [error, setError] = useState("");
   const [parents, setParents] = useState(null);
@@ -135,6 +137,67 @@ export default function BirthOrderPage() {
     localStorage.removeItem("pendingBirthOrderAction");
     return true;
   };
+  const assignPendingFromAC = async () => {
+    if (!pendingAction || pendingAction.source !== "AC") {
+      return false;
+    }
+  
+    if (pendingAction.mode === "single_parent") {
+      await fetch(`${API_BASE_URL}/parent_child/assign`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthConfig().headers,
+        },
+        body: JSON.stringify({
+          child_id: Number(pendingAction.childId),
+          parent_id: Number(pendingAction.parentId),
+          type: pendingAction.type,
+        }),
+      });
+  
+      return true;
+    }
+  
+    if (pendingAction.mode === "marriage") {
+      const marriageRes = await fetch(
+        `${API_BASE_URL}/marriage/${pendingAction.marriageId}`,
+        getAuthConfig()
+      );
+  
+      const marriage = await marriageRes.json();
+  
+      await fetch(`${API_BASE_URL}/parent_child/assign`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthConfig().headers,
+        },
+        body: JSON.stringify({
+          child_id: Number(pendingAction.childId),
+          parent_id: Number(marriage.spouse_a_id),
+          type: "father",
+        }),
+      });
+  
+      await fetch(`${API_BASE_URL}/parent_child/assign`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...getAuthConfig().headers,
+        },
+        body: JSON.stringify({
+          child_id: Number(pendingAction.childId),
+          parent_id: Number(marriage.spouse_b_id),
+          type: "mother",
+        }),
+      });
+  
+      return true;
+    }
+  
+    return false;
+  };
   const openPanel = async () => {
     if (!childId) {
       setError("Không xác định được người con.");
@@ -208,9 +271,10 @@ export default function BirthOrderPage() {
               }
             
               try {
-                const assigned = await assignPendingChildToMarriage();
-            
-                if (assigned) {
+                const assignedFromAP = await assignPendingChildToMarriage();
+                const assignedFromAC = await assignPendingFromAC();
+
+                if (assignedFromAP || assignedFromAC) {
                   alert("✅ Đã lưu thứ tự anh/chị/em và lưu gia đình.");
                   localStorage.removeItem("pendingBirthOrderAction");
                   navigate("/family-setup");

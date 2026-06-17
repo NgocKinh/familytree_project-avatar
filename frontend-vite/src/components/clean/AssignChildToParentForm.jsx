@@ -189,8 +189,16 @@ function AssignChildToParentForm() {
           const boResult = await birthOrder.checkBeforeSave(childId, null);
         
           if (boResult.opened) {
-            setPendingSaveAfterBO(true);
-            setLoading(false);
+            navigate(`/birth-order/${childId}/0`, {
+              state: {
+                source: "AC",
+                mode: "single_parent",
+                childId,
+                parentId,
+                type,
+              },
+            });
+        
             return;
           }
         }
@@ -235,8 +243,15 @@ function AssignChildToParentForm() {
           const boResult = await birthOrder.checkBeforeSave(childId, marriageId);
         
           if (boResult.opened) {
-            setPendingSaveAfterBO(true);
-            setLoading(false);
+            navigate(`/birth-order/${childId}/${marriageId}`, {
+              state: {
+                source: "AC",
+                mode: "marriage",
+                childId,
+                marriageId,
+              },
+            });
+        
             return;
           }
         }
