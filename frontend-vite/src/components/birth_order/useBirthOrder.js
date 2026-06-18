@@ -174,27 +174,24 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
       setBirthOrderLoading(false);
     }
   };
-  const openPanelByMarriage = async (
+  const openPanelByParentPair = async (
     childId,
-    marriageId,
+    fatherId,
+    motherId,
     { force = true } = {}
   ) => {
-    if (!childId) {
+    if (!childId || !fatherId || !motherId) {
       return {
         opened: false,
-        message: "❌ Vui lòng chọn Người Con trước khi cập nhật Birth Order.",
+        message: "❌ Không xác định đủ Cha và Mẹ để sắp xếp Birth Order.",
       };
-    }
-  
-    if (!marriageId) {
-      return openPanelByChild(childId, { force });
     }
   
     setBirthOrderLoading(true);
   
     try {
       const childrenRes = await axios.get(
-        `${API_BASE_URL}/parent_child/marriage/${marriageId}/children`,
+        `${API_BASE_URL}/parent_child/parents/${fatherId}/${motherId}/children`,
         getAuthConfig()
       );
   
@@ -226,10 +223,7 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
       });
   
       const rows = Array.from(rowsMap.values());
-      console.log("BO marriageId:", marriageId);
-      console.log("BO existingChildren:", existingChildren);
-      console.log("BO child:", child);
-      console.log("BO rows:", rows);
+  
       if (rows.length <= 1) {
         return {
           opened: false,
@@ -239,31 +233,31 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
   
       if (!force) {
         const childYear = getBirthYear(child.birth_date);
-      
+  
         const hasChildMissingBirthYear = !childYear;
-      
+  
         const hasSiblingMissingBirthYear = existingChildren.some(
           (p) => !getBirthYear(p.birth_date)
         );
-      
+  
         const sameYearSiblings = childYear
           ? existingChildren.filter(
               (p) => getBirthYear(p.birth_date) === childYear
             )
           : [];
-      
+  
         const shouldOpenBirthOrder =
           hasChildMissingBirthYear ||
           hasSiblingMissingBirthYear ||
           sameYearSiblings.length > 0;
-      
+  
         if (!shouldOpenBirthOrder) {
           setBirthConflictWarning("");
           return { opened: false };
         }
-      
+  
         setBirthOrderRows(sortBirthOrderRows(rows));
-      
+  
         if (hasChildMissingBirthYear) {
           setBirthConflictWarning(
             "⚠ Người con đang thêm chưa có năm sinh. Vui lòng cập nhật Birth Order để xác định thứ tự sinh."
@@ -285,6 +279,50 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
       scrollToPanel();
   
       return { opened: true };
+    } catch (err) {
+      console.error("Open BO panel by parent pair error:", err);
+  
+      return {
+        opened: false,
+        message: "❌ Không thể mở Birth Order theo cặp Cha/Mẹ.",
+      };
+    } finally {
+      setBirthOrderLoading(false);
+    }
+  };
+  const openPanelByMarriage = async (
+    childId,
+    marriageId,
+    { force = true } = {}
+  ) => {
+    if (!childId) {
+      return {
+        opened: false,
+        message: "❌ Vui lòng chọn Người Con trước khi cập nhật Birth Order.",
+      };
+    }
+  
+    if (!marriageId) {
+      return openPanelByChild(childId, { force });
+    }
+  
+    setBirthOrderLoading(true);
+  
+    try {
+      const marriageRes = await axios.get(
+        `${API_BASE_URL}/marriage/${marriageId}`,
+        getAuthConfig()
+      );
+    
+      const marriage = marriageRes.data;
+    
+      return await openPanelByParentPair(
+        childId,
+        marriage.spouse_a_id,
+        marriage.spouse_b_id,
+        { force }
+      );
+      
     } catch (err) {
       console.error("Open BO panel by marriage error:", err);
   
@@ -377,6 +415,7 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
     birthOrderPanelRef,
     openPanelByChild,
     openPanelByMarriage,
+    openPanelByParentPair,
     checkBeforeSave,
     saveBirthOrders,
   };

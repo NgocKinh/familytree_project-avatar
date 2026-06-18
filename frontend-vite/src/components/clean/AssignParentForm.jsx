@@ -158,7 +158,6 @@ function AssignParentForm() {
           : await birthOrder.checkBeforeSave(childId, null);
 
         if (boResult.opened) {
-          birthOrder.setShowBirthOrderPanel(false);
           navigate(`/birth-order/${childId}`);
           setLoading(false);
           return;
@@ -213,7 +212,6 @@ function AssignParentForm() {
           : await birthOrder.checkBeforeSave(childId, marriageId);
 
         if (boResult.opened) {
-          birthOrder.setShowBirthOrderPanel(false);
           localStorage.setItem(
             "pendingBirthOrderAction",
             JSON.stringify({
@@ -363,21 +361,8 @@ function AssignParentForm() {
   // =========================================================
   return (
     <div className="max-w-xl mx-auto p-4 bg-white shadow rounded">
-
       {success && <div className="text-green-600 mb-2">{success}</div>}
-      {birthOrder.birthConflictWarning && (
-        <div className="text-yellow-700 bg-yellow-100 p-2 rounded mb-2">
-
-          <div className="flex flex-col gap-2">
-
-            <span>{birthOrder.birthConflictWarning}</span>
-
-          </div>
-
-        </div>
-      )}
       <form onSubmit={handleSubmit} className="space-y-4">
-
         {/* ================================================= */}
         {/* 1️⃣ SELECT CON */}
         {/* ================================================= */}
@@ -608,7 +593,6 @@ function AssignParentForm() {
               setHasFather(false);
               setHasMother(false);
               setLockForm(false);
-              birthOrder.setShowBirthOrderPanel(false);
             }}
             className={`px-4 py-2 text-white rounded ${
               error

@@ -5,7 +5,6 @@ import PersonDropdown from "../common/PersonDropdown";
 import MarriageDropdown from "../common/MarriageDropdown";
 import { formatName } from "../../utils/formatName";
 import { handleAuthError } from "../../utils/authErrorHandler";
-import BirthOrderPanel from "../birth_order/BirthOrderPanel";
 import { useNavigate } from "react-router-dom";
 import useBirthOrder from "../birth_order/useBirthOrder";
 function AssignChildToParentForm() {
@@ -47,13 +46,11 @@ function AssignChildToParentForm() {
   const [hasMother, setHasMother] = useState(false);
   const [lockForm, setLockForm] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [pendingSaveAfterBO, setPendingSaveAfterBO] = useState(false);
   useEffect(() => {
     if (childId) {
       checkParentStatus(childId, noMarriage);
     }
   }, [childId, noMarriage]);
-  const [boConfirmed, setBoConfirmed] = useState(false);
   const birthOrder = useBirthOrder({
     persons,
     getAuthConfig,
@@ -308,36 +305,6 @@ function AssignChildToParentForm() {
         👨‍👩‍👧 Quan Hệ Cha/Mẹ & Con
       </h3>
 
-      {birthOrder.birthConflictWarning && (
-        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-300 rounded text-yellow-800">
-          {birthOrder.birthConflictWarning}
-        </div>
-      )}
-
-      {birthOrder.showBirthOrderPanel && Array.isArray(birthOrder.birthOrderRows) && (
-        <BirthOrderPanel
-          birthOrderPanelRef={birthOrder.birthOrderPanelRef}
-          birthOrderRows={birthOrder.birthOrderRows}
-          setBirthOrderRows={birthOrder.setBirthOrderRows}
-          saveBirthOrders={async () => {
-            const result = await birthOrder.saveBirthOrders();
-
-            if (result.ok) {
-              setError("");
-              birthOrder.setShowBirthOrderPanel(false);
-              if (pendingSaveAfterBO) {
-                setPendingSaveAfterBO(false);  
-                await handleSubmit(null, { skipBirthOrderCheck: true });
-              }
-            } else {
-              setError(result.message);
-            }
-          }}
-          setShowBirthOrderPanel={birthOrder.setShowBirthOrderPanel}
-          setError={setError}
-          displayName={displayName}
-        />
-      )}
         <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block font-semibold">
@@ -366,15 +333,9 @@ function AssignChildToParentForm() {
               value={marriageId}
               onChange={(id) => {
                 setMarriageId(id);
-            
+              
                 setError("");
                 setSuccess("");
-            
-                birthOrder.setShowBirthOrderPanel(false);
-            
-                if (birthOrder.setBirthOrderRows) {
-                  birthOrder.setBirthOrderRows([]);
-                }
               }}
               marriages={marriages}
               placeholder="-- Gõ tên hoặc kéo xuống chọn Cha & Mẹ --"
@@ -465,15 +426,9 @@ function AssignChildToParentForm() {
             value={childId}
             onChange={(id) => {
               setChildId(id);
-
+            
               setError("");
               setSuccess("");
-
-              birthOrder.setShowBirthOrderPanel(false);
-
-              if (birthOrder.setBirthOrderRows) {
-                birthOrder.setBirthOrderRows([]);
-              }
             }}
             persons={persons}
             disabled={lockForm}
@@ -523,7 +478,6 @@ function AssignChildToParentForm() {
                 type="submit"
                 disabled={
                   loading ||
-                  birthOrder.showBirthOrderPanel ||
                   !childId ||
                   (!noMarriage && !marriageId) ||
                   (noMarriage && (!parentId || !type)) ||
@@ -533,7 +487,6 @@ function AssignChildToParentForm() {
                 }
                 className={`px-4 py-2 text-white rounded ${
                   loading ||
-                  birthOrder.showBirthOrderPanel ||
                   !childId ||
                   (!noMarriage && !marriageId) ||
                   (noMarriage && (!parentId || !type)) ||
@@ -544,11 +497,7 @@ function AssignChildToParentForm() {
                     : "bg-blue-600 hover:bg-blue-700"
                 }`}
               >
-                {birthOrder.showBirthOrderPanel
-                  ? "🔒 Hoàn tất BO trước"
-                  : loading
-                  ? "⏳ Đang kiểm tra quyền..."
-                  : "💾 Lưu Gia Đình"}
+                {loading ? "⏳ Đang kiểm tra quyền..." : "💾 Lưu Gia Đình"}
               </button>
             )}
 
@@ -565,7 +514,6 @@ function AssignChildToParentForm() {
                 setHasFather(false);
                 setHasMother(false);
                 setLockForm(false);
-                birthOrder.setShowBirthOrderPanel(false);
               }}
               className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
             >

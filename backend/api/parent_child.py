@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-
+from sqlalchemy import func
 from backend.db import get_db
 from backend.services.parent_child_service import (
     get_all_parent_child,
@@ -78,7 +78,27 @@ def get_children_by_marriage(marriage_id: int, db: Session = Depends(get_db)):
     )
 
     return rows
-    
+# ==========================================================
+# 🔹 GET COMMON CHILDREN BY PARENT PAIR
+# ==========================================================
+@router.get("/parents/{father_id}/{mother_id}/children")
+def get_common_children_by_parent_pair(
+    father_id: int,
+    mother_id: int,
+    db: Session = Depends(get_db),
+):
+    parent_ids = [father_id, mother_id]
+
+    rows = (
+        db.query(Person)
+        .join(ParentChild, ParentChild.child_id == Person.id)
+        .filter(ParentChild.parent_id.in_(parent_ids))
+        .group_by(Person.id)
+        .having(func.count(func.distinct(ParentChild.parent_id)) == 2)
+        .all()
+    )
+
+    return rows    
 # ==========================================================
 # 🔹 ASSIGN PARENT
 # ==========================================================

@@ -61,7 +61,7 @@ export default function BirthOrderPage() {
 
   const loadParents = async () => {
     try {
-      if (marriageId) {
+      if (marriageId && marriageId !== "0") {
         const res = await fetch(
           `${API_BASE_URL}/marriage/${marriageId}`,
           getAuthConfig()
@@ -76,7 +76,48 @@ export default function BirthOrderPage() {
   
         return;
       }
-  
+      if (pendingAction?.mode === "single_parent" && pendingAction?.parentId) {
+        const statusRes = await fetch(
+          `${API_BASE_URL}/parent_child/child/${childId}/parents-status`,
+          getAuthConfig()
+        );
+      
+        const currentParents = await statusRes.json();
+      
+        const parentRes = await fetch(
+          `${API_BASE_URL}/person/${pendingAction.parentId}`,
+          getAuthConfig()
+        );
+      
+        const parent = await parentRes.json();
+      
+        const parentName =
+          parent.full_name_vn ||
+          parent.name ||
+          `${parent.last_name || ""} ${parent.middle_name || ""} ${parent.first_name || ""}`.trim();
+      
+        setParents({
+          ...currentParents,
+          father_id:
+            pendingAction.type === "father"
+              ? Number(pendingAction.parentId)
+              : currentParents.father?.id || currentParents.father_id,
+          mother_id:
+            pendingAction.type === "mother"
+              ? Number(pendingAction.parentId)
+              : currentParents.mother?.id || currentParents.mother_id,
+          father_name:
+            pendingAction.type === "father"
+              ? parentName
+              : currentParents.father?.name || currentParents.father_name,
+          mother_name:
+            pendingAction.type === "mother"
+              ? parentName
+              : currentParents.mother?.name || currentParents.mother_name,
+        });
+      
+        return;
+      }
       const res = await fetch(
         `${API_BASE_URL}/parent_child/child/${childId}/parents-status`,
         getAuthConfig()
@@ -212,7 +253,26 @@ export default function BirthOrderPage() {
     }
     await loadParents();
 
-    if (marriageId) {
+    if (pendingAction?.mode === "single_parent" && pendingAction?.parentId) {
+      const statusRes = await fetch(
+        `${API_BASE_URL}/parent_child/child/${childId}/parents-status`,
+        getAuthConfig()
+      );
+    
+      const currentParents = await statusRes.json();
+    
+      const fatherId =
+        pendingAction.type === "father"
+          ? Number(pendingAction.parentId)
+          : currentParents.father?.id || currentParents.father_id;
+    
+      const motherId =
+        pendingAction.type === "mother"
+          ? Number(pendingAction.parentId)
+          : currentParents.mother?.id || currentParents.mother_id;
+    
+      await birthOrder.openPanelByParentPair(childId, fatherId, motherId);
+    } else if (marriageId && marriageId !== "0") {
       await birthOrder.openPanelByMarriage(childId, marriageId);
     } else {
       await birthOrder.openPanelByChild(childId);
