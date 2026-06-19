@@ -93,6 +93,63 @@ def get_person_family_overview(
             detail="Không tìm thấy thành viên",
         )
 
+    def sort_people(rows):
+        return sorted(
+            rows,
+            key=lambda p: (
+                p.get("birth_order") or 9999,
+                p.get("birth_date") or "9999-99-99",
+                p.get("id") or 999999,
+            ),
+        )
+
+    # ======================================================
+    # 1️⃣ HÔN NHÂN CỦA NHÂN VẬT TRUNG TÂM
+    # ======================================================
+    marriages = (
+        db.query(Marriage)
+        .filter(
+            (Marriage.spouse_a_id == person_id)
+            | (Marriage.spouse_b_id == person_id)
+        )
+        .all()
+    )
+
+    marriage_overview = []
+
+    for marriage in marriages:
+        spouse_id = (
+            marriage.spouse_b_id
+            if marriage.spouse_a_id == person_id
+            else marriage.spouse_a_id
+        )
+
+        spouse = db.query(Person).filter(Person.id == spouse_id).first()
+
+        parent_ids = [marriage.spouse_a_id, marriage.spouse_b_id]
+
+        children = (
+            db.query(Person)
+            .join(ParentChild, ParentChild.child_id == Person.id)
+            .filter(ParentChild.parent_id.in_(parent_ids))
+            .group_by(Person.id)
+            .having(func.count(func.distinct(ParentChild.parent_id)) == 2)
+            .all()
+        )
+
+        marriage_overview.append(
+            {
+                "marriage_id": marriage.id,
+                "spouse": person_summary(spouse),
+                "children": sort_people(
+                    [person_summary(child) for child in children]
+                ),
+            }
+        )
+
+    # ======================================================
+    # 2️⃣ ANH CHỊ EM ĐẶC BIỆT CỦA NHÂN VẬT TRUNG TÂM
+    # ======================================================
     father, mother = get_parent_map(db, person_id)
 
     father_id = father.id if father else None
@@ -109,6 +166,7 @@ def get_person_family_overview(
             )
             .all()
         )
+
         for row in rows:
             sibling_ids.add(row.child_id)
 
@@ -121,15 +179,18 @@ def get_person_family_overview(
             )
             .all()
         )
+
         for row in rows:
             sibling_ids.add(row.child_id)
 
-    full_siblings = []
-    paternal_half_siblings = []
-    maternal_half_siblings = []
+    same_father_different_mother = []
+    same_mother_different_father = []
+    known_same_father_only = []
+    known_same_mother_only = []
 
     for sibling_id in sibling_ids:
         sibling = db.query(Person).filter(Person.id == sibling_id).first()
+
         if not sibling:
             continue
 
@@ -141,30 +202,39 @@ def get_person_family_overview(
         same_father = father_id is not None and father_id == sib_father_id
         same_mother = mother_id is not None and mother_id == sib_mother_id
 
+        # Không liệt kê cùng cha cùng mẹ
         if same_father and same_mother:
-            full_siblings.append(person_summary(sibling))
-        elif same_father:
-            paternal_half_siblings.append(person_summary(sibling))
-        elif same_mother:
-            maternal_half_siblings.append(person_summary(sibling))
+            continue
 
-    def sort_people(rows):
-        return sorted(
-            rows,
-            key=lambda p: (
-                p.get("birth_order") or 9999,
-                p.get("birth_date") or "9999-99-99",
-                p.get("id") or 999999,
-            ),
-        )
+        if same_father:
+            if mother_id and sib_mother_id and mother_id != sib_mother_id:
+                same_father_different_mother.append(person_summary(sibling))
+            else:
+                known_same_father_only.append(person_summary(sibling))
+
+        elif same_mother:
+            if father_id and sib_father_id and father_id != sib_father_id:
+                same_mother_different_father.append(person_summary(sibling))
+            else:
+                known_same_mother_only.append(person_summary(sibling))
 
     return {
         "person": person_summary(person),
-        "father": person_summary(father),
-        "mother": person_summary(mother),
-        "full_siblings": sort_people(full_siblings),
-        "paternal_half_siblings": sort_people(paternal_half_siblings),
-        "maternal_half_siblings": sort_people(maternal_half_siblings),
+        "marriages": marriage_overview,
+        "special_siblings": {
+            "same_father_different_mother": sort_people(
+                same_father_different_mother
+            ),
+            "same_mother_different_father": sort_people(
+                same_mother_different_father
+            ),
+            "known_same_father_only": sort_people(
+                known_same_father_only
+            ),
+            "known_same_mother_only": sort_people(
+                known_same_mother_only
+            ),
+        },
     }
 # ==========================================================
 # 🔹 GET ONE

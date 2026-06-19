@@ -32,7 +32,7 @@ import PendingPage from "./pages/PendingPage.jsx";
 import PendingReviewPage from "./pages/PendingReviewPage.jsx";
 
 import PersonDetailPage from "./pages/PersonDetailPage.jsx";
-
+import PersonFamilyOverviewPage from "./pages/PersonFamilyOverviewPage";
 import FamilySetupPage from "./pages/FamilySetupPage";
 import LoginPage from "./pages/LoginPage.jsx";
 import AdminUsersPage from "./pages/AdminUsersPage.jsx";
@@ -380,7 +380,19 @@ function AppContent() {
               </ProtectedRouteV6>
             }
           />
-
+          <Route
+            path="/person/:id/family"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={ALL_LOGIN_ROLES}
+                currentUser={currentUser}
+                redirectTo="/"
+              >
+                <PersonFamilyOverviewPage />
+              </ProtectedRouteV6>
+            }
+          />
           {/* ANNOUNCEMENT */}
           <Route
             path="/announcement"

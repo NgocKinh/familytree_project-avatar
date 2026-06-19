@@ -5,7 +5,6 @@
 //   - Không đổi bất kỳ logic nào khác
 //   - Giữ nguyên filter/tab/delete/sort
 // ======================================================
-
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getAvatarURL, handleAvatarError } from "../utils/avatarEngine";
@@ -32,6 +31,7 @@ export default function PersonList({ role }) {
   const [searchMatchIds, setSearchMatchIds] = useState([]);
   const [searchCurrentIndex, setSearchCurrentIndex] = useState(0);
   const [checkingTreeId, setCheckingTreeId] = useState(null);
+  const [checkingFamilyId, setCheckingFamilyId] = useState(null);
   const rowRefs = useRef({});
   // ✅ [CHANGE 1]: Chuẩn hóa ID vì backend có lúc trả id, có lúc trả person_id
   const getPersonId = (person) => person?.person_id ?? person?.id;
@@ -103,6 +103,45 @@ export default function PersonList({ role }) {
       alert("Không kiểm tra được quyền truy cập.");
     } finally {
       setCheckingTreeId(null);
+    }
+  };
+  const handleViewFamily = async (id) => {
+    if (!id) return;
+  
+    setCheckingFamilyId(id);
+  
+    try {
+      // Admin và Co-operator luôn được xem
+      if (role === "admin" || role === "co_operator") {
+        navigate(`/person/${id}/family`);
+        return;
+      }
+  
+      const res = await fetch("http://127.0.0.1:8000/api/auth/check-near-access", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          target_person_id: id,
+          action: "family:view",
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok && data.allowed) {
+        navigate(`/person/${id}/family`);
+        return;
+      }
+  
+      alert("Bạn không có quyền xem chi tiết gia đình của người này.");
+    } catch (err) {
+      console.error(err);
+      alert("Không kiểm tra được quyền truy cập.");
+    } finally {
+      setCheckingFamilyId(null);
     }
   };
   const handleSearchJump = () => {
@@ -380,7 +419,18 @@ export default function PersonList({ role }) {
                   >
                     {checkingTreeId === getPersonId(p) ? "⏳" : "🌳"}
                   </button>
-
+                  <button
+                    onClick={() => handleViewFamily(getPersonId(p))}
+                    disabled={checkingFamilyId === getPersonId(p)}
+                    className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-2 py-1 rounded"
+                    title={
+                      checkingFamilyId === getPersonId(p)
+                        ? "Đang kiểm tra quyền xem chi tiết gia đình..."
+                        : "Xem chi tiết gia đình"
+                    }
+                  >
+                    {checkingFamilyId === getPersonId(p) ? "⏳" : "👪"}
+                  </button>
                   {role !== "viewer" && (
                     <button
                       onClick={() => navigate(`/person/basic/${getPersonId(p)}`)}
