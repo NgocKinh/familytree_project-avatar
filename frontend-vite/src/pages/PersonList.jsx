@@ -31,6 +31,7 @@ export default function PersonList({ role }) {
   const [searchResultCount, setSearchResultCount] = useState(0);
   const [searchMatchIds, setSearchMatchIds] = useState([]);
   const [searchCurrentIndex, setSearchCurrentIndex] = useState(0);
+  const [checkingTreeId, setCheckingTreeId] = useState(null);
   const rowRefs = useRef({});
   // ✅ [CHANGE 1]: Chuẩn hóa ID vì backend có lúc trả id, có lúc trả person_id
   const getPersonId = (person) => person?.person_id ?? person?.id;
@@ -65,7 +66,45 @@ export default function PersonList({ role }) {
         onAvatarUpdated: fetchPersons, // 🔵 callback chuẩn
       },
     });
-  const handleViewTree = (id) => navigate(`/tree/${id}`);
+  const handleViewTree = async (id) => {
+    if (!id) return;
+  
+    setCheckingTreeId(id);
+  
+    try {
+      // Admin và Co-operator luôn được xem
+      if (role === "admin" || role === "co_operator") {
+        navigate(`/tree/${id}`);
+        return;
+      }
+  
+      const res = await fetch("http://127.0.0.1:8000/api/auth/check-near-access", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          target_person_id: id,
+          action: "tree:view",
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok && data.allowed) {
+        navigate(`/tree/${id}`);
+        return;
+      }
+  
+      alert("Bạn chỉ được xem cây gia phả của người thân gần.");
+    } catch (err) {
+      console.error(err);
+      alert("Không kiểm tra được quyền truy cập.");
+    } finally {
+      setCheckingTreeId(null);
+    }
+  };
   const handleSearchJump = () => {
     const keyword = searchTerm.trim().toLowerCase();
   
@@ -331,9 +370,15 @@ export default function PersonList({ role }) {
                 <td className="px-4 py-2 text-center space-x-2">
                   <button
                     onClick={() => handleViewTree(getPersonId(p))}
-                    className="bg-green-500 hover:bg-green-600 text-white px-2 py-1 rounded"
+                    disabled={checkingTreeId === getPersonId(p)}
+                    className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-2 py-1 rounded"
+                    title={
+                      checkingTreeId === getPersonId(p)
+                        ? "Đang kiểm tra quyền xem cây gia phả..."
+                        : "Xem cây gia phả"
+                    }
                   >
-                    🌳
+                    {checkingTreeId === getPersonId(p) ? "⏳" : "🌳"}
                   </button>
 
                   {role !== "viewer" && (

@@ -189,7 +189,6 @@ def check_near_access(
         current_user.person_id,
         data.target_person_id
     )
-
     relation_basic = None
 
     if result:

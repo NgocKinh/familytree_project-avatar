@@ -210,3 +210,22 @@ export const getAvatarURL = (person) => {
   // ưu tiên avatar thật
   return `${BACKEND_BASE_URL}/static/avatars/${id}.jpg?t=${Date.now()}`;
 };
+// ============================================
+// GET PERSON FAMILY OVERVIEW
+// ============================================
+export const getPersonFamilyOverview = async (personId) => {
+  try {
+    const res = await axios.get(
+      `${API_BASE_URL}/parent_child/person/${personId}/family`
+    );
+
+    return res.data;
+  } catch (err) {
+    if (handleAuthError(err)) {
+      return null;
+    }
+
+    console.error(`❌ Lỗi lấy gia đình trực hệ ID=${personId}:`, err);
+    return null;
+  }
+};

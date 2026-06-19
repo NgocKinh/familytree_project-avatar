@@ -19,15 +19,153 @@ from backend.models.parent_child_model import ParentChild
 from backend.models.person_model import Person
 # ✅ [CHANGE 1]: Bỏ prefix nội bộ vì main.py đã gắn prefix="/api/parent_child"
 router = APIRouter(tags=["ParentChild"])
+# ==========================================================
+# 🔧 PERSON SUMMARY
+# ==========================================================
+def person_summary(p: Person):
+    if not p:
+        return None
 
+    return {
+        "id": p.id,
+        "sur_name": p.sur_name,
+        "last_name": p.last_name,
+        "middle_name": p.middle_name,
+        "first_name": p.first_name,
+        "full_name_vn": getattr(p, "full_name_vn", None),
+        "gender": p.gender,
+        "birth_date": str(p.birth_date) if p.birth_date else None,
+        "birth_order": p.birth_order,
+    }
+
+def get_parent_map(db: Session, child_id: int):
+    rows = (
+        db.query(ParentChild, Person)
+        .join(Person, ParentChild.parent_id == Person.id)
+        .filter(ParentChild.child_id == child_id)
+        .all()
+    )
+
+    father = None
+    mother = None
+
+    for pc, parent in rows:
+        ptype = (pc.type or "").lower()
+
+        if ptype in ["father", "cha"]:
+            father = parent
+
+        if ptype in ["mother", "me", "mẹ"]:
+            mother = parent
+
+    return father, mother
 # ==========================================================
 # 🔹 GET ALL
 # ==========================================================
 @router.get("/")
 def get_all(db: Session = Depends(get_db)):
     return get_all_parent_child(db)
+# ==========================================================
+# 🔹 GET CHILD PARENTS STATUS
+# ==========================================================
+@router.get("/child/{child_id}/parents-status")
+def get_parents_status(child_id: int, db: Session = Depends(get_db)):
+    return get_child_parents_status(db, child_id)
+# ==========================================================
+# 🔹 GET CHILD SIBLINGS
+# ==========================================================
+@router.get("/child/{child_id}/siblings")
+def get_siblings_of_child(child_id: int, db: Session = Depends(get_db)):
+    return get_child_siblings(db, child_id)
+# ==========================================================
+# 🔹 GET PERSON FAMILY OVERVIEW
+# ==========================================================
+@router.get("/person/{person_id}/family")
+def get_person_family_overview(
+    person_id: int,
+    db: Session = Depends(get_db),
+):
+    person = db.query(Person).filter(Person.id == person_id).first()
 
+    if not person:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy thành viên",
+        )
 
+    father, mother = get_parent_map(db, person_id)
+
+    father_id = father.id if father else None
+    mother_id = mother.id if mother else None
+
+    sibling_ids = set()
+
+    if father_id:
+        rows = (
+            db.query(ParentChild)
+            .filter(
+                ParentChild.parent_id == father_id,
+                ParentChild.child_id != person_id,
+            )
+            .all()
+        )
+        for row in rows:
+            sibling_ids.add(row.child_id)
+
+    if mother_id:
+        rows = (
+            db.query(ParentChild)
+            .filter(
+                ParentChild.parent_id == mother_id,
+                ParentChild.child_id != person_id,
+            )
+            .all()
+        )
+        for row in rows:
+            sibling_ids.add(row.child_id)
+
+    full_siblings = []
+    paternal_half_siblings = []
+    maternal_half_siblings = []
+
+    for sibling_id in sibling_ids:
+        sibling = db.query(Person).filter(Person.id == sibling_id).first()
+        if not sibling:
+            continue
+
+        sib_father, sib_mother = get_parent_map(db, sibling_id)
+
+        sib_father_id = sib_father.id if sib_father else None
+        sib_mother_id = sib_mother.id if sib_mother else None
+
+        same_father = father_id is not None and father_id == sib_father_id
+        same_mother = mother_id is not None and mother_id == sib_mother_id
+
+        if same_father and same_mother:
+            full_siblings.append(person_summary(sibling))
+        elif same_father:
+            paternal_half_siblings.append(person_summary(sibling))
+        elif same_mother:
+            maternal_half_siblings.append(person_summary(sibling))
+
+    def sort_people(rows):
+        return sorted(
+            rows,
+            key=lambda p: (
+                p.get("birth_order") or 9999,
+                p.get("birth_date") or "9999-99-99",
+                p.get("id") or 999999,
+            ),
+        )
+
+    return {
+        "person": person_summary(person),
+        "father": person_summary(father),
+        "mother": person_summary(mother),
+        "full_siblings": sort_people(full_siblings),
+        "paternal_half_siblings": sort_people(paternal_half_siblings),
+        "maternal_half_siblings": sort_people(maternal_half_siblings),
+    }
 # ==========================================================
 # 🔹 GET ONE
 # ==========================================================
@@ -39,22 +177,7 @@ def get_one(rid: int, db: Session = Depends(get_db)):
         from backend.core.exceptions import NotFoundException
         raise NotFoundException("Không tìm thấy quan hệ cha-con này")
 
-    return data
-
-
-# ==========================================================
-# 🔹 GET CHILD PARENTS STATUS
-# ==========================================================
-@router.get("/child/{child_id}/parents-status")
-def get_parents_status(child_id: int, db: Session = Depends(get_db)):
-    return get_child_parents_status(db, child_id)
-
-# ==========================================================
-# 🔹 GET CHILD SIBLINGS
-# ==========================================================
-@router.get("/child/{child_id}/siblings")
-def get_siblings_of_child(child_id: int, db: Session = Depends(get_db)):
-    return get_child_siblings(db, child_id)
+    return data    
 # ==========================================================
 # 🔹 GET CHILDREN BY MARRIAGE
 # ==========================================================
@@ -130,7 +253,6 @@ def assign_parent(
         "message": "Đã lưu quan hệ cha-con thành công",
         "id": pc.id
     }
-
 # ==========================================================
 # 🔹 DELETE
 # ==========================================================

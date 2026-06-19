@@ -242,6 +242,13 @@ def get_family(pid: int):
             FROM parent_child pc
             JOIN persons p ON pc.parent_id = p.person_id
             WHERE pc.child_id = %s
+                ORDER BY
+                    CASE pc.type
+                        WHEN 'father' THEN 1
+                        WHEN 'mother' THEN 2
+                        ELSE 9
+                    END
+
         """, (person_id,))
 
         rows = cur.fetchall()

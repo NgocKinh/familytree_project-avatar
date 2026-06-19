@@ -31,7 +31,6 @@ function Avatar({ person, size = 80, onClick }) {
   );
 }
 
-
 /* ================= Person ================= */
 
 function Person({ person, go, size = 60 }) {
@@ -64,7 +63,6 @@ function Person({ person, go, size = 60 }) {
   );
 }
 
-
 /* ================= Helpers ================= */
 
 function ensureTwo(list = []) {
@@ -76,7 +74,6 @@ function ensureTwo(list = []) {
 
   return list.slice(0, 2);
 }
-
 
 function heartIcon(status) {
 
@@ -90,7 +87,6 @@ function heartIcon(status) {
 
 }
 
-
 /* ================= Page ================= */
 
 export default function TreePage() {
@@ -101,41 +97,53 @@ export default function TreePage() {
   const [tree, setTree] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const go = (pid) => navigate(`/tree/${pid}`);
-
-
-  /* ===== Load tree ===== */
-
-  useEffect(() => {
-
-    let alive = true;
-
-    const load = async () => {
-
-      setLoading(true);
-
-      try {
-
-        const data = await getFamilyTree(personId);
-
-        if (!alive) return;
-
-        setTree(data);
-
-      } finally {
-
-        if (alive) setLoading(false);
-
+  const go = async (pid) => {
+    if (!pid) return;
+  
+    try {
+      const token = localStorage.getItem("token");
+  
+      const res = await fetch("http://127.0.0.1:8000/api/auth/check-near-access", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          target_person_id: pid,
+          action: "tree:view",
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok && data.allowed) {
+        navigate(`/tree/${pid}`);
+        return;
       }
-
+  
+      alert("Bạn chỉ được xem cây gia phả của người thân gần.");
+    } catch (err) {
+      console.error("❌ Không kiểm tra được quyền xem cây:", err);
+      alert("Không kiểm tra được quyền truy cập cây gia phả.");
+    }
+  };
+  /* ===== Load tree ===== */
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const data = await getFamilyTree(personId);
+        if (!alive) return;
+        setTree(data);
+      } finally {
+        if (alive) setLoading(false);
+      }
     };
-
     load();
-
     return () => { alive = false };
-
   }, [personId]);
-
 
   /* ===== Extract data safely ===== */
 
@@ -148,7 +156,6 @@ export default function TreePage() {
     children_common = []
   } = tree || {};
 
-
   /* ===== Parents ===== */
 
   const safeFather = useMemo(
@@ -160,7 +167,6 @@ export default function TreePage() {
     () => ensureTwo(mother_parents),
     [mother_parents]
   );
-
 
   /* ===== Sort children ===== */
 
@@ -298,4 +304,4 @@ export default function TreePage() {
     </div>
 
   );
-}        
+}     
