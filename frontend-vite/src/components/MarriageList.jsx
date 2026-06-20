@@ -90,8 +90,12 @@ export default function MarriageList({ onEdit, role }) {
       setMessage("🗑️ Đã xóa quan hệ hôn nhân!");
       setDeleteConfirmId(null);
       
-    } catch {
-      setMessage("❌ Lỗi khi xóa bản ghi!");
+    } catch (err) {
+      const detail =
+        err?.response?.data?.detail ||
+        "Không thể kết nối đến máy chủ.";
+
+      setMessage(`❌ ${detail}`);
     }
   };
 
@@ -121,12 +125,8 @@ export default function MarriageList({ onEdit, role }) {
   // UI
   // ================================================================
   return (
-    <div className="bg-white p-0 rounded-xl shadow border">
-      <div className="sticky top-[56px] z-40 bg-white border rounded-xl shadow-sm p-1 mb-0">
-        <h3 className="text-xl font-bold text-blue-600 mb-2 text-center">
-          📋 Danh Sách Hôn Nhân
-        </h3>
-  
+    <div className="bg-white p-0">
+      <div className="bg-white border rounded-xl shadow-sm px-1 py-1">
         <div className="flex flex-wrap justify-center items-center gap-3">
           <input
             type="text"
@@ -136,12 +136,12 @@ export default function MarriageList({ onEdit, role }) {
               if (e.key === "Enter") setActiveSearch(searchText);
             }}
             placeholder="Nhập tên, ngày, trạng thái..."
-            className="border rounded px-3 py-2 w-72"
+            className="w-72 rounded-lg bg-gray-50 px-4 py-3 border border-gray-300 focus:border-blue-500 focus:outline-none"
           />
   
           <button
             onClick={() => setActiveSearch(searchText)}
-            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            className="px-5 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-sm"
           >
             🔍 Tìm kiếm
           </button>
@@ -152,7 +152,7 @@ export default function MarriageList({ onEdit, role }) {
                 setSearchText("");
                 setActiveSearch("");
               }}
-              className="bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600"
+              className="px-5 py-3 rounded-lg bg-yellow-500 text-white hover:bg-yellow-600 shadow-sm"
             >
               🚪 Thoát
             </button>
@@ -163,7 +163,7 @@ export default function MarriageList({ onEdit, role }) {
             <select
               value={mode}
               onChange={(e) => setMode(e.target.value)}
-              className="border p-2 rounded"
+              className="border px-3 py-2 rounded"
             >
               <option value="full">Đầy đủ</option>
               <option value="short">Rút gọn</option>
@@ -190,13 +190,15 @@ export default function MarriageList({ onEdit, role }) {
       </div>
   
       {message && (
-        <p
-          className={`text-center font-semibold mb-2 ${
-            message.startsWith("🗑️") ? "text-green-600" : "text-red-500"
+        <div
+          className={`fixed top-20 left-1/2 z-[9999] w-[90%] max-w-4xl -translate-x-1/2 rounded border px-4 py-3 text-center font-semibold shadow-lg ${
+            message.startsWith("🗑️")
+              ? "border-green-300 bg-green-50 text-green-700"
+              : "border-red-300 bg-red-50 text-red-700"
           }`}
         >
           {message}
-        </p>
+        </div>
       )}
   
         <div className="overflow-x-auto">

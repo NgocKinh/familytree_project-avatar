@@ -5,12 +5,12 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 from datetime import datetime
 
 from backend.db import get_db
 from backend.models.marriage_model import Marriage
-
+from backend.models.parent_child_model import ParentChild
 from backend.schemas.marriage_schema import MarriageCreate, MarriageUpdate
 from backend.services.marriage_service import create_marriage
 from backend.utils.auth_guard import (
@@ -232,12 +232,26 @@ def delete_marriage(
     marriage = db.query(Marriage).filter(Marriage.id == mid).first()
 
     if not marriage:
-        raise HTTPException(404, "Marriage not found")
+        raise HTTPException(404, "Không tìm thấy gia đình.")
+
+    child_count = (
+        db.query(ParentChild.child_id)
+        .filter(ParentChild.parent_id.in_([marriage.spouse_a_id, marriage.spouse_b_id]))
+        .group_by(ParentChild.child_id)
+        .having(func.count(ParentChild.parent_id) >= 2)
+        .count()
+    )
+
+    if child_count > 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Không thể xóa gia đình đã có con. Vui lòng hủy hoặc chuyển tình trạng hôn nhân thay vì xóa."
+        )
 
     db.delete(marriage)
     db.commit()
 
-    return {"message": "Deleted successfully"}
+    return {"message": "Đã xóa gia đình thành công."}
 
 # ==========================================================
 # GET ALL MARRIAGES OF A PERSON

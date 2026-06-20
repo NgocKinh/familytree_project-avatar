@@ -74,15 +74,17 @@ export default function MarriagePage({ role }) {
           </div>
         </div>
       </div>        
-      {activeTab === "list" ? (
-        <MarriageList
-          key={refreshKey}
-          onEdit={handleEdit}
-          role={role}
-        />
-      ) : (
-        <MarriageForm editId={editId} onBack={handleBack} />
-      )}
+      <div className="-mt-0">
+        {activeTab === "list" ? (
+          <MarriageList
+            key={refreshKey}
+            onEdit={handleEdit}
+            role={role}
+          />
+        ) : (
+          <MarriageForm editId={editId} onBack={handleBack} />
+        )}
+      </div>
     </div>
   );
 }
