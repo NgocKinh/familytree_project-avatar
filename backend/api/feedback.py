@@ -7,13 +7,12 @@
 # - Phase 1: CRUD cơ bản + status workflow
 # ======================================================
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 from backend.db import get_connection
-
+from backend.api.auth import get_current_user
 router = APIRouter()
-
 
 # ======================================================
 # SAFE CLOSE
@@ -31,7 +30,6 @@ def safe_close(conn, cursor):
     except Exception as e:
         print("⚠️ Connection close error:", e)
 
-
 # ======================================================
 # SCHEMAS
 # ======================================================
@@ -43,7 +41,6 @@ class FeedbackCreate(BaseModel):
     contact_email: Optional[str] = None
     contact_phone: Optional[str] = None
 
-
 class FeedbackUpdate(BaseModel):
     category: Optional[str] = None
     title: Optional[str] = None
@@ -52,7 +49,6 @@ class FeedbackUpdate(BaseModel):
     contact_phone: Optional[str] = None
     status: Optional[str] = None
     admin_note: Optional[str] = None
-
 
 # ======================================================
 # CREATE FEEDBACK
@@ -105,7 +101,6 @@ def create_feedback(payload: FeedbackCreate):
     finally:
         safe_close(conn, cursor)
 
-
 # ======================================================
 # LIST FEEDBACK
 # Admin xem danh sách feedback
@@ -152,7 +147,6 @@ def list_feedback():
 
     finally:
         safe_close(conn, cursor)
-
 
 # ======================================================
 # DETAIL FEEDBACK
@@ -207,7 +201,6 @@ def get_feedback(feedback_id: int):
     finally:
         safe_close(conn, cursor)
 
-
 # ======================================================
 # UPDATE FEEDBACK
 # Admin cập nhật status / admin_note
@@ -260,13 +253,20 @@ def update_feedback(feedback_id: int, payload: FeedbackUpdate):
     finally:
         safe_close(conn, cursor)
 
-
 # ======================================================
 # DELETE FEEDBACK
 # Admin xoá feedback
 # ======================================================
 @router.delete("/{feedback_id}")
-def delete_feedback(feedback_id: int):
+def delete_feedback(
+    feedback_id: int,
+    current_user=Depends(get_current_user),
+):
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=403,
+            detail="Chỉ Admin mới được xóa feedback.",
+        )
     conn = None
     cursor = None
 
@@ -283,7 +283,7 @@ def delete_feedback(feedback_id: int):
 
         return {
             "success": True,
-            "message": "Feedback deleted successfully"
+            "message": "Góp ý đã được xóa thành "
         }
 
     except Exception as e:

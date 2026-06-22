@@ -57,6 +57,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
   const [duplicateMessage, setDuplicateMessage] = useState("");
   const [pendingPayload, setPendingPayload] = useState(null);
   const [savedOnce, setSavedOnce] = useState(false);
+  
   // =========================
   // RESET FORM
   // =========================
@@ -196,7 +197,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
     
       if (dupRes?.duplicate) {
         const realMatches = (dupRes.matches || []).filter(
-          (p) => Number(p.person_id) !== Number(id)
+          (p) => Number(p.person_id || p.id) !== Number(realId)
         );
       
         if (realMatches.length > 0) {
@@ -219,15 +220,15 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
     try {
       if (isEdit) {
         console.log("🔥 BEFORE API");
-    
+      
         await updatePerson(realId, payload);
-    
+      
         alert("✅ Cập nhật thành công!");
-    
+      
         if (onSaved) {
           onSaved();
         }
-    
+      
         return true;
       }
     

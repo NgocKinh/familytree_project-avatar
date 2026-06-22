@@ -242,7 +242,7 @@ function ParentChildList({ onEdit, role }) {
 
                     <button
                       type="button"
-                      title="Sắp xếp thứ tự anh/chị/em trong gia đình"
+                      title="Sắp xếp thứ tự anh/chị/em"
                       onClick={() => {
                         const childId =
                           r.child_id ||

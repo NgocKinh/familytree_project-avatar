@@ -7,11 +7,11 @@
 | ✅ Gate 1 | Environment | Git, Backend, Build, Vite | PASS |
 | ✅ Gate 2 | Authentication | Login + ACL | PASS |
 | ✅ Gate 3 | Person | CRUD + Family Overview | PASS |
-| ⏳ Gate 4 | Marriage | CRUD + Permission | PENDING |
-| ⏳ Gate 5 | Parent Child | AP + AC + Validation | TODO |
-| ⏳ Gate 6 | Birth Order | Trigger + Pending Action | TODO |
-| ⏳ Gate 7 | Tree | Access Guard + Navigation | TODO |
-| ⏳ Gate 8 | Announcement | User + Admin | TODO |
+| ✅ Gate 4 | Marriage | CRUD + Permission + Delete Protection | PASS |
+| ✅ Gate 5 | Parent Child | AP + AC + Validation | PASS |
+| ✅ Gate 6 | Birth Order | Trigger + Pending Action | PASS |
+| ✅ Gate 7 | Tree | Access Guard + Navigation | PASS |
+| ✅ Gate 8 | Announcement | User + Admin | PASS |
 | ⏳ Gate 9 | Feedback | User + Admin | TODO |
 | ⏳ Gate 10 | Role | ACL Verification | TODO |
 | ⏳ Gate 11 | Production Configuration | .env / CORS / Secret Key | TODO |

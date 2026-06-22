@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AdminHeader from "../components/admin/AdminHeader";
 import { handleAuthError } from "../utils/authErrorHandler";
 import { makeApiUrl } from "../api/apiConfig";
-function AdminFeedbackPage() {
+function AdminFeedbackPage({ role }) {
   const navigate = useNavigate();
   const [feedbacks, setFeedbacks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -73,7 +73,40 @@ function AdminFeedbackPage() {
       setSaving(false);
     }
   };
-
+  const deleteFeedback = async () => {
+    if (!selectedFeedback) return;
+  
+    if (!window.confirm("Bạn có chắc muốn xóa Feedback này không?")) {
+      return;
+    }
+  
+    try {
+      const token = localStorage.getItem("token");
+  
+      const res = await fetch(
+        makeApiUrl(`/feedback/${selectedFeedback.feedback_id}`),
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+  
+      const data = await res.json();
+  
+      if (data.success) {
+        alert("Đã xóa Feedback.");
+        setSelectedFeedback(null);
+        loadFeedbacks();
+      } else {
+        alert("Không thể xóa Feedback.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi khi xóa Feedback.");
+    }
+  };
   useEffect(() => {
     loadFeedbacks();
   }, []);
@@ -140,8 +173,22 @@ function AdminFeedbackPage() {
       )}
 
       {selectedFeedback && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded shadow-lg w-full max-w-2xl p-6">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 flex items-start justify-center z-50 overflow-y-auto py-8"
+          onClick={() => setSelectedFeedback(null)}
+        >
+          <div
+            className="bg-white rounded shadow-lg w-full max-w-2xl p-6 max-h-[85vh] overflow-y-auto relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+          <button
+            type="button"
+            onClick={() => setSelectedFeedback(null)}
+            className="absolute top-3 right-3 text-gray-500 hover:text-black text-xl font-bold"
+            title="Đóng"
+          >
+            ✖
+          </button>
             <h3 className="text-xl font-bold text-blue-600 mb-4">
               📨 Feedback #{selectedFeedback.feedback_id}
             </h3>
@@ -211,19 +258,29 @@ function AdminFeedbackPage() {
 
             <div className="flex justify-end gap-3 mt-6">
               <button
-                onClick={() => setSelectedFeedback(null)}
-                className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
-              >
-                Đóng
-              </button>
-
-              <button
                 onClick={updateFeedback}
                 disabled={saving}
                 className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 disabled:bg-gray-400"
               >
                 {saving ? "Đang lưu..." : "Lưu"}
               </button>
+
+              <button
+                onClick={() => setSelectedFeedback(null)}
+                className="px-4 py-2 rounded bg-gray-300 hover:bg-gray-400"
+              >
+                Đóng
+              </button>
+
+              {role === "admin" && (
+                <button
+                  type="button"
+                  onClick={deleteFeedback}
+                  className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+                >
+                  🗑 Xóa
+                </button>
+              )}
             </div>
           </div>
         </div>

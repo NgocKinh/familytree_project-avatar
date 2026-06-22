@@ -33,7 +33,6 @@ def safe_close(conn, cursor):
     except Exception as e:
         print("⚠️ Connection close error:", e)
 
-
 # ------------------------------------------------------------
 # Convert dd/mm âm lịch → ngày dương lịch năm nay
 # ------------------------------------------------------------
@@ -134,8 +133,6 @@ def announcement_today():
                         d, m = ann.split("/")
                         solar_this_year = date(today.year, int(m), int(d))
 
-                        print("DEBUG SOLAR:", full_name, solar_this_year, today)
-
                         if solar_this_year == today:
 
                             lunar_today = Converter.Solar2Lunar(solar_this_year)
@@ -150,8 +147,6 @@ def announcement_today():
                                 "lunar_year_name": get_can_chi_year(today.year),
                                 "calendar_type": "solar",
                             })
-
-                            print("✅ APPENDED:", full_name)
 
                     except Exception as e:
                         print("❌ SOLAR ERROR:", full_name, e)
@@ -261,7 +256,6 @@ def announcement_today():
     finally:
         safe_close(conn, cursor)
 
-
 # ------------------------------------------------------------
 # Sắp tới 7 ngày
 # ------------------------------------------------------------
@@ -278,7 +272,6 @@ def announcement_upcoming():
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
         cursor.execute("SELECT DATABASE() AS db_name")
-        print("DEBUG DB:", cursor.fetchone())
         # ⭐ FIX THỨ TỰ TÊN – CHUẨN CẤU TRÚC PROJECT
         cursor.execute("""
             SELECT 
@@ -303,7 +296,6 @@ def announcement_upcoming():
             full_name = f"{row['sur_name']} {row['last_name']} {row['middle_name']} {row['first_name']}".strip()
             ann = row["anniversary_death"]
             ann_type = (row.get("anniversary_type") or "lunar").strip().lower()
-            print("DEBUG ANN:", row["person_id"], ann, ann_type)
             if ann:
 
                 # GIỖ ÂM
@@ -437,6 +429,56 @@ def announcement_upcoming():
     except Exception as e:
         print("❌ ERROR UPCOMING:", e)
         return {"error": str(e)}
+
+    finally:
+        safe_close(conn, cursor)
+
+# ------------------------------------------------------------
+# Thông báo chung đang active
+# ------------------------------------------------------------
+@router.get("/list")
+def announcement_list():
+    conn = None
+    cursor = None
+
+    try:
+        conn = get_connection()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT
+                id,
+                title,
+                description,
+                event_type,
+                calendar_type,
+                solar_date,
+                lunar_day,
+                lunar_month,
+                lunar_year,
+                repeat_type,
+                person_id,
+                is_active,
+                created_at
+            FROM announcements
+            WHERE is_active = 1
+            ORDER BY created_at DESC
+        """)
+
+        rows = cursor.fetchall()
+
+        return {
+            "success": True,
+            "data": rows
+        }
+
+    except Exception as e:
+        print("❌ ERROR ANNOUNCEMENT LIST:", e)
+        return {
+            "success": False,
+            "error": str(e),
+            "data": []
+        }
 
     finally:
         safe_close(conn, cursor)

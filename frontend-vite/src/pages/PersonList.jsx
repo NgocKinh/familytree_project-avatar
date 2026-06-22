@@ -18,7 +18,7 @@ from "../api/personApi";
 import { formatGender } from "../utils/formatGender";
 import { formatDateVN } from "../utils/formatDate";
 import { formatName } from "../utils/formatName";
-
+import { API_BASE_URL } from "../api/apiConfig";
 export default function PersonList({ role }) {
   const [persons, setPersons] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -78,7 +78,7 @@ export default function PersonList({ role }) {
         return;
       }
   
-      const res = await fetch("http://127.0.0.1:8000/api/auth/check-near-access", {
+      const res = await fetch(`${API_BASE_URL}/auth/check-near-access`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -17,3 +17,4 @@ Chỉ được phép thay đổi trạng thái hôn nhân.
 Lý do:
 
 Tree, Family Overview và ParentChild đều phụ thuộc vào Marriage để biểu diễn gia đình một cách nhất quán.
+

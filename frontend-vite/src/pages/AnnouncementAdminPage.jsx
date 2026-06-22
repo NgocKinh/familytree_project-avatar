@@ -24,7 +24,7 @@ function AnnouncementAdminPage() {
             }
 
             const json = await res.json();
-
+            console.log("📢 ADMIN ANNOUNCEMENT LIST:", json);
             if (json.success) {
                 setAnnouncements(json.data || []);
             }
@@ -129,9 +129,12 @@ function AnnouncementAdminPage() {
     const handleDelete = async (id) => {
         if (!window.confirm("Bạn có chắc muốn xóa thông báo này không?")) return;
 
-        await fetch(`http://localhost:8000/api/admin/announcement/${id}`, {
+        await fetch(makeApiUrl(`/admin/announcement/${id}`), {
             method: "DELETE",
-        });
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
 
         fetchAnnouncements();
     };

@@ -23,6 +23,7 @@ export default function AddPersonPage({ role }) {
   const [personId, setPersonId] = useState(id || null);
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [hasNavigated, setHasNavigated] = useState(false);
+  
   // Ai được phép xem Form Chi Tiết?
   const canShowDetail =
     role === "co_operator" ||
@@ -49,7 +50,7 @@ export default function AddPersonPage({ role }) {
   // ======================================================================
   // Callback từ PersonBasicForm (khi lưu xong)
   // ======================================================================
-  const handleSavedBasic = (result) => {
+  const handleSavedBasic = async (result) => {
     // Backend có thể trả id hoặc person_id → chuẩn hoá
     // ----------------------------------------------------------
     // result = { id: 10, ... } hoặc { person_id: 10, ... }
@@ -67,7 +68,7 @@ export default function AddPersonPage({ role }) {
     }
     // Lưu ID vào state
     setPersonId(savedId);
-
+    
     // ==================================================================
     // Quy tắc hiển thị Form Detail:
     // - co_operator/admin → luôn hiển thị
@@ -80,7 +81,7 @@ export default function AddPersonPage({ role }) {
     // ✅ Guard navigate tránh chạy nhiều lần
     if (!hasNavigated) {
       setHasNavigated(true);
-    
+              
       if (isEditMode) {
         navigate("/person-list");
       } else {

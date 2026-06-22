@@ -158,7 +158,18 @@ function AssignParentForm() {
           : await birthOrder.checkBeforeSave(childId, null);
 
         if (boResult.opened) {
-          navigate(`/birth-order/${childId}`);
+          localStorage.setItem(
+            "pendingBirthOrderAction",
+            JSON.stringify({
+              source: "AssignParentForm",
+              mode: "single_parent",
+              childId,
+              parentId,
+              type,
+            })
+          );
+
+          navigate(`/birth-order/${childId}/0`);
           setLoading(false);
           return;
         }

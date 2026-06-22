@@ -271,11 +271,11 @@ export default function BirthOrderPage() {
           ? Number(pendingAction.parentId)
           : currentParents.mother?.id || currentParents.mother_id;
     
-      await birthOrder.openPanelByParentPair(childId, fatherId, motherId);
+      await birthOrder.openPanelByParentPair(childId, fatherId, motherId, { force: true });
     } else if (marriageId && marriageId !== "0") {
-      await birthOrder.openPanelByMarriage(childId, marriageId);
+      await birthOrder.openPanelByMarriage(childId, marriageId, { force: true });
     } else {
-      await birthOrder.openPanelByChild(childId);
+      await birthOrder.openPanelByChild(childId, { force: true });
     }
     setCheckingAccess(false);
   };
@@ -286,7 +286,7 @@ export default function BirthOrderPage() {
     <div className="max-w-4xl mx-auto p-4 bg-white shadow rounded">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold text-blue-700">
-          👨‍👩‍👧‍👦 Sắp xếp thứ tự anh/chị/em
+          👨‍👩‍👧‍👦 Danh sách anh/chị/em trong gia đình
         </h2>
 
         <button

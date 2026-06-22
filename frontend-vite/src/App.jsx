@@ -265,7 +265,7 @@ function AppContent() {
                 currentUser={currentUser}
                 redirectTo="/"
               >
-                <AdminFeedbackPage />
+                <AdminFeedbackPage role={role} />
               </ProtectedRouteV6>
             }
           />

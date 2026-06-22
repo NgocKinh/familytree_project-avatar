@@ -10,24 +10,39 @@ import { makeApiUrl } from "../api/apiConfig";
 function AnnouncementPage() {
   const [todayData, setTodayData] = useState(null);
   const [upcomingData, setUpcomingData] = useState(null);
+  const [customAnnouncements, setCustomAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Gọi API cả 2
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [todayRes, upcomingRes] = await Promise.all([
+        const [todayRes, upcomingRes, customRes] = await Promise.all([
           fetch(makeApiUrl("/announcement/today")),
           fetch(makeApiUrl("/announcement/upcoming?days=7")),
+          fetch(makeApiUrl("/announcement/list")),
         ]);
-        if (todayRes.status === 401 || upcomingRes.status === 401) {
+        if (
+          todayRes.status === 401 ||
+          upcomingRes.status === 401 ||
+          customRes.status === 401
+        ) {
           handleAuthError({ response: { status: 401 } });
           return;
         }
         const todayJson = await todayRes.json();
         const upcomingJson = await upcomingRes.json();
+        const customJson = await customRes.json();
+
         setTodayData(todayJson);
         setUpcomingData(upcomingJson);
+        if (Array.isArray(customJson)) {
+          setCustomAnnouncements(customJson);
+        } else if (customJson.success) {
+          setCustomAnnouncements(customJson.data || []);
+        } else {
+          setCustomAnnouncements(customJson.announcements || []);
+        }
       } catch (e) {
         if (handleAuthError(e)) {
           return;
@@ -86,7 +101,7 @@ function AnnouncementPage() {
         {todayData?.lunar} {todayData?.lunar_year_name}
       </b>
       </p>
-
+      
       {/* --- PHẦN 1: Hôm nay --- */}
       <h2 className="text-xl font-semibold text-center text-indigo-600 mb-2">
         📅 Sự kiện trong ngày
@@ -155,6 +170,30 @@ function AnnouncementPage() {
                   {item.calendar_type === "lunar" ? "Giỗ theo âm lịch" : "Giỗ theo dương lịch"}
                 </p>
               </div>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* --- PHẦN 3: Thông báo chung --- */}
+      <h2 className="text-2xl font-bold text-center mb-1 text-blue-700 drop-shadow-sm">
+        📢 Thông báo chung
+      </h2>
+      
+      {customAnnouncements.length === 0 ? (
+        <p className="text-center text-gray-400 italic mb-6">
+          Chưa có thông báo chung nào.
+        </p>
+      ) : (
+        <div className="space-y-3 mb-8">
+          {customAnnouncements.map((item) => (
+            <div
+              key={item.id}
+              className="p-4 rounded-2xl shadow-sm bg-blue-50 border-l-4 border-blue-500"
+            >
+              <p className="font-semibold text-blue-800">{item.title}</p>
+              <p className="text-gray-700 mt-1 whitespace-pre-line">
+                {item.description}
+              </p>
             </div>
           ))}
         </div>

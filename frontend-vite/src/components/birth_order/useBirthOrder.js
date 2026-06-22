@@ -79,93 +79,33 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
     setBirthOrderLoading(true);
 
     try {
-      const res = await axios.get(
-        `${API_BASE_URL}/parent_child/child/${childId}/siblings`,
+      const statusRes = await axios.get(
+        `${API_BASE_URL}/parent_child/child/${childId}/parents-status`,
         getAuthConfig()
       );
 
-      const siblings = (res.data || []).map((p) => ({
-        ...p,
-        id: p.id ?? p.person_id,
-      }));
-      
-      const childRes = await axios.get(
-        `${API_BASE_URL}/person/${childId}`,
-        getAuthConfig()
-      );
-      
-      const child = {
-        ...childRes.data,
-        id: childRes.data.id ?? childRes.data.person_id,
-      };
+      const fatherId =
+        statusRes.data?.father?.id ??
+        statusRes.data?.father?.person_id ??
+        statusRes.data?.father_id;
 
-      if (!child) {
+      const motherId =
+        statusRes.data?.mother?.id ??
+        statusRes.data?.mother?.person_id ??
+        statusRes.data?.mother_id;
+
+      if (!fatherId || !motherId) {
         return {
           opened: false,
-          message: "❌ Không tìm thấy thông tin Người Con.",
+          message: "ℹ️ Birth Order chỉ áp dụng cho con chung của cùng một cặp Cha + Mẹ.",
         };
       }
 
-      const rows = [child, ...siblings];
-
-      if (rows.length <= 1) {
-        return {
-          opened: false,
-          message: "ℹ️ Người con này chưa có anh/chị/em để sắp xếp Birth Order.",
-        };
-      }
-
-      if (!force) {
-        const childYear = getBirthYear(child.birth_date);
-      
-        const hasChildMissingBirthYear = !childYear;
-      
-        const hasSiblingMissingBirthYear = siblings.some(
-          (p) => !getBirthYear(p.birth_date)
-        );
-      
-        const sameYearSiblings = childYear
-          ? siblings.filter(
-              (p) => getBirthYear(p.birth_date) === childYear
-            )
-          : [];
-      
-        const shouldOpenBirthOrder =
-          hasChildMissingBirthYear ||
-          hasSiblingMissingBirthYear ||
-          sameYearSiblings.length > 0;
-      
-        if (!shouldOpenBirthOrder) {
-          setBirthConflictWarning("");
-          return { opened: false };
-        }
-
-        setBirthOrderRows(sortBirthOrderRows(rows));
-      
-        if (hasChildMissingBirthYear) {
-          setBirthConflictWarning(
-            "⚠ Người con đang thêm chưa có năm sinh. Vui lòng cập nhật Birth Order để xác định thứ tự sinh."
-          );
-        } else if (hasSiblingMissingBirthYear) {
-          setBirthConflictWarning(
-            "⚠ Trong nhóm anh/chị/em có người chưa có năm sinh. Vui lòng cập nhật Birth Order để xác định thứ tự sinh."
-          );
-        } else {
-          setBirthConflictWarning(
-            "⚠ Người con đang thêm trùng năm sinh với anh/chị/em. Vui lòng cập nhật Birth Order để xác định thứ tự sinh."
-          );
-        }
-
-      } else {
-        setBirthOrderRows(sortBirthOrderRows(rows));
-      }
-
-      setShowBirthOrderPanel(true);
-      scrollToPanel();
-
-      return { opened: true };
+      return await openPanelByParentPair(childId, fatherId, motherId, {
+        force,
+      });
     } catch (err) {
-      console.error("Open BO panel error:", err);
+      console.error("Open BO panel by child error:", err);
       return {
         opened: false,
         message: "❌ Không thể mở Birth Order.",
