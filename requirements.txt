@@ -6,3 +6,4 @@ python-jose[cryptography]
 mysql-connector-python
 python-dotenv
 python-multipart
+lunarcalendar
