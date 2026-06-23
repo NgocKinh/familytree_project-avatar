@@ -62,3 +62,64 @@ Feedback Module v2
 - Người gửi được thu hồi Feedback khi Admin chưa xử lý.
 - Thêm trạng thái: Mới / Đang xử lý / Đã xử lý.
 - Thêm trang "Feedback của tôi".
+
+## Version 2.1 – Technical Debt
+
+### Route Standardization
+Priority: Low
+
+- Chuẩn hóa toàn bộ route theo kebab-case.
+- Đổi:
+  /parent_child
+  → /parent-child
+
+Mục tiêu:
+- Đồng nhất toàn bộ URL.
+- Tránh nhầm lẫn giữa "_" và "-".
+- Không thực hiện trước Deployment v1.0 để tránh ảnh hưởng các route đã được kiểm thử.
+
+□ Xóa toàn bộ user test.
+□ Thiết kế lại hệ thống tài khoản production.
+□ Tạo mới các tài khoản theo vai trò:
+   - Admin
+   - Co-operator
+   - Member
+   - Viewer
+□ Kiểm tra đăng nhập từng role.
+□ Sau khi xác nhận hoạt động ổn định mới chính thức đưa vào sử dụng.
+
+## Checklist trước Production Deploy
+
+□ Đổi ENV=development → ENV=production
+
+□ Đổi FRONTEND_URL từ:
+   http://localhost:5173
+   →
+   https://<domain-thật>
+
+□ Xóa toàn bộ user test.
+
+□ Tạo danh sách user production.
+
+□ Kiểm tra đăng nhập 4 role:
+   - Admin
+   - Co-operator
+   - Member
+   - Viewer
+
+□ Đổi ENV=production
+□ Đổi FRONTEND_URL sang domain thật
+□ Xóa user test
+□ Tạo user production
+□ Kiểm tra đăng nhập 4 role
+## Version 2.1 – User Management
+
+□ Thêm nút Xóa User cho Admin.
+□ Chỉ Admin được phép xóa user.
+□ Admin được phép xóa user thường và admin khác.
+□ Không cho Admin tự xóa chính mình.
+□ Hiển thị hộp xác nhận trước khi xóa.
+□ Test lại ACL sau khi thêm chức năng.
+Admin được xóa admin khác.
+Admin không được tự xóa chính mình.
+Backend kiểm tra quyền tại thời điểm xóa.
