@@ -97,6 +97,15 @@ Mục tiêu:
    →
    https://<domain-thật>
 
+□ Tạo file frontend-vite/.env.production
+
+□ Cấu hình:
+   VITE_API_BASE_URL=https://familytreeproject-avatar-production.up.railway.app
+
+□ npm run build
+
+□ Upload lại dist lên Cloudflare Pages
+
 □ Xóa toàn bộ user test.
 
 □ Tạo danh sách user production.
@@ -112,6 +121,7 @@ Mục tiêu:
 □ Xóa user test
 □ Tạo user production
 □ Kiểm tra đăng nhập 4 role
+
 ## Version 2.1 – User Management
 
 □ Thêm nút Xóa User cho Admin.

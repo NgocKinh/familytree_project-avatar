@@ -14,5 +14,13 @@
 | ✅ Gate 8 | Announcement | User + Admin | PASS |
 | ✅ Gate 9 | Feedback | User + Admin | PASS |
 | ✅ Gate 10 | Role | ACL Verification | PASS |
-| ✅ Gate 11 | Production Configuration | .env / CORS / Secret Key |  PASS |
+  ⏳  Gate 11 | Production Configuration | ENV / CORS / Secret Key | IN PROGRESS |
 | ⏳ Gate 12 | Production Verification | Final Production Test | TODO |
+
+## Production Endpoints
+
+### Backend (Railway)
+https://familytreeproject-avatar-production.up.railway.app
+
+### Frontend Environment Variable (.env.production)
+VITE_API_BASE_URL=https://familytreeproject-avatar-production.up.railway.app
