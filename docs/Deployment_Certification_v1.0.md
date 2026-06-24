@@ -24,3 +24,23 @@ https://familytreeproject-avatar-production.up.railway.app
 
 ### Frontend Environment Variable (.env.production)
 VITE_API_BASE_URL=https://familytreeproject-avatar-production.up.railway.app
+
+### Frontend (Cloudflare)
+https://silent-limit-c56a.ngocking56.workers.dev
+
+### Railway Project
+harmonious-forgiveness
+
+### Railway Service
+familytree_project-avatar
+
+### Railway Production Branch
+main
+
+### Current Working Branch
+redesign-db
+
+### Recovery Point #1
+GitHub commit: 0b0ed70
+Date: 2026-06-24
+Note: Production deploy paused because Railway was deploying old `main` branch while active code is on `redesign-db`.
