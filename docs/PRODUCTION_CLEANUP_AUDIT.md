@@ -20,6 +20,7 @@
 | _archive_tests/backend_tests_debug/debug_relationship_path_vi.py | READY FOR DELETE | Nằm trong archive test/debug; không thuộc Production |
 | backend/sql_backup/fix_old_precision.sql | KEEP | Migration script chạy một lần để chuẩn hóa dữ liệu; nên lưu làm lịch sử kỹ thuật |
 | backend/sql_backup/trigger_auto_precision.sql | KEEP | Migration/trigger script cho MySQL; là tài liệu kỹ thuật triển khai, không phải tàn dư |
+| backend/_orphan_ARCHIVE | READY FOR DELETE | Không phát hiện import, router hoặc tham chiếu từ Production; chỉ chứa mã archive/orphan
 ## Thu gọn lại kết 
 File	Status	Evidence
 backend/api/clean_parent_api_old.py	READY FOR DELETE	Không import; không router; không frontend gọi
