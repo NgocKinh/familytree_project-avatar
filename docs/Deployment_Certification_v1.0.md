@@ -44,3 +44,5 @@ redesign-db
 GitHub commit: 0b0ed70
 Date: 2026-06-24
 Note: Production deploy paused because Railway was deploying old `main` branch while active code is on `redesign-db`.
+
+Production Deploy Attempt #1 paused after discovering Railway deploys branch 'main' while active development branch is 'redesign-db'.
