@@ -7,3 +7,4 @@ mysql-connector-python
 python-dotenv
 python-multipart
 lunarcalendar
+bcrypt==4.0.1
