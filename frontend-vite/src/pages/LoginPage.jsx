@@ -22,7 +22,7 @@ export default function LoginPage({ setRole, setCurrentUser }) {
       formData.append("password", password);
 
       const res = await axios.post(
-        `${API_BASE_URL}/auth/login`,
+        `${API_BASE_URL}/api/auth/login`,
         formData,
         {
           headers: {
@@ -34,8 +34,13 @@ export default function LoginPage({ setRole, setCurrentUser }) {
       localStorage.setItem("token", res.data.access_token);
       localStorage.setItem("currentUser", JSON.stringify(res.data.user));
 
-      setRole(res.data.user.role || "viewer");
-      setCurrentUser(res.data.user);
+      if (setRole) {
+        setRole(res.data.user.role || "viewer");
+      }
+      
+      if (setCurrentUser) {
+        setCurrentUser(res.data.user);
+      }
 
       navigate("/");
     } catch (err) {

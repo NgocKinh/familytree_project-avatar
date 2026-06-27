@@ -107,11 +107,7 @@ def login(
         .filter(User.username == form_data.username)
         .first()
     )
-    print("LOGIN USERNAME:", form_data.username)
-
-    if user:
-        print("DB USER:", user.username)
-        print("DB HASH:", user.password_hash)
+    
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
