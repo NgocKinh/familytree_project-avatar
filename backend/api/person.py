@@ -17,6 +17,8 @@ from backend.db import get_db
 from backend.models.person_model import Person
 from backend.models.marriage_model import Marriage
 from backend.models.parent_child_model import ParentChild
+from backend.api.auth import get_current_user
+from backend.utils.auth_guard import has_near_access
 from backend.schemas.person_schema import (
     PersonBasicResponse,
     PersonDetailResponse,
@@ -241,8 +243,24 @@ def create_person(data: PersonCreate, db: Session = Depends(get_db)):
     return person_service.create_person(db, data)
 
 @router.put("/{person_id}", response_model=PersonDetailResponse)
-def update_person(person_id: int, payload: dict = Body(...), db: Session = Depends(get_db)):
+def update_person(
+    person_id: int,
+    payload: dict = Body(...),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     try:
+        role = current_user.get("role")
+        user_person_id = current_user.get("person_id")
+
+        if role not in ["admin", "co_operator"]:
+            allowed = has_near_access(db, user_person_id, person_id)
+
+            if not allowed:
+                raise HTTPException(
+                    status_code=403,
+                    detail="Bạn không có quyền chỉnh sửa người này vì không có quan hệ gần.",
+                )
         return person_service.update_person(db, person_id, payload)
     except NotFoundError as e:
 

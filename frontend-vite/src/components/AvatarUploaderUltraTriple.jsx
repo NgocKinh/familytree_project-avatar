@@ -206,8 +206,6 @@ export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated })
   // ===============================
 
   const upload = async () => {
-
-    console.log("🚀 UPLOAD START", personId);
   
     if (uploadLock.current) return;
   
@@ -230,8 +228,6 @@ export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated })
       `${API_BASE_URL}/avatar/upload/${personId}`,
       { method: "POST", body: form }
     );
-  
-    console.log("UPLOAD RESPONSE", res.status);
   
     uploadLock.current = false;
   
@@ -337,7 +333,6 @@ export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated })
 
           <button
             onClick={() => {
-              console.log("CLICK BUTTON");
               upload();
             }}
             className="px-4 py-1 bg-green-600 text-white rounded"

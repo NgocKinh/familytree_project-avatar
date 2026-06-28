@@ -44,7 +44,6 @@ export default function ParentChildForm({ role = "admin", editId = null, onBack 
     async function fetchData() {
       try {
         const personData = await getPersonBasicList();
-        console.log("📌 DEBUG ParentChild persons:", personData);
         setPersons(personData.filter(p => Number(p.delete_status) === 0));
 
       } catch (err) {

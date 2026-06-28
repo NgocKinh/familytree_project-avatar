@@ -5,7 +5,6 @@ import PersonDropdown from "../components/common/PersonDropdown";
 import { useNavigate } from "react-router-dom";
 import { handleAuthError } from "../utils/authErrorHandler";
 function RelationFinderPage() {
-  console.log("RelationFinderPage RENDER");
   const navigate = useNavigate();
   const [persons, setPersons] = useState([]);
   const [personA, setPersonA] = useState("");
@@ -36,9 +35,6 @@ function RelationFinderPage() {
           person_id: p.person_id ?? p.id,
           full_name_vn: p.full_name_vn || buildFullName(p),
         }));
-
-        console.log("PERSONS ACTIVE", personsActive);
-        console.log("PERSON CÓ NĂM SINH", personsActive.find(p => p.birth_date !== null));
 
         const sortedPersons = [...personsActive].sort((a, b) => {
           if (!a.birth_date && !b.birth_date) {
@@ -110,7 +106,6 @@ function RelationFinderPage() {
         )
       );
 
-      console.log("RELATION RESPONSE", res.data);
       setResult(res.data);
     } catch (err) {
       if (handleAuthError(err)) {

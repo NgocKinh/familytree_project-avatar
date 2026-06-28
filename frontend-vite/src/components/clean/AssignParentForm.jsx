@@ -218,7 +218,7 @@ function AssignParentForm() {
         const m = marriages.find(
           x => String(x.id) === String(marriageId)
         );
-        console.log("AP marriageId before BO:", marriageId);
+
         const boResult = skipBirthOrderCheck
           ? { opened: false }
           : await birthOrder.checkBeforeSave(childId, marriageId);

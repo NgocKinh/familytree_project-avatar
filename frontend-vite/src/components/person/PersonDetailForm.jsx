@@ -81,18 +81,14 @@ export default function PersonDetailForm({ personId, role }) {
         try {
           const lunar = await convertSolarToLunar(data.birth_date);
           setForm((prev) => ({ ...prev, asian_birth_date: lunar }));
-        } catch (e) {
-          console.log("⚠ Không convert được ngày sinh âm");
-        }
+        } catch {}
       }
 
       if (data.death_date) {
         try {
           const lunar = await convertSolarToLunar(data.death_date);
           setForm((prev) => ({ ...prev, asian_death_date: lunar }));
-        } catch (e) {
-          console.log("⚠ Không convert được ngày mất âm");
-        }
+        } catch {}
       }
     } catch (err) {
       console.error("❌ Lỗi load detail:", err);

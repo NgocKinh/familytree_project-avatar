@@ -17,7 +17,6 @@ export default function MarriagePage({ role }) {
   const [editId, setEditId] = useState(null);
   const [refreshKey, setRefreshKey] = useState(0);
   const handleEdit = (id) => {
-    console.log("🟦 EDIT ID:", id);
     setEditId(id);
     setActiveTab("form");
   };

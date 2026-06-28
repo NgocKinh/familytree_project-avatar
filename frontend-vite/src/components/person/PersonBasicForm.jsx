@@ -91,8 +91,6 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
     try {
       setLoading(true);
 
-      console.log("🔥 LOAD PERSON ID:", id);
-
       const data = await getPersonById(id);
 
       setForm({
@@ -134,7 +132,6 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
   // 🔵 LOAD DATA WHEN EDIT
   // =========================
   useEffect(() => {
-    console.log("🔥 isEdit:", isEdit, "realId:", realId);
 
     if (isEdit && realId) {
       loadData(realId);
@@ -201,7 +198,6 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
         );
       
         if (realMatches.length > 0) {
-          console.log("🔥 DUPLICATE FOUND", realMatches);
           setDuplicateMessage(JSON.stringify(realMatches, null, 2));
           setPendingPayload(payload);
           setShowPendingModal(true);
@@ -219,7 +215,6 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
 
     try {
       if (isEdit) {
-        console.log("🔥 BEFORE API");
       
         await updatePerson(realId, payload);
       
@@ -233,8 +228,6 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
       }
     
       const res = await addPerson(payload);
-    
-      console.log("🔥 ADD RESPONSE:", res);
     
       if (mode === "save_add_new") {
         alert("✅ Đã lưu. Tiếp tục nhập người mới.");

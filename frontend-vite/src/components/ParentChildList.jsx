@@ -19,7 +19,7 @@ function ParentChildList({ onEdit, role }) {
 
   const loadData = async () => {
     const data = await getParentChildList();
-    console.log("🔥 PARENT_CHILD DATA:", data);
+
     setRelations(data);
   };
 

@@ -24,7 +24,6 @@ function AnnouncementAdminPage() {
             }
 
             const json = await res.json();
-            console.log("📢 ADMIN ANNOUNCEMENT LIST:", json);
             if (json.success) {
                 setAnnouncements(json.data || []);
             }

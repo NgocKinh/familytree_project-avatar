@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import useBirthOrder from "../birth_order/useBirthOrder";
 import { makeApiUrl } from "../../api/apiConfig";
 function AssignChildToParentForm() {
-  console.log("AC COMPONENT RENDER");
+
   const navigate = useNavigate();
 
   const getAuthConfig = () => {

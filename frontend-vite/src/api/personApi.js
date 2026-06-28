@@ -23,14 +23,11 @@ const BACKEND_BASE_URL = API_BASE_URL.replace("/api", "");
 // ============================================
 export const getPersonList = async () => {
   try {
-    console.log("📡 CALL URL:", `${API_URL}/`);
 
     const res = await axios.get(`${API_URL}/`, {
       timeout: 5000,
       params: { include_hidden: true },
     });
-
-    console.log("✅ RESPONSE:", res.data);
 
     // ✅ tương thích cả format cũ và mới
     if (Array.isArray(res.data)) return res.data;
@@ -46,7 +43,6 @@ export const getPersonList = async () => {
 
     // 🔁 retry 1 lần
     try {
-      console.log("🔁 RETRY...");
       const res = await axios.get(`${API_URL}/`, {
         timeout: 5000,
         params: { include_hidden: true },

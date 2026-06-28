@@ -33,6 +33,7 @@ export default function PersonList({ role }) {
   const [searchCurrentIndex, setSearchCurrentIndex] = useState(0);
   const [checkingTreeId, setCheckingTreeId] = useState(null);
   const [checkingFamilyId, setCheckingFamilyId] = useState(null);
+  const [checkingEditId, setCheckingEditId] = useState(null);
   const rowRefs = useRef({});
   // ✅ [CHANGE 1]: Chuẩn hóa ID vì backend có lúc trả id, có lúc trả person_id
   const getPersonId = (person) => person?.person_id ?? person?.id;
@@ -143,6 +144,27 @@ export default function PersonList({ role }) {
       alert("Không kiểm tra được quyền truy cập.");
     } finally {
       setCheckingFamilyId(null);
+    }
+  };
+  const handleEditPerson = async (personId) => {
+    if (role === "admin" || role === "co_operator") {
+      navigate(`/person/basic/${personId}`);
+      return;
+    }
+  
+    try {
+      setCheckingEditId(personId);
+  
+      const allowed = await checkNearAccess(personId, "person:update");
+  
+      if (!allowed) {
+        alert("Bạn không có quyền chỉnh sửa người này vì không có quan hệ gần.");
+        return;
+      }
+  
+      navigate(`/person/basic/${personId}`);
+    } finally {
+      setCheckingEditId(null);
     }
   };
   const handleSearchJump = () => {
@@ -434,10 +456,16 @@ export default function PersonList({ role }) {
                   </button>
                   {role !== "viewer" && (
                     <button
-                      onClick={() => navigate(`/person/basic/${getPersonId(p)}`)}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 py-1 rounded"
+                      onClick={() => handleEditPerson(getPersonId(p))}
+                      disabled={checkingEditId === getPersonId(p)}
+                      className="bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-400 text-white px-2 py-1 rounded"
+                      title={
+                        checkingEditId === getPersonId(p)
+                          ? "Đang kiểm tra quyền chỉnh sửa..."
+                          : "Chỉnh sửa"
+                      }
                     >
-                      ✏️
+                      {checkingEditId === getPersonId(p) ? "⏳" : "✏️"}
                     </button>
                   )}
 

@@ -26,11 +26,8 @@ export default function MarriageList({ onEdit, role }) {
         },
         getAuthConfig()
       );
-  
-      console.log("✅ Priority saved");
-    } catch (err) {
-      console.error("❌ Save priority failed", err);
-    }
+
+    } catch {}
   };
   const [marriages, setMarriages] = useState([]);
   const [mode, setMode] = useState("full");

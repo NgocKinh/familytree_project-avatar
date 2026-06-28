@@ -27,7 +27,7 @@ import PersonSelectWithAvatarV2 from "../common/PersonSelectWithAvatarV2";
 // Component chính
 // ======================================================================
 export default function MarriageForm({ role = "admin", editId = null, onBack }) {
-  console.log("🔥 MARRIAGE FORM RENDER");
+
   if (role === "viewer") {
     return (
       <p className="text-red-500 text-center">
@@ -71,9 +71,9 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
   useEffect(() => {
     async function fetchPersons() {
       try {
-        console.log("🔥 FETCH PERSONS START");
+
         const list = await getPersonBasicList();
-        console.log("🔥 FETCH PERSONS RESULT:", list);
+
         const sorted = [...list]
           .filter((p) => p.delete_status === undefined || Number(p.delete_status) === 0)
           .sort((a, b) => {
@@ -239,7 +239,6 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
       }
       let res;
       if (editId) {
-        console.log("🟦 EDIT ID:", editId);
         res = await updateMarriage(editId, {
           spouse_a_id,
           spouse_b_id,
