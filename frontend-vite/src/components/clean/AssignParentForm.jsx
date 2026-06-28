@@ -51,7 +51,7 @@ function AssignParentForm() {
     getAuthConfig,
   });
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/marriage`)
+    axios.get(`${API_BASE_URL}/person/`)
       .then(res => {
         const data = res.data || [];
 

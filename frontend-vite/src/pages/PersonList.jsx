@@ -146,23 +146,39 @@ export default function PersonList({ role }) {
       setCheckingFamilyId(null);
     }
   };
-  const handleEditPerson = async (personId) => {
-    if (role === "admin" || role === "co_operator") {
-      navigate(`/person/basic/${personId}`);
-      return;
-    }
+  const handleEditPerson = async (id) => {
+    if (!id) return;
+  
+    setCheckingEditId(id);
   
     try {
-      setCheckingEditId(personId);
-  
-      const allowed = await checkNearAccess(personId, "person:update");
-  
-      if (!allowed) {
-        alert("Bạn không có quyền chỉnh sửa người này vì không có quan hệ gần.");
+      if (role === "admin" || role === "co_operator") {
+        navigate(`/person/basic/${id}`);
         return;
       }
   
-      navigate(`/person/basic/${personId}`);
+      const res = await fetch(makeApiUrl("/auth/check-near-access"), {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+        body: JSON.stringify({
+          target_person_id: id,
+          action: "family:view",
+        }),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok && data.allowed) {
+        navigate(`/person/basic/${id}`);
+        return;
+      }
+  
+      alert("Bạn không có quyền chỉnh sửa người này vì không có quan hệ gần.");
+    } catch (err) {
+      alert("Không kiểm tra được quyền chỉnh sửa.");
     } finally {
       setCheckingEditId(null);
     }

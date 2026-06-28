@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { getParentChildList, deleteParentChild } from "../api/parentChildApi";
 import { formatName } from "../utils/formatName";
 import { useNavigate } from "react-router-dom";
-function ParentChildList({ onEdit, role }) {
+function ParentChildList({ role }) {
   const navigate = useNavigate();
   const [relations, setRelations] = useState([]);
   const [mode, setMode] = useState("full");
@@ -232,14 +232,7 @@ function ParentChildList({ onEdit, role }) {
                 {/* Thao tác */}
                 <td className="border px-4 py-2">
                   <div className="flex justify-end gap-2">
-                    <button
-                      onClick={() => onEdit(r.id)}
-                      className="bg-yellow-400 hover:bg-yellow-500 text-white px-3 py-1 rounded"
-                      title="Sửa quan hệ cha/con"
-                    >
-                      ✏️
-                    </button>
-
+                
                     <button
                       type="button"
                       title="Sắp xếp thứ tự anh/chị/em"

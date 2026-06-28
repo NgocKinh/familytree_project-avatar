@@ -136,3 +136,10 @@ Backend kiểm tra quyền tại thời điểm xóa.
 
 # DB PASSWORD & SECRET KEY
 Đã lộ DB_PASSWORD và SECRET_KEY trong chat. Sau khi ổn định production, nên đổi lại password/secret trên Railway.
+
+## Security & Privacy Enhancements
+
+- Relationship Finder:
+  - Hạn chế member tra cứu quan hệ.
+  - Chỉ cho phép khi cả hai người đều thuộc phạm vi "near access".
+  - Mục tiêu: tránh suy luận thông tin về các nhánh gia đình ngoài phạm vi được phép.

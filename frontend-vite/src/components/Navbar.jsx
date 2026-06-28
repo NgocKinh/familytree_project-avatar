@@ -106,15 +106,19 @@ const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
                   <span>Tìm quan hệ</span>
                 </Link>
 
-                <Link to="/parent_child" className={actionClass("/parent_child")}>
-                  <FaSitemap />
-                  <span>Cha-Con</span>
-                </Link>
+                {isAdminArea && (
+                  <Link to="/parent_child" className={actionClass("/parent_child")}>
+                    <FaSitemap />
+                    <span>Cha-Con</span>
+                  </Link>
+                )}
 
-                <Link to="/marriage" className={actionClass("/marriage")}>
-                  <FaHeart />
-                  <span>Hôn nhân</span>
-                </Link>
+                {isAdminArea && (
+                  <Link to="/marriage" className={actionClass("/marriage")}>
+                    <FaHeart />
+                    <span>Hôn nhân</span>
+                  </Link>
+                )}
 
                 <Link to="/family-setup" className={actionClass("/family-setup")}>
                   <FaUsers />

@@ -57,7 +57,7 @@ function AssignChildToParentForm() {
     getAuthConfig,
   });
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/person`)
+    axios.get(`${API_BASE_URL}/person/`)
       .then(res => {
         const data = res.data || [];
 
