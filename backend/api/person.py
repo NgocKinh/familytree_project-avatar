@@ -18,7 +18,7 @@ from backend.models.person_model import Person
 from backend.models.marriage_model import Marriage
 from backend.models.parent_child_model import ParentChild
 from backend.api.auth import get_current_user
-from backend.utils.auth_guard import has_near_access
+from backend.utils.auth_guard import is_near_person
 from backend.schemas.person_schema import (
     PersonBasicResponse,
     PersonDetailResponse,
@@ -254,7 +254,7 @@ def update_person(
         user_person_id = current_user.get("person_id")
 
         if role not in ["admin", "co_operator"]:
-            allowed = has_near_access(db, user_person_id, person_id)
+            allowed = is_near_person(db, user_person_id, person_id)
 
             if not allowed:
                 raise HTTPException(
