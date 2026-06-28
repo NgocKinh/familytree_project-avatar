@@ -11,7 +11,7 @@ const PERSON_URL = `${API_BASE_URL}/person`;
 
 export const getPersonBasicList = async () => {
   try {
-    const res = await axios.get(PERSON_URL); 
+    const res = await axios.get(`${PERSON_URL}/`);
     return res.data || [];
   } catch (err) {
     console.error("❌ Lỗi tải danh sách cơ bản:", err.response?.status, err.response?.data || err);

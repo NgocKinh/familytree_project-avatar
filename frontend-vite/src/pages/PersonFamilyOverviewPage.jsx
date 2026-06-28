@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
-const API_BASE = "http://127.0.0.1:8000/api";
+import { makeApiUrl } from "../api/apiConfig";
 
 function displayName(p) {
   if (!p) return "Chưa có dữ liệu";
@@ -62,7 +61,7 @@ export default function PersonFamilyOverviewPage() {
       setError("");
 
       const res = await fetch(
-        `${API_BASE}/parent_child/person/${id}/family`,
+        makeApiUrl(`/parent_child/person/${id}/family`),
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

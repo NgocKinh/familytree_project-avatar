@@ -21,8 +21,8 @@ function RelationFinderPage() {
     async function fetchPersons() {
       try {
         const res = await axios.get(
-          makeApiUrl("/person")
-        )
+          makeApiUrl("/person/")
+        );
         const rawPersons = Array.isArray(res.data)
           ? res.data
           : Array.isArray(res.data?.data)

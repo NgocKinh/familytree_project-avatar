@@ -32,7 +32,7 @@ export const getMarriageById = async (id) => {
 // ===============================
 export const addMarriage = async (data) => {
   const res = await axios.post(
-    `${MARRIAGE_URL}/`,
+    MARRIAGE_URL,
     data,
     getAuthConfig()
   );

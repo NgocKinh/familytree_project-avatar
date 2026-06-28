@@ -3,7 +3,7 @@
 // =======================================================================
 import { handleAuthError } from "../utils/authErrorHandler";
 import { API_BASE_URL } from "./apiConfig";
-const BASE = `${API_BASE_URL}/person_pending`;
+const BASE = `${API_BASE_URL}/person_pending/`;
 
 function getAuthHeaders(extraHeaders = {}) {
   const token = localStorage.getItem("token");

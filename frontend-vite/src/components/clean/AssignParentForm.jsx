@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../../api/apiConfig";
+import { makeApiUrl } from "../../api/apiConfig";
 import PersonDropdown from "../common/PersonDropdown";
 import MarriageDropdown from "../common/MarriageDropdown";
 import { formatName } from "../../utils/formatName";
@@ -50,7 +51,7 @@ function AssignParentForm() {
     getAuthConfig,
   });
   useEffect(() => {
-    axios.get(`${API_BASE_URL}/person`)
+    axios.get(`${API_BASE_URL}/marriage`)
       .then(res => {
         const data = res.data || [];
 
@@ -328,7 +329,7 @@ function AssignParentForm() {
     try {
       const token = localStorage.getItem("token");
   
-      const res = await fetch("http://127.0.0.1:8000/api/auth/check-near-access", {
+      const res = await fetch(makeApiUrl("/auth/check-near-access"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -11,7 +11,7 @@ const getAuthConfig = () => ({
 // 🔹 GET ALL: Lấy toàn bộ quan hệ cha–con
 // ===============================
 export const getParentChildList = async () => {
-  const res = await axios.get(PARENT_CHILD_URL);
+  const res = await axios.get(`${PARENT_CHILD_URL}/`);
   return res.data;
 };
 

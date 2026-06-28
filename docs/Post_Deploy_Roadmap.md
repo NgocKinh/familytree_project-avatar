@@ -133,3 +133,6 @@ Mục tiêu:
 Admin được xóa admin khác.
 Admin không được tự xóa chính mình.
 Backend kiểm tra quyền tại thời điểm xóa.
+
+# DB PASSWORD & SECRET KEY
+Đã lộ DB_PASSWORD và SECRET_KEY trong chat. Sau khi ổn định production, nên đổi lại password/secret trên Railway.

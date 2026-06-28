@@ -1,6 +1,5 @@
 import { handleAuthError } from "./authErrorHandler";
-
-const API_BASE_URL = "http://localhost:8000/api";
+import { API_BASE_URL } from "../api/apiConfig";
 
 export async function apiClient(path, options = {}) {
   const token = localStorage.getItem("token");

@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../api/apiConfig";
-
+import { makeApiUrl } from "../api/apiConfig";
 export default function LoginPage({ setRole, setCurrentUser }) {
   const navigate = useNavigate();
 
@@ -22,7 +21,7 @@ export default function LoginPage({ setRole, setCurrentUser }) {
       formData.append("password", password);
 
       const res = await axios.post(
-        `${API_BASE_URL}/api/auth/login`,
+        makeApiUrl("/auth/login"),
         formData,
         {
           headers: {

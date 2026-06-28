@@ -7,6 +7,7 @@ import { formatName } from "../../utils/formatName";
 import { handleAuthError } from "../../utils/authErrorHandler";
 import { useNavigate } from "react-router-dom";
 import useBirthOrder from "../birth_order/useBirthOrder";
+import { makeApiUrl } from "../../api/apiConfig";
 function AssignChildToParentForm() {
   console.log("AC COMPONENT RENDER");
   const navigate = useNavigate();
@@ -76,7 +77,7 @@ function AssignChildToParentForm() {
   const checkParentStatus = async (childId, currentNoMarriage = noMarriage) => {
     try {
       const res = await fetch(
-        `http://localhost:8000/api/parent_child/child/${childId}/parents-status`
+        makeApiUrl(`/parent_child/child/${childId}/parents-status`)
       );
   
       const data = await res.json();
@@ -361,7 +362,6 @@ function AssignChildToParentForm() {
                     setParentId("");
                     setError("");
                     setSuccess("");
-                    setBoConfirmed(false);
                   }}
                   disabled={lockForm || hasFather}
                 />{" "}
@@ -378,7 +378,6 @@ function AssignChildToParentForm() {
                     setParentId("");
                     setError("");
                     setSuccess("");
-                    setBoConfirmed(false);
                   }}
                   disabled={lockForm || hasMother}
                 />{" "}
@@ -397,7 +396,6 @@ function AssignChildToParentForm() {
                 setParentId(id);
                 setError("");
                 setSuccess("");
-                setBoConfirmed(false);
               }}
               persons={persons}
               disabled={lockForm || !type}
