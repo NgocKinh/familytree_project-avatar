@@ -143,3 +143,20 @@ Backend kiểm tra quyền tại thời điểm xóa.
   - Hạn chế member tra cứu quan hệ.
   - Chỉ cho phép khi cả hai người đều thuộc phạm vi "near access".
   - Mục tiêu: tránh suy luận thông tin về các nhánh gia đình ngoài phạm vi được phép.
+
+## UX Improvements
+
+### Person List
+
+- Add loading state before enabling search.
+- While /person/ API is loading, display:
+  "⏳ Đang tải danh sách thành viên..."
+  instead of
+  "Không tìm thấy thành viên phù hợp".
+
+Reason:
+Avoid confusing first-time users on slow networks or mobile devices.
+
+## Production Enhancement (không chặn phát hành v1.0):
+
+Cấu hình Cloudflare SPA fallback để refresh hoặc truy cập trực tiếp các route (/marriage, /person, /tree/...) không bị HTTP 404.

@@ -102,7 +102,7 @@ function RelationFinderPage() {
     try {
       const res = await axios.get(
         makeApiUrl(
-          `/relationship?source_id=${parseInt(personA)}&target_id=${parseInt(personB)}`
+          `/relationship?source_id=${parseInt(personB)}&target_id=${parseInt(personA)}`
         )
       );
 
@@ -243,7 +243,12 @@ function RelationFinderPage() {
           </div>
 
           <div className="inline-block px-5 py-2 rounded-full bg-emerald-600 text-white text-xl font-bold shadow">
-            {result.result?.relation || result.relationship}
+          {
+            result.relation ||
+            result.result?.relation ||
+            result.relationship ||
+            "Chưa xác định quan hệ"
+          }
           </div>
 
           <div className="text-lg my-2 text-gray-700">

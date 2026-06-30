@@ -346,7 +346,6 @@ def build_standard_output(a, b, relation, path, metadata):
                 "call": None
             }
 
-        gender_b = get_gender(b)
         spouse_gender = get_gender(spouse)
 
         birth_a = get_birth(a)
@@ -354,31 +353,28 @@ def build_standard_output(a, b, relation, path, metadata):
 
         older = False
         if birth_a and birth_b:
-            older = birth_b < birth_a
+            older = birth_a < birth_b
 
-        # =========================
-        # 🔥 CORE LOGIC FIX
-        # =========================
-
+        # A là anh/chị/em vợ/chồng của B
         if spouse_gender == "female":
-            # bên vợ
-            if gender_b == "male":
+            # A là anh/chị/em của vợ B
+            if gender_a == "male":
                 rel = "anh vợ" if older else "em vợ"
             else:
                 rel = "chị vợ" if older else "em vợ"
 
         else:
-            # bên chồng
-            if gender_b == "male":
-                rel = "anh rể" if older else "em rể"
+            # A là anh/chị/em của chồng B
+            if gender_a == "male":
+                rel = "anh chồng" if older else "em chồng"
             else:
-                rel = "chị dâu" if older else "em dâu"
+                rel = "chị chồng" if older else "em chồng"
 
         return {
             "relation": rel,
             "relation_basic": "sibling_in_law",
             "relation_side": None,
-            "gender": gender_b,
+            "gender": gender_a,
             "call": {
                 "north": rel,
                 "south": rel

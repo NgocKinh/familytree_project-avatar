@@ -11,8 +11,6 @@ import { API_BASE_URL } from "./apiConfig";
 // ============================================
 // BASE URL
 // ============================================
-// ❌ Flask (không dùng nữa)
-// const PERSON_URL = "http://127.0.0.1:5000/api/person";
 
 // ✅ FastAPI
 const API_URL = `${API_BASE_URL}/person`;
@@ -132,7 +130,7 @@ export const getPersonById = async (id) => {
 // ============================================
 export const addPerson = async (data) => {
   try {
-    const res = await axios.post(`${API_URL}`, data, {
+    const res = await axios.post(`${API_URL}/`, data, {
       headers: { "Content-Type": "application/json" },
     });
     return res.data;
