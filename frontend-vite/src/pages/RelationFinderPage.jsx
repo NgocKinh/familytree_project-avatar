@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { makeApiUrl } from "../api/apiConfig";
+import { makeApiUrl, API_BASE_URL } from "../api/apiConfig";
 import PersonDropdown from "../components/common/PersonDropdown";
 import { useNavigate } from "react-router-dom";
 import { handleAuthError } from "../utils/authErrorHandler";
+const BACKEND_BASE_URL = API_BASE_URL.replace("/api", "");
 function RelationFinderPage() {
   const navigate = useNavigate();
   const [persons, setPersons] = useState([]);
@@ -102,7 +103,7 @@ function RelationFinderPage() {
     try {
       const res = await axios.get(
         makeApiUrl(
-          `/relationship?source_id=${parseInt(personB)}&target_id=${parseInt(personA)}`
+          `/relationship?source_id=${parseInt(personA)}&target_id=${parseInt(personB)}`
         )
       );
 
@@ -129,7 +130,7 @@ function RelationFinderPage() {
   const selectedB = persons.find(
     (p) => p.person_id === Number(personB)
   );
-
+  
   return (
     <div className="w-full p-4 bg-white">
       
@@ -235,6 +236,13 @@ function RelationFinderPage() {
           </div>
 
           <div className="text-2xl font-bold text-slate-800">
+            {selectedA && (
+              <img
+                src={getAvatarURL(selectedA)}
+                onError={(e) => handleAvatarError(e, selectedA?.gender)}
+                className="w-20 h-20 rounded-full object-cover mx-auto mb-2 border"
+              />
+            )}
             {selectedA?.full_name_vn}
           </div>
 
@@ -256,6 +264,13 @@ function RelationFinderPage() {
           </div>
 
           <div className="text-2xl font-bold text-slate-800">
+            {selectedB && (
+              <img
+                src={getAvatarURL(selectedB)}
+                onError={(e) => handleAvatarError(e, selectedB?.gender)}
+                className="w-20 h-20 rounded-full object-cover mx-auto mb-2 border"
+              />
+            )}
             {selectedB?.full_name_vn}
           </div>
 

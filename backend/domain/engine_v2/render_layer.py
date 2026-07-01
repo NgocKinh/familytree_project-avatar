@@ -339,14 +339,13 @@ def build_standard_output(a, b, relation, path, metadata):
 
         siblings = get_siblings(spouse)
 
+        # B phải là anh/chị/em ruột của vợ/chồng A
         if b not in siblings:
             return {
                 "relation": "chưa xác định mối quan hệ",
                 "gender": gender_a,
                 "call": None
             }
-
-        spouse_gender = get_gender(spouse)
 
         birth_a = get_birth(a)
         birth_b = get_birth(b)
@@ -355,20 +354,13 @@ def build_standard_output(a, b, relation, path, metadata):
         if birth_a and birth_b:
             older = birth_a < birth_b
 
-        # A là anh/chị/em vợ/chồng của B
-        if spouse_gender == "female":
-            # A là anh/chị/em của vợ B
-            if gender_a == "male":
-                rel = "anh vợ" if older else "em vợ"
-            else:
-                rel = "chị vợ" if older else "em vợ"
-
+        # UI hiển thị: A là ... của B
+        # Nếu A là nam, A là rể của gia đình B
+        # Nếu A là nữ, A là dâu của gia đình B
+        if gender_a == "male":
+            rel = "anh rể" if older else "em rể"
         else:
-            # A là anh/chị/em của chồng B
-            if gender_a == "male":
-                rel = "anh chồng" if older else "em chồng"
-            else:
-                rel = "chị chồng" if older else "em chồng"
+            rel = "chị dâu" if older else "em dâu"
 
         return {
             "relation": rel,

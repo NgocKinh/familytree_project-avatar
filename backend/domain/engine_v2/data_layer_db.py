@@ -109,6 +109,36 @@ def get_spouse(person_id):
 
     return row["spouse_a_id"]
 
+def get_spouses(person_id):
+
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+
+    cur.execute(
+        """
+        SELECT spouse_a_id, spouse_b_id
+        FROM marriages
+        WHERE spouse_a_id = %s
+           OR spouse_b_id = %s
+        """,
+        (person_id, person_id)
+    )
+
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    spouses = []
+
+    for row in rows:
+        if row["spouse_a_id"] == person_id:
+            spouses.append(row["spouse_b_id"])
+        else:
+            spouses.append(row["spouse_a_id"])
+
+    return spouses   
+
 # =====================================
 # 🔵 GET CHILDREN FROM MYSQL
 # =====================================
