@@ -236,6 +236,7 @@ function RelationFinderPage() {
           </div>
 
           <div className="text-2xl font-bold text-slate-800">
+          {/*
             {selectedA && (
               <img
                 src={getAvatarURL(selectedA)}
@@ -243,6 +244,7 @@ function RelationFinderPage() {
                 className="w-20 h-20 rounded-full object-cover mx-auto mb-2 border"
               />
             )}
+            */}    
             {selectedA?.full_name_vn}
           </div>
 
@@ -264,6 +266,7 @@ function RelationFinderPage() {
           </div>
 
           <div className="text-2xl font-bold text-slate-800">
+          {/*
             {selectedB && (
               <img
                 src={getAvatarURL(selectedB)}
@@ -271,9 +274,10 @@ function RelationFinderPage() {
                 className="w-20 h-20 rounded-full object-cover mx-auto mb-2 border"
               />
             )}
+            */}
             {selectedB?.full_name_vn}
           </div>
-
+        
         </div>
 
         {/* EXTRA INFO */}
