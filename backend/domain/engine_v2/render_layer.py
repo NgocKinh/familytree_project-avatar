@@ -329,55 +329,20 @@ def build_standard_output(a, b, relation, path, metadata):
     if relation == "sibling_in_law":
 
         gender_a = get_gender(a)
-
+        kind = metadata.get("kind") if metadata else None
         # Case 1: A là vợ/chồng của anh/chị/em ruột B
-        for sib in get_siblings(b):
-            if a in get_spouses(sib):
-                birth_sib = get_birth(sib)
-                birth_b = get_birth(b)
-                older = False
-                if birth_sib and birth_b:
-                    older = birth_sib < birth_b
-                if gender_a == "male":
-                    rel = "anh rể" if older else "em rể"
-                else:
-                    rel = "chị dâu" if older else "em dâu"
-
-                return {
-                    "relation": rel,
-                    "relation_basic": "sibling_in_law",
-                    "relation_side": None,
-                    "gender": gender_a,
-                    "call": {
-                        "north": rel,
-                        "south": rel
-                    }
-                }
-
-        # Case 2: A là anh/chị/em ruột của vợ/chồng B
-        spouse_b = get_spouse(b)
-
-        if spouse_b:
-            for sib in get_siblings(spouse_b):
-                if a == sib:
-                    spouse_gender = get_gender(spouse_b)
-
-                    birth_a = get_birth(a)
-                    birth_spouse_b = get_birth(spouse_b)
+        if kind == "spouse_sibling":
+            for sib in get_siblings(b):
+                if a in get_spouses(sib):
+                    birth_sib = get_birth(sib)
+                    birth_b = get_birth(b)
                     older = False
-                    if birth_a and birth_spouse_b:
-                        older = birth_a < birth_spouse_b
-
-                    if spouse_gender == "female":
-                        if gender_a == "male":
-                            rel = "anh vợ" if older else "em vợ"
-                        else:
-                            rel = "chị vợ" if older else "em vợ"
+                    if birth_sib and birth_b:
+                        older = birth_sib < birth_b
+                    if gender_a == "male":
+                        rel = "anh rể" if older else "em rể"
                     else:
-                        if gender_a == "male":
-                            rel = "anh chồng" if older else "em chồng"
-                        else:
-                            rel = "chị chồng" if older else "em chồng"
+                        rel = "chị dâu" if older else "em dâu"
 
                     return {
                         "relation": rel,
@@ -389,6 +354,43 @@ def build_standard_output(a, b, relation, path, metadata):
                             "south": rel
                         }
                     }
+
+        # Case 2: A là anh/chị/em ruột của vợ/chồng B
+        if kind == "sibling_spouse":
+            spouse_b = get_spouse(b)
+
+            if spouse_b:
+                for sib in get_siblings(spouse_b):
+                    if a == sib:
+                        spouse_gender = get_gender(spouse_b)
+
+                        birth_a = get_birth(a)
+                        birth_spouse_b = get_birth(spouse_b)
+                        older = False
+                        if birth_a and birth_spouse_b:
+                            older = birth_a < birth_spouse_b
+
+                        if spouse_gender == "female":
+                            if gender_a == "male":
+                                rel = "anh vợ" if older else "em vợ"
+                            else:
+                                rel = "chị vợ" if older else "em vợ"
+                        else:
+                            if gender_a == "male":
+                                rel = "anh chồng" if older else "em chồng"
+                            else:
+                                rel = "chị chồng" if older else "em chồng"
+
+                        return {
+                            "relation": rel,
+                            "relation_basic": "sibling_in_law",
+                            "relation_side": None,
+                            "gender": gender_a,
+                            "call": {
+                                "north": rel,
+                                "south": rel
+                            }
+                        }
 
         return {
             "relation": "chưa xác định mối quan hệ",
