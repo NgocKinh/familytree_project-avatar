@@ -52,11 +52,11 @@ def render_relationship(a, b, normalized, metadata):
             gender_spouse = get_gender(spouse)
             print("DEBUG gender_spouse =", gender_spouse)       
             if get_gender(a) == "male":
-                if hierarchy == "older":
+                if hierarchy == "younger":
                     return "anh rể"
                 return "em rể"
 
-            if hierarchy == "older":
+            if hierarchy == "younger":
                 return "chị dâu"
             return "em dâu"
 
