@@ -34,7 +34,7 @@ def render_relationship(a, b, normalized, metadata):
 
             if gender_inlaw == "male":
 
-                if gender_b == "male":
+                if get_gender(a) == "male":
                     if hierarchy == "older":
                         return "anh chồng"
                     return "em chồng"
