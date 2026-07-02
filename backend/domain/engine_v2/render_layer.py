@@ -329,16 +329,15 @@ def build_standard_output(a, b, relation, path, metadata):
     if relation == "sibling_in_law":
 
         gender_a = get_gender(a)
-        birth_a = get_birth(a)
-        birth_b = get_birth(b)
-
-        older = False
-        if birth_a and birth_b:
-            older = birth_a < birth_b
 
         # Case 1: A là vợ/chồng của anh/chị/em ruột B
         for sib in get_siblings(b):
             if a in get_spouses(sib):
+                birth_sib = get_birth(sib)
+                birth_b = get_birth(b)
+                older = False
+                if birth_sib and birth_b:
+                    older = birth_sib < birth_b
                 if gender_a == "male":
                     rel = "anh rể" if older else "em rể"
                 else:
@@ -362,6 +361,12 @@ def build_standard_output(a, b, relation, path, metadata):
             for sib in get_siblings(spouse_b):
                 if a == sib:
                     spouse_gender = get_gender(spouse_b)
+
+                    birth_a = get_birth(a)
+                    birth_spouse_b = get_birth(spouse_b)
+                    older = False
+                    if birth_a and birth_spouse_b:
+                        older = birth_a < birth_spouse_b
 
                     if spouse_gender == "female":
                         if gender_a == "male":
