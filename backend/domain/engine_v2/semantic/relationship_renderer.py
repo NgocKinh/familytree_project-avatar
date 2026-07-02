@@ -14,7 +14,8 @@ def render_relationship(a, b, normalized, metadata):
 
         hierarchy = metadata.get("hierarchy")
         kind = metadata.get("kind")
-
+        print("DEBUG kind =", kind)
+        print("DEBUG metadata =", metadata)       
         if kind == "sibling_spouse":
 
             gender_b = get_gender(b)
@@ -47,10 +48,10 @@ def render_relationship(a, b, normalized, metadata):
 
         if kind == "spouse_sibling":
 
-            inlaw = metadata.get("inlaw")
-            gender_inlaw = get_gender(inlaw)
-
-            if gender_inlaw == "male":
+            spouse = metadata.get("spouse")
+            gender_spouse = get_gender(spouse)
+            print("DEBUG gender_spouse =", gender_spouse)       
+            if gender_spouse == "male":
                 if hierarchy == "older":
                     return "anh rể"
                 return "em rể"
