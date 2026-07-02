@@ -51,7 +51,7 @@ def render_relationship(a, b, normalized, metadata):
             spouse = metadata.get("spouse")
             gender_spouse = get_gender(spouse)
             print("DEBUG gender_spouse =", gender_spouse)       
-            if gender_spouse == "male":
+            if get_gender(a) == "male":
                 if hierarchy == "older":
                     return "anh rể"
                 return "em rể"
