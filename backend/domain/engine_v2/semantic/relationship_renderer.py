@@ -15,7 +15,7 @@ def render_relationship(a, b, normalized, metadata):
         hierarchy = metadata.get("hierarchy")
         kind = metadata.get("kind")
 
-        if kind == "spouse_sibling":
+        if kind == "sibling_spouse":
 
             gender_b = get_gender(b)
             spouse = metadata.get("spouse")
@@ -45,7 +45,7 @@ def render_relationship(a, b, normalized, metadata):
 
             return relation
 
-        if kind == "sibling_spouse":
+        if kind == "spouse_sibling":
 
             inlaw = metadata.get("inlaw")
             gender_inlaw = get_gender(inlaw)
