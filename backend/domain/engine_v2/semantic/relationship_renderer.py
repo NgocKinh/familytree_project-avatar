@@ -21,25 +21,25 @@ def render_relationship(a, b, normalized, metadata):
             inlaw = metadata.get("inlaw")
             gender_inlaw = get_gender(inlaw)
 
-            if gender_inlaw == "female":
-
-                if gender_b == "male":
-                    if hierarchy == "older":
-                        return "anh vợ"
-                    return "em vợ"
-
-                if hierarchy == "older":
-                    return "chị vợ"
-                return "em vợ"
-
             if gender_inlaw == "male":
 
                 if get_gender(a) == "male":
-                    if hierarchy == "older":
+                    if hierarchy == "younger":
+                        return "anh vợ"
+                    return "em vợ"
+
+                if hierarchy == "younger":
+                    return "chị vợ"
+                return "em vợ"
+
+            if gender_inlaw == "female":
+
+                if get_gender(a) == "male":
+                    if hierarchy == "younger":
                         return "anh chồng"
                     return "em chồng"
 
-                if hierarchy == "older":
+                if hierarchy == "younger":
                     return "chị chồng"
                 return "em chồng"
 
