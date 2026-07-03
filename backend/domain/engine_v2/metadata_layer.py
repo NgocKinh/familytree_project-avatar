@@ -297,6 +297,16 @@ def extract_metadata(path, source_person, target_person):
             path
         )
     # =====================================
+    # FIX COUSIN
+    # =====================================
+
+    if steps == ["parent", "parent", "child", "child"]:
+
+        a = source_person.get("id")
+        b = target_person.get("id")
+
+        metadata = extract_cousin_metadata(a, b)    
+    # =====================================
     # FIX SIBLING
     # =====================================
 
@@ -524,7 +534,70 @@ def extract_uncle_aunt_metadata(a, b):
         }
 
     return None
+   
+# =========================================================
+# EXTRACT COUSIN METADATA
+# =========================================================
 
+def extract_cousin_metadata(a, b):
+
+    parents_a = get_parents(a)
+    parents_b = get_parents(b)
+
+    if not parents_a or not parents_b:
+        return None
+
+    def is_sibling(x, y):
+
+        if not x or not y:
+            return False
+
+        px = {pp for pp, _ in get_parents(x)}
+        py = {pp for pp, _ in get_parents(y)}
+
+        return len(px & py) > 0
+
+    for parent_a_id, parent_a_role in parents_a:
+
+        for parent_b_id, parent_b_role in parents_b:
+
+            if not is_sibling(parent_a_id, parent_b_id):
+                continue
+
+            side = None
+
+            if parent_a_role == "father":
+                side = "paternal"
+
+            elif parent_a_role == "mother":
+                side = "maternal"
+
+            parent_a_older = resolve_older_younger(
+                parent_a_id,
+                parent_b_id
+            )
+            relative_age = None
+
+            if parent_a_older is True:
+                relative_age = "older"
+
+            elif parent_a_older is False:
+                relative_age = "younger"
+
+            return {
+                "side": side,
+                "gender_a": get_gender(a),
+                "gender_b": get_gender(b),
+                "parent_a_id": parent_a_id,
+                "parent_b_id": parent_b_id,
+                "parent_a_gender": get_gender(parent_a_id),
+                "parent_b_gender": get_gender(parent_b_id),
+                "parent_a_older_than_parent_b": parent_a_older,
+                "relative_age": relative_age,
+            }
+
+    return None
+    
 # =========================================================
 # EXTRACT SPOUSE OF UNCLE / AUNT METADATA
 # =========================================================

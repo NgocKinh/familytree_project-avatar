@@ -237,6 +237,69 @@ def build_nephew_niece_output(metadata):
             "south": "cháu gái"
         }
     }
+# =====================================
+# 🔥 COUSIN OUTPUT
+# =====================================
+
+def build_cousin_output(metadata):
+
+    if not metadata:
+        return {
+            "relation": "anh/chị/em họ",
+            "relation_basic": "cousin",
+            "relation_side": None,
+            "gender": None,
+            "call": {
+                "north": "anh/chị/em họ",
+                "south": "anh/chị/em họ"
+            }
+        }
+
+    side = metadata.get("side")
+    gender_b = metadata.get("gender_b")
+    parent_b_gender = metadata.get("parent_b_gender")
+    parent_a_older = metadata.get("parent_a_older_than_parent_b")
+    relative_age = metadata.get("relative_age")
+
+    if relative_age == "older":
+        prefix = "em"
+
+    elif relative_age == "younger":
+        prefix = "anh" if gender_b == "male" else "chị"
+
+    else:
+        prefix = "anh/chị/em"
+
+    branch = "họ"
+
+    if side == "paternal":
+
+        if parent_b_gender == "male":
+            branch = "con chú" if parent_a_older else "con bác"
+
+        elif parent_b_gender == "female":
+            branch = "con cô"
+
+    elif side == "maternal":
+
+        if parent_b_gender == "male":
+            branch = "con cậu"
+
+        elif parent_b_gender == "female":
+            branch = "bạn dì"
+
+    relation = f"{prefix} {branch}"
+
+    return {
+        "relation": relation,
+        "relation_basic": "cousin",
+        "relation_side": side,
+        "gender": gender_b,
+        "call": {
+            "north": relation,
+            "south": relation
+        }
+    }
 
 def build_standard_output(a, b, relation, path, metadata):
 
@@ -298,7 +361,13 @@ def build_standard_output(a, b, relation, path, metadata):
                 "south": relation_name
             }
         }
+    # =====================================
+    # 🔥 COUSIN
+    # =====================================
 
+    if relation == "cousin":
+        return build_cousin_output(metadata)
+        
     # =====================================
     # 🔥 GRANDPARENT
     # =====================================
@@ -321,82 +390,6 @@ def build_standard_output(a, b, relation, path, metadata):
         metadata = extract_sibling_metadata(a, b)
 
         return build_sibling_output(metadata)
-
-    # =====================================
-    # 🔥 SIBLING IN-LAW
-    # =====================================
-
-    if relation == "sibling_in_law":
-
-        gender_a = get_gender(a)
-        kind = metadata.get("kind") if metadata else None
-        # Case 1: A là vợ/chồng của anh/chị/em ruột B
-        if kind == "spouse_sibling":
-            for sib in get_siblings(b):
-                if a in get_spouses(sib):
-                    birth_sib = get_birth(sib)
-                    birth_b = get_birth(b)
-                    older = False
-                    if birth_sib and birth_b:
-                        older = birth_sib < birth_b
-                    if gender_a == "male":
-                        rel = "anh rể" if older else "em rể"
-                    else:
-                        rel = "chị dâu" if older else "em dâu"
-
-                    return {
-                        "relation": rel,
-                        "relation_basic": "sibling_in_law",
-                        "relation_side": None,
-                        "gender": gender_a,
-                        "call": {
-                            "north": rel,
-                            "south": rel
-                        }
-                    }
-
-        # Case 2: A là anh/chị/em ruột của vợ/chồng B
-        if kind == "sibling_spouse":
-            spouse_b = get_spouse(b)
-
-            if spouse_b:
-                for sib in get_siblings(spouse_b):
-                    if a == sib:
-                        spouse_gender = get_gender(spouse_b)
-
-                        birth_a = get_birth(a)
-                        birth_spouse_b = get_birth(spouse_b)
-                        older = False
-                        if birth_a and birth_spouse_b:
-                            older = birth_a < birth_spouse_b
-
-                        if spouse_gender == "female":
-                            if gender_a == "male":
-                                rel = "anh vợ" if older else "em vợ"
-                            else:
-                                rel = "chị vợ" if older else "em vợ"
-                        else:
-                            if gender_a == "male":
-                                rel = "anh chồng" if older else "em chồng"
-                            else:
-                                rel = "chị chồng" if older else "em chồng"
-
-                        return {
-                            "relation": rel,
-                            "relation_basic": "sibling_in_law",
-                            "relation_side": None,
-                            "gender": gender_a,
-                            "call": {
-                                "north": rel,
-                                "south": rel
-                            }
-                        }
-
-        return {
-            "relation": "chưa xác định mối quan hệ",
-            "gender": gender_a,
-            "call": None
-        }
 
     # =====================================
     # 🔥 CHILD IN-LAW
@@ -445,8 +438,8 @@ def build_standard_output(a, b, relation, path, metadata):
         }
     # =====================================
     # 🔥 STEP 6.2 — NEPHEW / NIECE (FINAL CLEAN)
-    # =====================================
     # ⚠️ NOT USED BY CURRENT CANONICAL FLOW
+    # =====================================
     if relation == "nephew/niece":
 
         gender_a = get_gender(a)
