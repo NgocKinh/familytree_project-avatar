@@ -260,10 +260,10 @@ def build_cousin_output(metadata):
     parent_b_gender = metadata.get("parent_b_gender")
     parent_a_older = metadata.get("parent_a_older_than_parent_b")
     if parent_a_older is True:
-        prefix = "em"
+        prefix = "anh" if gender_b == "male" else "chị"
 
     elif parent_a_older is False:
-        prefix = "anh" if gender_b == "male" else "chị"
+        prefix = "em"
 
     else:
         prefix = "anh/chị/em"
