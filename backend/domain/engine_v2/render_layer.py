@@ -259,12 +259,10 @@ def build_cousin_output(metadata):
     gender_b = metadata.get("gender_b")
     parent_b_gender = metadata.get("parent_b_gender")
     parent_a_older = metadata.get("parent_a_older_than_parent_b")
-    relative_age = metadata.get("relative_age")
-
-    if relative_age == "older":
+    if parent_a_older is True:
         prefix = "em"
 
-    elif relative_age == "younger":
+    elif parent_a_older is False:
         prefix = "anh" if gender_b == "male" else "chị"
 
     else:
