@@ -37,13 +37,13 @@ def normalize_path(path_steps):
     if path_steps == ["parent", "child", "spouse"]:
         return ["sibling_in_law"]
 
-    # child -> spouse = child_in_law
+    # child -> spouse = parent_in_law
     if path_steps == ["child", "spouse"]:
-        return ["child_in_law"]
-
-    # spouse -> parent = parent_in_law
-    if path_steps == ["spouse", "parent"]:
         return ["parent_in_law"]
+
+    # spouse -> parent = child_in_law
+    if path_steps == ["spouse", "parent"]:
+        return ["child_in_law"]
 
     # spouse -> parent -> child = sibling_in_law
     if path_steps == ["spouse", "parent", "child"]:

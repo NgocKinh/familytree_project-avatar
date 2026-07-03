@@ -404,20 +404,20 @@ def build_standard_output(a, b, relation, path, metadata):
 
     if relation == "child_in_law":
 
-        gender_b = get_gender(b)
+        gender_a = get_gender(a)
 
-        rel = "con dâu" if gender_b == "female" else "con rể"
+        rel = "con dâu" if gender_a == "female" else "con rể"
 
         return {
             "relation": rel,
             "relation_basic": "in-law",
             "relation_side": None,
-            "gender": gender_b,
+            "gender": gender_a,
             "call": {
                 "north": rel,
                 "south": rel
             }
-        } 
+        }
 
     # =====================================
     # 🔥 PARENT IN-LAW
@@ -428,32 +428,21 @@ def build_standard_output(a, b, relation, path, metadata):
         gender_a = get_gender(a)
         gender_b = get_gender(b)
 
-        # =====================================
-        # 🔥 SOURCE LÀ NAM
-        # =====================================
-
-        if gender_a == "male":
-
-            rel = "ba vợ" if gender_b == "male" else "mẹ vợ"
-
-        # =====================================
-        # 🔥 SOURCE LÀ NỮ
-        # =====================================
-
+        if gender_b == "male":
+            rel = "ba vợ" if gender_a == "male" else "mẹ vợ"
         else:
-
-            rel = "ba chồng" if gender_b == "male" else "mẹ chồng"
+            rel = "ba chồng" if gender_a == "male" else "mẹ chồng"
 
         return {
             "relation": rel,
             "relation_basic": "in-law",
             "relation_side": None,
-            "gender": gender_b,
+            "gender": gender_a,
             "call": {
                 "north": rel,
                 "south": rel
             }
-        }    
+        }
     # =====================================
     # 🔥 STEP 6.2 — NEPHEW / NIECE (FINAL CLEAN)
     # =====================================
