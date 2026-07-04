@@ -262,7 +262,7 @@ def build_cousin_output(metadata):
     parent_b_gender = metadata.get("parent_b_gender")
     parent_a_older = metadata.get("parent_a_older_than_parent_b")
     relative_age = metadata.get("relative_age")
-
+    cousin_branch = metadata.get("cousin_branch")
     # ================================
     # PREFIX: anh / chị / em
     # Dựa trên tuổi của B so với A
@@ -278,25 +278,21 @@ def build_cousin_output(metadata):
     # BRANCH: con bác / con chú / con cô / con cậu / con dì
     # Không ghép độc lập kiểu prefix + branch cho bác/chú
     # ================================
-    branch = "họ"
+    branch_map = {
+        "bac": "con bác",
+        "chu": "con chú",
+        "co": "con cô",
+        "cau": "con cậu",
+        "di": "con dì",
+    }
 
-    if side == "paternal":
-        if parent_a_gender == "male":
-            if parent_a_older is True:
-                branch = "con bác"
-                if relative_age == "younger":
-                    prefix = "anh" if gender_a == "male" else "chị"
-            elif parent_a_older is False:
-                branch = "con chú"
-                prefix = "em"
-        elif parent_a_gender == "female":
-            branch = "con cô"
+    branch = branch_map.get(cousin_branch, "họ")
 
-    elif side == "maternal":
-        if parent_a_gender == "male":
-            branch = "con cậu"
-        elif parent_a_gender == "female":
-            branch = "con dì"
+    if cousin_branch == "bac":
+        prefix = "anh" if gender_a == "male" else "chị"
+
+    elif cousin_branch == "chu":
+        prefix = "em"
 
     relation = f"{prefix} {branch}"
 
