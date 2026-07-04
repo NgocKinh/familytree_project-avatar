@@ -1,4 +1,4 @@
-import { handleAuthError } from "./authErrorHandler";
+import { handleAuthError } from "../utils/authErrorHandler";
 import { API_BASE_URL } from "../api/apiConfig";
 
 export async function apiClient(path, options = {}) {

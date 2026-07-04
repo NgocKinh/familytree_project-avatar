@@ -8,6 +8,7 @@
 import axios from "axios";
 import { handleAuthError } from "../utils/authErrorHandler";
 import { API_BASE_URL } from "./apiConfig";
+import { apiClient } from "./apiClient";
 // ============================================
 // BASE URL
 // ============================================
@@ -149,14 +150,13 @@ export const addPerson = async (data) => {
 // ============================================
 export const updatePerson = async (id, data) => {
   try {
-    const res = await axios.put(`${API_URL}/${id}`, data, {
-      headers: { "Content-Type": "application/json" },
+    const res = await apiClient(`/person/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
     });
-    return res.data;
+
+    return await res.json();
   } catch (err) {
-    if (handleAuthError(err)) {
-      return null;
-    }
     console.error(`❌ Lỗi cập nhật ID=${id}:`, err);
     throw err;
   }

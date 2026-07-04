@@ -6,7 +6,7 @@
 // ===================================================================
 import axios from "axios";
 import { API_BASE_URL } from "./apiConfig";
-
+import { apiClient } from "./apiClient";
 const PERSON_URL = `${API_BASE_URL}/person`;
 
 export const getPersonBasicList = async () => {
@@ -18,7 +18,6 @@ export const getPersonBasicList = async () => {
     return [];
   }
 };
-
 
 // ===================================================================
 // 🔹 GET theo ID
@@ -51,22 +50,22 @@ export const addPersonBasic = async (personData) => {
   }
 };
 
-
 // ===================================================================
 // 🔹 PUT: cập nhật
 // ===================================================================
 export const updatePersonBasic = async (id, personData) => {
   try {
-    const res = await axios.put(`${PERSON_URL}/${id}`, personData);
-    // 👍 Route này đúng, không thêm "/"
+    const res = await apiClient(`/person/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(personData),
+    });
 
-    return res.data;
+    return await res.json();
   } catch (err) {
     console.error("❌ Lỗi cập nhật person:", err);
     throw err;
   }
 };
-
 
 // ===================================================================
 // 🔹 DELETE
@@ -80,5 +79,3 @@ export const deletePersonBasic = async (id) => {
     throw err;
   }
 };
-
-
