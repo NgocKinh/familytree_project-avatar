@@ -572,10 +572,24 @@ def extract_cousin_metadata(a, b):
             elif parent_a_role == "mother":
                 side = "maternal"
 
-            parent_a_older = resolve_older_younger(
-                parent_a_id,
-                parent_b_id
-            )
+            cousin_branch = None
+
+            parent_b_gender = get_gender(parent_b_id)
+
+            if side == "paternal":
+                if parent_b_gender == "male":
+                    if parent_a_older is True:
+                        cousin_branch = "bac"
+                    elif parent_a_older is False:
+                        cousin_branch = "chu"
+                elif parent_b_gender == "female":
+                    cousin_branch = "co"
+
+            elif side == "maternal":
+                if parent_b_gender == "male":
+                    cousin_branch = "cau"
+                elif parent_b_gender == "female":
+                    cousin_branch = "di"
             relative_age = None
 
             if parent_a_older is True:
@@ -594,10 +608,11 @@ def extract_cousin_metadata(a, b):
                 "parent_b_gender": get_gender(parent_b_id),
                 "parent_a_older_than_parent_b": parent_a_older,
                 "relative_age": relative_age,
+                "cousin_branch": cousin_branch,
             }
 
     return None
-    
+
 # =========================================================
 # EXTRACT SPOUSE OF UNCLE / AUNT METADATA
 # =========================================================
