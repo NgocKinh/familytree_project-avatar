@@ -257,6 +257,7 @@ def build_cousin_output(metadata):
 
     side = metadata.get("side")
     gender_b = metadata.get("gender_b")
+    gender_a = metadata.get("gender_a")
     parent_b_gender = metadata.get("parent_b_gender")
     parent_a_older = metadata.get("parent_a_older_than_parent_b")
     relative_age = metadata.get("relative_age")
@@ -266,7 +267,7 @@ def build_cousin_output(metadata):
     # Dựa trên tuổi của B so với A
     # ================================
     if relative_age == "older":
-        prefix = "anh" if gender_b == "male" else "chị"
+        prefix = "anh" if gender_a == "male" else "chị"
     elif relative_age == "younger":
         prefix = "em"
     else:
@@ -283,7 +284,7 @@ def build_cousin_output(metadata):
             if parent_a_older is True:
                 branch = "con bác"
                 if relative_age == "younger":
-                    prefix = "anh" if gender_b == "male" else "chị"
+                    prefix = "anh" if gender_a == "male" else "chị"
             elif parent_a_older is False:
                 branch = "con chú"
                 prefix = "em"
@@ -302,7 +303,7 @@ def build_cousin_output(metadata):
         "relation": relation,
         "relation_basic": "cousin",
         "relation_side": side,
-        "gender": gender_b,
+        "gender": gender_a,
         "call": {
             "north": relation,
             "south": relation
