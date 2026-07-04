@@ -577,21 +577,21 @@ def extract_cousin_metadata(a, b):
             )
             cousin_branch = None
 
-            parent_b_gender = get_gender(parent_b_id)
+            parent_a_gender = get_gender(parent_a_id)
 
-            if side == "paternal":
-                if parent_b_gender == "male":
+            if parent_b_role == "father":
+                if parent_a_gender == "male":
                     if parent_a_older is True:
-                        cousin_branch = "bac"
+                          cousin_branch = "bac"
                     elif parent_a_older is False:
                         cousin_branch = "chu"
-                elif parent_b_gender == "female":
+                elif parent_a_gender == "female":
                     cousin_branch = "co"
 
-            elif side == "maternal":
-                if parent_b_gender == "male":
+            elif parent_b_role == "mother":
+                if parent_a_gender == "male":
                     cousin_branch = "cau"
-                elif parent_b_gender == "female":
+                elif parent_a_gender == "female":
                     cousin_branch = "di"
             relative_age = None
 
