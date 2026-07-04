@@ -250,8 +250,8 @@ def update_person(
     current_user: dict = Depends(get_current_user),
 ):
     try:
-        role = current_user.get("role")
-        user_person_id = current_user.get("person_id")
+        role = current_user.role
+        user_person_id = current_user.person_id
 
         if role not in ["admin", "co_operator"]:
             allowed = is_near_person(db, user_person_id, person_id)
