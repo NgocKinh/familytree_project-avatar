@@ -571,7 +571,10 @@ def extract_cousin_metadata(a, b):
 
             elif parent_a_role == "mother":
                 side = "maternal"
-
+            parent_a_older = resolve_older_younger(
+                parent_a_id,
+                parent_b_id
+            )
             cousin_branch = None
 
             parent_b_gender = get_gender(parent_b_id)
