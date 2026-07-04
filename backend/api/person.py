@@ -254,7 +254,7 @@ def update_person(
         user_person_id = current_user.person_id
 
         if role not in ["admin", "co_operator"]:
-            allowed = is_near_person(db, user_person_id, person_id)
+            allowed = is_near_person(current_user, person_id, db)
 
             if not allowed:
                 raise HTTPException(
