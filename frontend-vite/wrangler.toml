@@ -1,0 +1,6 @@
+name = "silent-limit-c56a"
+compatibility_date = "2026-07-05"
+preview_urls = true
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
