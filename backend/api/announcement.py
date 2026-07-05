@@ -271,7 +271,7 @@ def announcement_upcoming():
 
         conn = get_connection()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT DATABASE() AS db_name")
+
         # ⭐ FIX THỨ TỰ TÊN – CHUẨN CẤU TRÚC PROJECT
         cursor.execute("""
             SELECT 
