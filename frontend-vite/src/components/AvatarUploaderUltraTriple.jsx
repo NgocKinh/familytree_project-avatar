@@ -4,50 +4,13 @@ export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated })
 
   const inputRef = useRef(null)
   const canvasRef = useRef(null)
-
   const [img,setImg] = useState(null)
   const [zoom,setZoom] = useState(1)
   const [rotation,setRotation] = useState(0)
   const [pos,setPos] = useState({x:0,y:0})
   const [dragging,setDragging] = useState(false)
   const [start,setStart] = useState({x:0,y:0})
-  // ✅ [CHANGE 7]: Luôn tạo cache-buster khi mở form
-  const [reload,setReload] = useState(Date.now())
   const uploadLock = useRef(false)
-  const BACKEND_BASE_URL = API_BASE_URL.replace("/api", "");
-  // ✅ [CHANGE 1]: Đồng bộ FastAPI port 8000
-  const avatarUrl = `${BACKEND_BASE_URL}/static/avatars/${personId}.jpg?t=${reload}`;
-
-  // ✅ [CHANGE 3]: fallback theo hệ thống hiện tại
-  const fallback = `${BACKEND_BASE_URL}/static/avatars/default_other.png`;
-  // ===============================
-  // LOAD CURRENT AVATAR
-  // ===============================
-
-  useEffect(()=>{
-
-    const image = new Image()
-    image.crossOrigin = "anonymous";
-    image.src = avatarUrl
-    image.onerror = () => {
-      image.src = fallback;
-    }
-    image.onload = ()=>{
-
-      const fitZoom =
-        Math.min(
-          400/image.width,
-          400/image.height
-        )
-
-      setZoom(fitZoom)
-      setRotation(0)
-      setPos({x:0,y:0})
-      setImg(image)
-
-    }
-
-  },[avatarUrl])
 
   // ===============================
   // DRAW ENGINE
@@ -236,7 +199,6 @@ export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated })
       return;
     }
   
-    setReload(Date.now());
     setImg(null);
   
     if (onAvatarUpdated) onAvatarUpdated();
@@ -293,7 +255,15 @@ export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated })
         if (file) loadImage(file);
       }}
       />
-
+      {!img && (
+        <button
+          type="button"
+          onClick={openFilePicker}
+          className="px-4 py-1 bg-blue-600 text-white rounded"
+        >
+          Chọn ảnh
+        </button>
+      )}
       {img && (
 
         <>

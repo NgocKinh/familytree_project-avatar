@@ -110,6 +110,8 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
         ),
         birth_date_precision: data.birth_date_precision || "unknown",
         death_date_precision: data.death_date_precision || "unknown",
+        avatar: data.avatar || "",
+        updated_at: data.updated_at || "",
       });
 
     } catch (err) {
@@ -146,8 +148,13 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
   const displayAvatar = avatarPreview
     ? avatarPreview
     : isEdit
-      ? getAvatarURL({ id: realId, gender: form.gender })
-      : fallbackAvatar(form.gender);
+      ? getAvatarURL({
+        id: realId,
+        gender: form.gender,
+        avatar: form.avatar,
+        updated_at: form.updated_at,
+      })
+    : fallbackAvatar(form.gender);
 
   // =========================
   // HANDLE CHANGE
@@ -216,8 +223,13 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
     try {
       if (isEdit) {
       
-        await updatePerson(realId, payload);
-      
+        const saved = await updatePerson(realId, payload);
+
+        setForm((prev) => ({
+          ...prev,
+          ...saved,
+        }));
+
         alert("✅ Cập nhật thành công!");
       
         if (onSaved) {
@@ -327,7 +339,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
               alt="avatar"
               className="w-24 h-24 rounded-full object-cover border"
             />
-
+            
             <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition">
               <span className="text-white text-lg">✏️</span>
             </div>
