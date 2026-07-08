@@ -77,7 +77,12 @@ async def upload_avatar(
         f.write(contents)
 
     os.replace(tmp_path, file_path)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=500, detail="Avatar file was not written")
 
+    saved_size = os.path.getsize(file_path)
+    if saved_size == 0:
+        raise HTTPException(status_code=500, detail="Avatar file is empty")
     # 7️⃣ UPDATE DB (ORM)
     from sqlalchemy.sql import func
 
@@ -88,5 +93,7 @@ async def upload_avatar(
     TREE_CACHE.clear()
     return {
         "message": "Avatar uploaded successfully",
-        "filename": filename
+        "filename": filename,
+        "size": saved_size,
+        "path": file_path
     }
