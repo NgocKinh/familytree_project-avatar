@@ -15,16 +15,16 @@ function ParentChildCRUD({ persons }) {
   
   async function handleAdd(e) {
     e.preventDefault();
-    console.log("ADD (mock)", form);
+
   }
 
   async function handleUpdate(e) {
     e.preventDefault();
-    console.log("UPDATE (mock)", form);
+
   }
 
   async function handleDelete(id) {
-    console.log("DELETE (mock)", id);
+
   }
   
   return (

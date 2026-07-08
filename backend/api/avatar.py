@@ -10,7 +10,6 @@ from backend.models.person_model import Person
 import os
 from backend.api.tree import TREE_CACHE
 router = APIRouter()
-# ✅ [DEBUG]: Kiểm tra avatar.py có được load không
 
 # ==========================================================
 # CONFIG

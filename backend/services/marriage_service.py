@@ -346,7 +346,7 @@ def handle_person_death(db: Session, person_id: int, death_date):
     ).all()
 
     for m in marriages: # TODO: move this logic to domain service / event handler
-        if m.status in ACTIVE_MARRIAGE_STATUSES: # TODO:
+        if m.status in ACTIVE_MARRIAGE_STATUSES: 
             m.ended_by = EndedByEnum.death
             m.end_date = death_date
             m.status = MarriageStatus.widowed

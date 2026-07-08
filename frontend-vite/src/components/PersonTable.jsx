@@ -11,7 +11,7 @@ export default function PersonTable() {
     axios
       .get(`${API_FASTAPI}/api/person/basic`)
       .then((res) => {
-        console.log("API trả về:", res.data);
+
         setPersons(res.data);
       })
       .catch((err) => console.error("Lỗi khi fetch dữ liệu:", err));
@@ -57,13 +57,13 @@ export default function PersonTable() {
 
   const handleEdit = (person) => {
     alert(`✏️ Sửa thành viên ID ${person.person_id} (sẽ phát triển sau).`);
-    console.log("Edit:", person);
+
   };
 
   const handleDelete = (id) => {
     if (window.confirm("Bạn có chắc muốn xóa thành viên này?")) {
       alert(`🗑️ Đã xóa ID ${id} (chức năng thật sẽ phát triển sau).`);
-      console.log("Delete:", id);
+
     }
   };
 

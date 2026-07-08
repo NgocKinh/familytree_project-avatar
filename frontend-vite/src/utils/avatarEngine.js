@@ -2,7 +2,7 @@ import maleAvatar from "../assets/default_male.png";
 import femaleAvatar from "../assets/default_female.png";
 import otherAvatar from "../assets/default_other.png";
 import { API_BASE_URL } from "../api/apiConfig";
-// ✅ [CHANGE 1]: Dùng FastAPI backend hiện tại
+
 const API = API_BASE_URL.replace("/api", "");
 
 /* fallback avatar */
@@ -44,13 +44,11 @@ export function handleAvatarError(e, gender) {
   const img = e.target;
   const src = img.src || "";
 
-  // ✅ [CHANGE 4]: Nếu jpg lỗi thì thử png
   if (src.includes(".jpg")) {
     img.src = src.replace(".jpg", ".png");
     return;
   }
 
-  // ✅ [CHANGE 5]: Nếu png cũng lỗi thì trả về avatar mặc định theo giới tính
   img.onerror = null;
   img.src = fallbackAvatar(gender);
 }

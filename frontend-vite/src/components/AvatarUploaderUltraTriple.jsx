@@ -128,7 +128,7 @@ export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated })
   }
 
   const mouseUp=()=>setDragging(false)
-  // ✅ [CHANGE 6]: Cho phép chọn lại ảnh khác khi avatar hiện tại bị sai
+
   const openFilePicker = () => {
     if (!inputRef.current) return;
     inputRef.current.value = "";
