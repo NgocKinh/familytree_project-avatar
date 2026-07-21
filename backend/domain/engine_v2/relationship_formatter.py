@@ -26,7 +26,7 @@ def normalize_steps_from_path(path):
 
 # rules
 # ⚠️ transitional semantic rules
-# TODO: migrate to relationship_resolver.py
+
 RULES = {
     
     ("spouse", "parent", "child"): {
@@ -73,7 +73,7 @@ def apply_region(term, context=None):
 
 # core rules
 # ⚠️ transitional semantic rules
-# TODO: migrate to relationship_resolver.py
+
 CORE_RULES = {
 
     # ===== CHA / MẸ =====

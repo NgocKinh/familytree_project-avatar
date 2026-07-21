@@ -28,7 +28,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const onAvatarUpdated = location.state?.onAvatarUpdated;
+  
   // ✅ [CHANGE 2]: Ưu tiên personId từ props
   const realId = personId || id;
 
@@ -122,6 +122,18 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
     } finally {
       setLoading(false);
     }
+  };
+  const handleAvatarUpdated = async () => {
+    if (!realId) return;
+  
+    // bỏ preview cũ
+    setAvatarPreview(null);
+  
+    // đọc lại Person từ server
+    await loadData(realId);
+  
+    // đóng Avatar Editor
+    setShowAvatarEditor(false);
   };
   // 👉 CHỈ LOAD 1 LẦN KHI CÓ ID
   useEffect(() => {
@@ -351,7 +363,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
         <div className="flex flex-col items-center mt-4">
           <AvatarUploaderUltraTriple
             personId={realId}
-            onAvatarUpdated={onAvatarUpdated}
+            onAvatarUpdated={handleAvatarUpdated}
           />
 
           <button

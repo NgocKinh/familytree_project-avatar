@@ -68,13 +68,14 @@ export default function PersonDetailForm({ personId, role }) {
 
   const loadDetail = async () => {
     try {
+      
       const data = await getPersonDetail(personId);
-
+   
       setForm((prev) => ({
         ...prev,
         ...data,
       }));
-
+  
       // AUTO-CONVERT LUNAR
       // ---------------------------------------------------------
       if (data.birth_date) {
@@ -83,7 +84,7 @@ export default function PersonDetailForm({ personId, role }) {
           setForm((prev) => ({ ...prev, asian_birth_date: lunar }));
         } catch {}
       }
-
+  
       if (data.death_date) {
         try {
           const lunar = await convertSolarToLunar(data.death_date);
@@ -130,7 +131,9 @@ export default function PersonDetailForm({ personId, role }) {
   return (
     <div className="mt-6">
 
-      {/* ============================
+      {
+      /* 
+      ============================
           PERSONAL INFORMATION
       ============================== */}
       <Card icon="📌" title="Thông Tin Cá Nhân">
@@ -143,7 +146,9 @@ export default function PersonDetailForm({ personId, role }) {
         </div>
       </Card>
 
-      {/* ============================
+      {
+      /* 
+      ============================
           CONTACT + EDUCATION
       ============================== */}
       <Card icon="📞" title="Liên Hệ & Học Vấn">
@@ -156,7 +161,9 @@ export default function PersonDetailForm({ personId, role }) {
         </div>
       </Card>
 
-      {/* ============================
+      {
+      /* 
+      ============================
           LUNAR DATES
       ============================== */}
       <Card icon="📅" title="Ngày Tháng Âm Lịch">
@@ -197,7 +204,9 @@ export default function PersonDetailForm({ personId, role }) {
         </div>
       </Card>
 
-      {/* ============================
+      {
+      /* 
+      ============================
           FUNERAL
       ============================== */}
       <Card icon="⚰️" title="Thông Tin Tang Lễ">
@@ -207,7 +216,9 @@ export default function PersonDetailForm({ personId, role }) {
         </div>
       </Card>
 
-      {/* ============================
+      {
+      /* 
+      ============================
           ADMIN SECTION
       ============================== */}
       {(role === "co_operator" || role === "admin") && (
@@ -220,7 +231,9 @@ export default function PersonDetailForm({ personId, role }) {
         </Card>
       )}
 
-      {/* ============================
+      {
+      /* 
+      ============================
           NOTES
       ============================== */}
       <Card icon="📝" title="Ghi chú">

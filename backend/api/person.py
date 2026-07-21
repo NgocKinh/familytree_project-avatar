@@ -220,19 +220,93 @@ def get_person_orm(pid: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Person not found")
 
     return {
+        # =========================
+        # BASIC
+        # =========================
         "id": person.id,
+        "lineage_id": person.lineage_id,
+
         "sur_name": person.sur_name,
         "last_name": person.last_name,
         "middle_name": person.middle_name,
         "first_name": person.first_name,
+        "full_name_vn": person.full_name_vn,
+
         "gender": person.gender,
+
+        # =========================
+        # DATE
+        # =========================
         "birth_date": str(person.birth_date) if person.birth_date else None,
+        "birth_date_precision": person.birth_date_precision,
         "birth_order": person.birth_order,
+
         "death_date": str(person.death_date) if person.death_date else None,
+        "death_date_precision": person.death_date_precision,
+
+        # =========================
+        # LUNAR
+        # =========================
+        "asian_birth_date": person.asian_birth_date,
+        "asian_birth_precision": person.asian_birth_precision,
+
+        "asian_death_date": person.asian_death_date,
+        "asian_death_precision": person.asian_death_precision,
+
         "anniversary_death": person.anniversary_death,
         "anniversary_type": person.anniversary_type,
-        "birth_date_precision": person.birth_date_precision,
-        "death_date_precision": person.death_date_precision
+
+        # =========================
+        # LOCATION
+        # =========================
+        "birth_place": person.birth_place,
+        "death_place": person.death_place,
+        "grave_info": person.grave_info,
+
+        # =========================
+        # INFO
+        # =========================
+        "nationality": person.nationality,
+        "ethnic_group": person.ethnic_group,
+        "religion": person.religion,
+        "languages_spoken": person.languages_spoken,
+
+        # =========================
+        # CONTACT
+        # =========================
+        "address": person.address,
+        "phone_number": person.phone_number,
+        "email": person.email,
+
+        # =========================
+        # AVATAR
+        # =========================
+        "avatar": safe_avatar_file(
+            person.gender,
+            getattr(person, "avatar", None),
+            person.id
+        ),
+
+        # =========================
+        # EDUCATION
+        # =========================
+        "school_attended": person.school_attended,
+        "degree_earned": person.degree_earned,
+
+        # =========================
+        # EXTRA
+        # =========================
+        "notes": person.notes,
+        "blood_code": person.blood_code,
+        "role_in_marriage": person.role_in_marriage,
+
+        # =========================
+        # META
+        # =========================
+        "created_at": str(person.created_at) if person.created_at else None,
+        "updated_at": str(person.updated_at) if person.updated_at else None,
+        "deleted_at": str(person.deleted_at) if person.deleted_at else None,
+        "delete_status": person.delete_status,
     }
 
 # ==========================================================

@@ -201,9 +201,15 @@ export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated })
   
     setImg(null);
   
-    if (onAvatarUpdated) onAvatarUpdated();
-  
-    alert("Avatar updated");
+    // đóng editor
+    setImg(null);
+
+    // báo cho form cha reload lại Person
+    if (onAvatarUpdated) {
+      await onAvatarUpdated();
+    }
+
+    // editor sẽ tự đóng sau khi callback hoàn tất
   };
 
   // ===============================
