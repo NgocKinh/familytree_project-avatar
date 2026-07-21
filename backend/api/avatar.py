@@ -87,12 +87,20 @@ async def upload_avatar(
 
     person.avatar = filename
     person.updated_at = func.now()
+
     db.commit()
-    # Clear Tree cache để avatar mới hiện ngay
+    db.refresh(person)
+
+    print("DB avatar =", person.avatar)
+
+    # Clear cache
     TREE_CACHE.clear()
+
     return {
         "message": "Avatar uploaded successfully",
         "filename": filename,
+        "avatar_db": person.avatar,
+        "file_exists": os.path.exists(file_path),
         "size": saved_size,
         "path": file_path
     }
