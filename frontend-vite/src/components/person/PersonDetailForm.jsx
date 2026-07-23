@@ -108,6 +108,7 @@ export default function PersonDetailForm({ personId, role }) {
   //  SUBMIT
   // ============================================================
   const handleSubmit = async () => {
+  
     try {
       const payload = {
         ...form,
@@ -117,10 +118,18 @@ export default function PersonDetailForm({ personId, role }) {
             : Number(form.lineage_id),
       };
   
-      await updatePersonDetail(personId, payload);
+      const result = await updatePersonDetail(personId, payload);
+  
+  
       alert("✔ Cập nhật chi tiết thành công!");
     } catch (err) {
       console.error("❌ ERROR update:", err);
+  
+      if (err.response) {
+        console.error("Status:", err.response.status);
+        console.error("Data:", err.response.data);
+      }
+  
       alert("Không thể lưu thông tin chi tiết!");
     }
   };

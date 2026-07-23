@@ -80,5 +80,3 @@ export async function updatePersonDetail(personId, payload) {
   if (!res.ok) throw new Error("Không thể cập nhật chi tiết");
   return res.json();
 }
-
-
