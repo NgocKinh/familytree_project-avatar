@@ -68,23 +68,44 @@ def to_iso(date_value):
 # ==========================================================
 def safe_avatar_file(gender, avatar_value, person_id=None):
     """
-    Trả về ONLY filename:
-        '5.jpg'
-        hoặc 'default_male.png'
+    Chỉ trả về filename:
+        '112.jpg'
+        '112.png'
+        hoặc ảnh mặc định theo giới tính
     """
+    BASE_DIR = os.path.dirname(
+        os.path.dirname(os.path.abspath(__file__))
+    )
+    static_dir = os.path.join(BASE_DIR, "static", "avatars")
+
     default_map = {
         "male": "default_male.png",
         "female": "default_female.png",
         "other": "default_other.png",
     }
 
-    val = str(avatar_value or "").strip()
+    gender_key = (gender or "other").lower()
+    value = os.path.basename(str(avatar_value or "").strip())
 
-    if val:
-        return os.path.basename(val)
+    candidates = []
 
-    gen = (gender or "other").lower()
-    return default_map.get(gen, "default_other.png")
+    # Ưu tiên tên ảnh thật lưu trong database
+    if value and not value.startswith("default_"):
+        candidates.append(value)
+
+    # Sau đó kiểm tra trực tiếp ảnh theo ID
+    if person_id is not None:
+        candidates.extend([
+            f"{person_id}.jpg",
+            f"{person_id}.png",
+        ])
+
+    for filename in candidates:
+        file_path = os.path.join(static_dir, filename)
+        if os.path.isfile(file_path):
+            return filename
+
+    return default_map.get(gender_key, "default_other.png")
 
 # ==========================================================
 # 🆕 ORM - GET ALL PERSON

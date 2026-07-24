@@ -92,7 +92,7 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
       setLoading(true);
 
       const data = await getPersonById(id);
-      console.log("getPersonById avatar =", data.avatar);
+
       setForm({
         sur_name: data.sur_name || "",
         last_name: data.last_name || "",

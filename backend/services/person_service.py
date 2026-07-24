@@ -29,11 +29,9 @@ def create_person(db: Session, payload: PersonCreate) -> Person:
 def update_person(db: Session, person_id: int, payload: PersonUpdate) -> Person:
     person = get_person_or_404(db, person_id)
 
-    print("===== UPDATE PERSON =====")
-    print("payload avatar =", payload.get("avatar"))
-
     payload.pop("created_at", None)
     payload.pop("updated_at", None)
+    payload.pop("avatar", None)
     
     for k, v in payload.items():
         setattr(person, k, v)
