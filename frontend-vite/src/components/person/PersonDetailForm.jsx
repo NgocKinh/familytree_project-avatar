@@ -70,7 +70,7 @@ export default function PersonDetailForm({ personId, role }) {
     try {
       
       const data = await getPersonDetail(personId);
-   
+      console.log("GET avatar =", data.avatar);
       setForm((prev) => ({
         ...prev,
         ...data,

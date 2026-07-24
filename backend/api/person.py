@@ -72,33 +72,18 @@ def safe_avatar_file(gender, avatar_value, person_id=None):
         '5.jpg'
         hoặc 'default_male.png'
     """
-    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    static_dir = os.path.join(BASE_DIR, "static", "avatars")
     default_map = {
         "male": "default_male.png",
         "female": "default_female.png",
         "other": "default_other.png",
     }
 
-    gen = (gender or "other").lower()
     val = str(avatar_value or "").strip()
 
-    candidates = []
-
     if val:
-        base = os.path.basename(val)
-        candidates.append(base)
+        return os.path.basename(val)
 
-    if person_id:
-        candidates.append(f"{person_id}.jpg")
-        candidates.append(f"{person_id}.png")
-
-    candidates.append(default_map.get(gen, "default_other.png"))
-
-    for c in candidates:
-        if os.path.exists(os.path.join(static_dir, c)):
-            return c
-
+    gen = (gender or "other").lower()
     return default_map.get(gen, "default_other.png")
 
 # ==========================================================
