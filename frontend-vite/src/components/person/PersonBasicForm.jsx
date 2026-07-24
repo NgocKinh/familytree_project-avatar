@@ -177,64 +177,163 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
   };
 
   // =========================
+  // DATE VALIDATION
+  // =========================
+  const isValidDateInput = (value) => {
+    const text = String(value || "").trim();
+
+    // Cho phép bỏ trống
+    if (!text) return true;
+
+    // Cho phép dùng dấu "/" hoặc "-"
+    const normalized = text.replace(/-/g, "/");
+
+    const isValidCalendarDate = (day, month, year) => {
+      if (year < 1000 || year > 9999) return false;
+      if (month < 1 || month > 12) return false;
+
+      const maxDay = new Date(year, month, 0).getDate();
+      return day >= 1 && day <= maxDay;
+    };
+
+    // yyyy
+    if (/^\d{4}$/.test(normalized)) {
+      const year = Number(normalized);
+      return year >= 1000 && year <= 9999;
+    }
+
+    // mm/yyyy
+    let match = normalized.match(/^(\d{1,2})\/(\d{4})$/);
+
+    if (match) {
+      const month = Number(match[1]);
+      const year = Number(match[2]);
+
+      return (
+        month >= 1 &&
+        month <= 12 &&
+        year >= 1000 &&
+        year <= 9999
+      );
+    }
+
+    // dd/mm/yyyy
+    match = normalized.match(
+      /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
+    );
+
+    if (match) {
+      const day = Number(match[1]);
+      const month = Number(match[2]);
+      const year = Number(match[3]);
+
+      return isValidCalendarDate(day, month, year);
+    }
+
+    // Chấp nhận dữ liệu ISO yyyy-mm-dd khi load từ API
+    match = normalized.match(
+      /^(\d{4})\/(\d{1,2})\/(\d{1,2})$/
+    );
+
+    if (match) {
+      const year = Number(match[1]);
+      const month = Number(match[2]);
+      const day = Number(match[3]);
+
+      return isValidCalendarDate(day, month, year);
+    }
+
+    return false;
+  };
+
+  // =========================
   // SUBMIT
   // =========================
   const handleSubmit = async (e, mode = "save") => {
     e.preventDefault();
+
     if (!form.last_name?.trim()) {
       alert("❌ Vui lòng nhập Tên họ.");
       return false;
     }
-    
+
     if (!form.first_name?.trim()) {
       alert("❌ Vui lòng nhập Tên chính.");
       return false;
     }
+
     if (!form.gender) {
       alert("❌ Vui lòng chọn Giới tính.");
       return false;
     }
+
+    // Kiểm tra tất cả trường ngày trong Form Basic
+    const invalidDateFields = [];
+
+    if (!isValidDateInput(form.birth_date)) {
+      invalidDateFields.push("Ngày sinh");
+    }
+
+    if (!isValidDateInput(form.death_date)) {
+      invalidDateFields.push("Ngày mất");
+    }
+
+    if (invalidDateFields.length > 0) {
+      alert(
+        `❌ Ngày tháng nhập không hợp lệ: ${invalidDateFields.join(", ")}.\n\n` +
+        "Vui lòng nhập theo một trong các định dạng:\n" +
+        "• dd/mm/yyyy — ví dụ: 25/12/1990\n" +
+        "• mm/yyyy — ví dụ: 12/1990\n" +
+        "• yyyy — ví dụ: 1990"
+      );
+
+      return false;
+    }
+
     const payload = {
       ...form,
       birth_date: parseVNDate(form.birth_date),
       death_date: parseVNDate(form.death_date),
       birth_date_precision: detectPrecision(form.birth_date),
-      birth_order: form.birth_order ? Number(form.birth_order) : null,
+      birth_order: form.birth_order
+        ? Number(form.birth_order)
+        : null,
       death_date_precision: detectPrecision(form.death_date),
       role,
     };
-    // ✅ [CHANGE]: disable duplicate check hoàn toàn
+
     try {
       const dupRes = await checkDuplicatePerson({
         last_name: form.last_name,
         first_name: form.first_name,
         gender: form.gender,
       });
-    
+
       if (dupRes?.duplicate) {
         const realMatches = (dupRes.matches || []).filter(
           (p) => Number(p.person_id || p.id) !== Number(realId)
         );
-      
+
         if (realMatches.length > 0) {
-          setDuplicateMessage(JSON.stringify(realMatches, null, 2));
+          setDuplicateMessage(
+            JSON.stringify(realMatches, null, 2)
+          );
           setPendingPayload(payload);
           setShowPendingModal(true);
-          return;
+          return false;
         }
       }
-    
     } catch (err) {
       if (handleAuthError(err)) {
         return false;
       }
+
       console.error("❌ Duplicate API ERROR:", err);
-      return;
+      return false;
     }
 
     try {
       if (isEdit) {
-      
         const saved = await updatePerson(realId, payload);
 
         setForm((prev) => ({
@@ -243,39 +342,42 @@ export default function PersonBasicForm({ role, onSaved, personId }) {
         }));
 
         alert("✅ Cập nhật thành công!");
-      
+
         if (onSaved) {
           onSaved();
         }
-      
+
         return true;
       }
-    
-      const res = await addPerson(payload);
-    
+
+      await addPerson(payload);
+
       if (mode === "save_add_new") {
         alert("✅ Đã lưu. Tiếp tục nhập người mới.");
         return true;
       }
-    
+
       alert(`✅ Đã lưu thành công.
-    
-    Bạn có thể:
-    • Bấm Home để thoát.
-    • Bấm Thêm Thành Viên Mới để nhập người khác.`);
-    
+
+  Bạn có thể:
+  • Bấm Home để thoát.
+  • Bấm Thêm Thành Viên Mới để nhập người khác.`);
+
       setSavedOnce(true);
-    
+
       return true;
-    
     } catch (err) {
       if (handleAuthError(err)) {
         return false;
       }
+
       console.error("❌ Submit error:", err);
-    
-      alert("❌ Không thể lưu thông tin thành viên. Vui lòng kiểm tra lại dữ liệu và thử lại.");
-    
+
+      alert(
+        "❌ Không thể lưu thông tin thành viên. " +
+        "Vui lòng kiểm tra lại dữ liệu và thử lại."
+      );
+
       return false;
     }
   };
