@@ -384,7 +384,17 @@ function AssignChildToParentForm() {
                 Mẹ
               </label>
             </div>
+              {hasFather && (
+                <div className="mb-2 text-sm text-red-600">
+                  Người này đã có Cha rồi.
+                </div>
+              )}
 
+              {hasMother && (
+                <div className="mb-2 text-sm text-red-600">
+                  Người này đã có Mẹ rồi.
+                </div>
+              )}
             <label className="block font-semibold">
               3️⃣ Chọn Cha / Mẹ
             </label>

@@ -503,6 +503,17 @@ function AssignParentForm() {
                   Mẹ
                 </label>
               </div>
+                {hasFather && (
+                  <div className="mt-2 text-sm text-red-600">
+                    Người này đã có Cha rồi.
+                  </div>
+                )}
+
+                {hasMother && (
+                  <div className="mt-2 text-sm text-red-600">
+                    Người này đã có Mẹ rồi.
+                  </div>
+                )}
             </div>
           )
         }
