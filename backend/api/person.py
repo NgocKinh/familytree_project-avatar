@@ -359,11 +359,39 @@ def delete_person(person_id: int, db: Session = Depends(get_db)):
 @router.put("/birth-order/bulk")
 def update_birth_order_bulk(
     payload: BirthOrderBulkUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
+    role = current_user.role
 
+    # Chỉ admin, co_operator và member_basic được dùng endpoint
+    if role not in ["admin", "co_operator", "member_basic"]:
+        raise HTTPException(
+            status_code=403,
+            detail="Bạn không có quyền cập nhật thứ tự sinh.",
+        )
+
+    # member_basic phải có quan hệ gần với TẤT CẢ người được cập nhật
+    # Kiểm tra toàn bộ trước khi thay đổi dữ liệu
+    if role == "member_basic":
+        for item in payload.items:
+            allowed = is_near_person(
+                current_user,
+                item.person_id,
+                "birth_order:update",
+            )
+
+            if not allowed:
+                raise HTTPException(
+                    status_code=403,
+                    detail=(
+                        f"Bạn không có quyền cập nhật thứ tự sinh "
+                        f"của thành viên ID {item.person_id}."
+                    ),
+                )
+
+    # Chỉ cập nhật sau khi toàn bộ kiểm tra quyền đã PASS
     for item in payload.items:
-
         person = db.query(Person).filter(
             Person.id == item.person_id
         ).first()
@@ -377,7 +405,7 @@ def update_birth_order_bulk(
 
     return {
         "success": True,
-        "message": "Birth Order updated successfully"
+        "message": "Birth Order updated successfully",
     }
 # ==========================================================
 # CHECK DUPLICATE
