@@ -37,6 +37,41 @@ export default function MarriageList({ onEdit, role }) {
   const [searchText, setSearchText] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
 
+  const checkNearAccessForMarriage = async (marriage) => {
+    if (["admin", "co_operator"].includes(role)) {
+      return true;
+    }
+    const targetPersonIds = [
+      marriage.spouse_a_id,
+      marriage.spouse_b_id,
+    ].filter(Boolean);
+    try {
+      for (const targetPersonId of targetPersonIds) {
+        const res = await axios.post(
+          `${API_BASE_URL}/auth/check-near-access`,
+          {
+            target_person_id: Number(targetPersonId),
+            action: "relation:update",
+          },
+          getAuthConfig()
+        );
+        if (res.data?.allowed === true) {
+          setMessage("");
+          return true;
+        }
+      }
+      setMessage(
+        "Bạn không có quan hệ gần với người thứ nhất hoặc người thứ hai."
+      );
+      return false;
+    } catch (err) {
+      setMessage(
+        err?.response?.data?.detail ||
+        "Không kiểm tra được quyền chỉnh sửa quan hệ hôn nhân."
+      );
+      return false;
+    }
+  };
   // ================================================================
   // LOAD
   // ================================================================
@@ -272,7 +307,15 @@ export default function MarriageList({ onEdit, role }) {
                       ) : (
                         <div className="flex justify-center gap-2">
                           <button
-                            onClick={() => onEdit(m.id)}
+                            onClick={async () => {
+                              const allowed = await checkNearAccessForMarriage(m);
+
+                              if (!allowed) {
+                                return;
+                              }
+
+                              onEdit(m.id);
+                            }}
                             className="bg-yellow-400 text-white px-2 py-1 rounded hover:bg-yellow-500"
                           >
                             ✏️

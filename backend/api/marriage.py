@@ -197,11 +197,33 @@ def update_marriage(
         raise HTTPException(404, "Marriage not found")
 
     if current_user.role not in ["admin", "co_operator"]:
-        if not has_near_access_to_any(
+        # Kiểm tra quyền đối với quan hệ hiện tại
+        allowed_current = has_near_access_to_any(
             current_user,
             [marriage.spouse_a_id, marriage.spouse_b_id],
-            "relation:update"
-        ):
+            "relation:update",
+        )
+
+        # Xác định dữ liệu dự kiến cập nhật — chưa ghi database
+        target_spouse_a_id = (
+            data.spouse_a_id
+            if data.spouse_a_id is not None
+            else marriage.spouse_a_id
+        )
+        target_spouse_b_id = (
+            data.spouse_b_id
+            if data.spouse_b_id is not None
+            else marriage.spouse_b_id
+        )
+
+        # Kiểm tra quyền đối với dữ liệu dự kiến cập nhật
+        allowed_target = has_near_access_to_any(
+            current_user,
+            [target_spouse_a_id, target_spouse_b_id],
+            "relation:update",
+        )
+
+        if not allowed_current or not allowed_target:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này",
@@ -291,8 +313,12 @@ def get_person_marriages(person_id: int, db: Session = Depends(get_db)):
 # UPDATE PRIORITY
 # ==========================================================
 @router.put("/{mid}/priority")
-def update_priority(mid: int, data: dict, db: Session = Depends(get_db)):
-
+def update_priority(
+    mid: int,
+    data: dict,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     priority = int(data.get("priority", 0))
 
     marriage = (
@@ -304,11 +330,23 @@ def update_priority(mid: int, data: dict, db: Session = Depends(get_db)):
     if not marriage:
         raise HTTPException(404, "Marriage not found")
 
+    if current_user.role not in ["admin", "co_operator"]:
+        allowed = has_near_access_to_any(
+            current_user,
+            [marriage.spouse_a_id, marriage.spouse_b_id],
+            "relation:update",
+        )
+
+        if not allowed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Bạn không có quyền cập nhật ưu tiên quan hệ hôn nhân này",
+            )
+
     marriage.priority = priority
 
     db.commit()
     db.refresh(marriage)
-
 
     return {
         "success": True

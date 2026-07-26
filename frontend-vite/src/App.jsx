@@ -414,7 +414,7 @@ function AppContent() {
             element={
               <ProtectedRouteV6
                 role={role}
-                allowRoles={ADMIN_AREA_ROLES}
+                allowRoles={MEMBER_ROLES}
                 currentUser={currentUser}
                 redirectTo="/"
               >

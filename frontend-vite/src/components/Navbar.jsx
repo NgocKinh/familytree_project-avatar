@@ -111,12 +111,10 @@ const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
                     <span>Cha-Con</span>
                   </Link>
 
-                {isAdminArea && (
                   <Link to="/marriage" className={actionClass("/marriage")}>
                     <FaHeart />
                     <span>Hôn nhân</span>
                   </Link>
-                )}
 
                 <Link to="/family-setup" className={actionClass("/family-setup")}>
                   <FaUsers />
