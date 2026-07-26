@@ -31,7 +31,7 @@ export default function BirthOrderPage() {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          target_person_id: Number(childId),
+          target_person_id: Number(pendingAction?.parentId || childId),
           action: "birth_order:update",
         }),
       });
@@ -323,7 +323,9 @@ export default function BirthOrderPage() {
             birthOrderRows={birthOrder.birthOrderRows}
             setBirthOrderRows={birthOrder.setBirthOrderRows}
             saveBirthOrders={async () => {
-              const result = await birthOrder.saveBirthOrders();
+              const result = await birthOrder.saveBirthOrders(
+                Number(pendingAction?.parentId || childId)
+              );
             
               if (!result.ok) {
                 setError(result.message || "Không lưu được thứ tự anh/chị/em.");

@@ -212,4 +212,5 @@ class BirthOrderUpdateItem(BaseModel):
     birth_order: Optional[int] = None
 
 class BirthOrderBulkUpdate(BaseModel):
+    target_person_id: Optional[int] = None
     items: List[BirthOrderUpdateItem]

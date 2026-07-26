@@ -241,13 +241,21 @@ function ParentChildList({ role }) {
                           r.child_id ||
                           r.child?.person_id ||
                           r.child?.id;
-
-                        if (!childId) {
-                          alert("Không xác định được ID người con để mở BO.");
+                        const parentId =
+                          r.parent_id ||
+                          r.parent?.person_id ||
+                          r.parent?.id;
+                        if (!childId || !parentId) {
+                          alert("Không xác định được ID cha/mẹ hoặc người con để mở BO.");
                           return;
                         }
-
-                        navigate(`/birth-order/${childId}`);
+                        navigate(`/birth-order/${childId}`, {
+                          state: {
+                            mode: "single_parent",
+                            parentId: Number(parentId),
+                            type: r.type,
+                          },
+                        });
                       }}
                       className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded"
                     >

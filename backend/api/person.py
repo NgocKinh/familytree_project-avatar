@@ -371,22 +371,46 @@ def update_birth_order_bulk(
             detail="Bạn không có quyền cập nhật thứ tự sinh.",
         )
 
-    # member_basic phải có quan hệ gần với TẤT CẢ người được cập nhật
-    # Kiểm tra toàn bộ trước khi thay đổi dữ liệu
+    # member_basic phải có quan hệ gần với cha/mẹ đại diện
+    # Mỗi người được cập nhật phải là con của cha/mẹ đó
     if role == "member_basic":
-        for item in payload.items:
-            allowed = is_near_person(
-                current_user,
-                item.person_id,
-                "birth_order:update",
+        target_person_id = payload.target_person_id
+
+        if target_person_id is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Thiếu ID cha/mẹ đại diện của gia đình.",
             )
 
-            if not allowed:
+        # Kiểm tra member có quan hệ gần với cha/mẹ đại diện
+        allowed = is_near_person(
+            current_user,
+            target_person_id,
+            "birth_order:update",
+        )
+
+        if not allowed:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"Bạn không có quan hệ gần với thành viên "
+                    f"ID {target_person_id}."
+                ),
+            )
+
+        # Xác minh từng người được cập nhật thuộc đúng gia đình
+        for item in payload.items:
+            belongs_to_family = db.query(ParentChild).filter(
+                ParentChild.parent_id == target_person_id,
+                ParentChild.child_id == item.person_id,
+            ).first()
+
+            if not belongs_to_family:
                 raise HTTPException(
                     status_code=403,
                     detail=(
-                        f"Bạn không có quyền cập nhật thứ tự sinh "
-                        f"của thành viên ID {item.person_id}."
+                        f"Thành viên ID {item.person_id} không thuộc "
+                        f"gia đình của cha/mẹ ID {target_person_id}."
                     ),
                 )
 

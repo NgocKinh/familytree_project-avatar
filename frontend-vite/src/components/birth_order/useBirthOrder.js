@@ -290,7 +290,7 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
     return new Set(values).size !== values.length;
   };
 
-  const saveBirthOrders = async () => {
+  const saveBirthOrders = async (targetPersonId = null) => {
     if (hasDuplicateBirthOrder()) {
       return {
         ok: false,
@@ -310,7 +310,10 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
 
       await axios.put(
         `${API_BASE_URL}/person/birth-order/bulk`,
-        { items: payload },
+        {
+          target_person_id: targetPersonId,
+          items: payload,
+        },
         getAuthConfig()
       );
 
