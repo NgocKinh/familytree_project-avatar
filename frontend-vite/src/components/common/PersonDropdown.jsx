@@ -8,6 +8,7 @@ export default function PersonDropdown({
     placeholder = "-- Chọn --",
     filterFn = null,
     disabled = false,
+    showId = false,
 }) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
@@ -42,12 +43,21 @@ export default function PersonDropdown({
 
     const getDisplay = (p) => {
         if (!p) return "";
+
+        const personId = p.person_id ?? p.id;
         const birthYear = p.birth_date
-            ? new Date(p.birth_date).getFullYear()
+          ? new Date(p.birth_date).getFullYear()
+          : "";
+
+        const idText =
+          showId && personId !== undefined && personId !== null
+            ? `[ID: ${personId}] `
             : "";
 
-        return `${formatName(p)}${birthYear ? ` (${birthYear})` : ""}`;
-    };
+        return `${idText}${formatName(p)}${
+          birthYear ? ` (${birthYear})` : ""
+        }`;
+      };
 
     const filteredPersons = sortedPersons.filter((p) =>
         getDisplay(p).toLowerCase().includes(search.toLowerCase())

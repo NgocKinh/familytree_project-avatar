@@ -54,7 +54,7 @@ export default function AdminUsersPage({ currentUser }) {
     }
     async function loadPersons() {
         try {
-            const res = await axios.get(`${API_BASE_URL}/person`);
+            const res = await axios.get(`${API_BASE_URL}/person/`);
 
             const data = res.data || [];
 
@@ -202,11 +202,12 @@ export default function AdminUsersPage({ currentUser }) {
                         value={form.person_id}
                         onChange={(id) =>
                             setForm((prev) => ({
-                                ...prev,
-                                person_id: id,
+                            ...prev,
+                            person_id: id,
                             }))
                         }
                         persons={persons}
+                        showId
                         placeholder="🔍Gõ tên để tìm nhanh hoặc bấm ▼ để chọn thành viên trong gia phả"
                     />
                 </div>
