@@ -20,6 +20,7 @@ NEAR_RELATION_EDIT = {
     "parent",
     "child",
     "sibling",
+    "uncle_aunt",
 }
 def has_permission(role: str, permission_key: str) -> bool:
     if not role:
