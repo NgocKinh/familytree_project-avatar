@@ -8,13 +8,16 @@
 //   - Load dữ liệu edit chuẩn
 // ======================================================================
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   addMarriage,
   getMarriageById,
   updateMarriage,
 } from "../../api/marriageApi";
-import { getPersonBasicList } from "../../api/personBasicApi";
+import {
+  getPersonBasicList,
+  getPersonBasicById,
+} from "../../api/personBasicApi";
 import { checkNearAccess } from "../../api/authApi";
 // Utils ngày tháng
 import { formatDateVN, parseVNDate, detectPrecision } from "../../utils/formatDate";
@@ -44,7 +47,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
     end_date: "",
     start_precision: "exact",
     end_precision: "exact",
-    status: "married",
+    status: "",
     priority: 0,
     ceremony_type: "",
     location: "",
@@ -60,8 +63,19 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
   // STATE – data / ui
   const [persons, setPersons] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
+  const [statusError, setStatusError] = useState("");
+  const statusRef = useRef(null);
   const [successMsg, setSuccessMsg] = useState("");
   const [loading, setLoading] = useState(false);
+  const [canShowMarriageDetails, setCanShowMarriageDetails] = useState(
+    role !== "member_basic"
+  );
+  const [checkingNearAccess, setCheckingNearAccess] = useState(false);
+  const [selectedPersonDetails, setSelectedPersonDetails] = useState({
+    spouseA: null,
+    spouseB: null,
+  });
+  const [lifeDataWarnings, setLifeDataWarnings] = useState([]);
   const [mode, setMode] = useState("full");
   const [showSurName, setShowSurName] = useState(true);
 
@@ -118,6 +132,155 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
       resetForm(); // ✅ [CHANGE]: vào chế độ Thêm mới thì xóa dữ liệu cũ
     }
   }, [editId]);
+  // ======================================================================
+  // Kiểm tra quyền ngay sau khi chọn đủ hai người
+  // ======================================================================
+  useEffect(() => {
+    let cancelled = false;
+
+    const verifySelectedPeopleAccess = async () => {
+      const spouseAId = formData.spouse_a_id;
+      const spouseBId = formData.spouse_b_id;
+
+      // Admin và co_operator không cần khóa phần chi tiết
+      if (role !== "member_basic") {
+        setCanShowMarriageDetails(true);
+        setCheckingNearAccess(false);
+        return;
+      }
+
+      // Member chưa chọn đủ hai người: chưa mở phần chi tiết
+      if (!spouseAId || !spouseBId) {
+        setCanShowMarriageDetails(false);
+        setCheckingNearAccess(false);
+        setErrorMsg("");
+        return;
+      }
+
+      setCheckingNearAccess(true);
+      setCanShowMarriageDetails(false);
+      setErrorMsg("");
+
+      try {
+        const [accessA, accessB] = await Promise.all([
+          checkNearAccess(spouseAId),
+          checkNearAccess(spouseBId),
+        ]);
+
+        if (cancelled) return;
+
+        const allowed = Boolean(accessA?.allowed || accessB?.allowed);
+        setCanShowMarriageDetails(allowed);
+
+        if (!allowed) {
+          setErrorMsg(
+            "❌ Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này."
+          );
+        }
+      } catch (err) {
+        if (cancelled) return;
+
+        setCanShowMarriageDetails(false);
+
+        if (handleAuthError(err)) {
+          return;
+        }
+
+        setErrorMsg("❌ Không thể kiểm tra quyền quan hệ gần.");
+      } finally {
+        if (!cancelled) {
+          setCheckingNearAccess(false);
+        }
+      }
+    };
+
+    verifySelectedPeopleAccess();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [role, formData.spouse_a_id, formData.spouse_b_id]);
+  // ======================================================================
+  // Kiểm tra dữ liệu ngày qua đời / ngày giỗ của hai người
+  // ======================================================================
+  useEffect(() => {
+    let cancelled = false;
+
+    const checkLifeData = async () => {
+      const spouseAId = formData.spouse_a_id;
+      const spouseBId = formData.spouse_b_id;
+
+      // Chỉ đọc chi tiết khi đã chọn đủ và đã được phép mở form
+      if (!spouseAId || !spouseBId || !canShowMarriageDetails) {
+        setSelectedPersonDetails({
+          spouseA: null,
+          spouseB: null,
+        });
+        setLifeDataWarnings([]);
+        return;
+      }
+
+      try {
+        const [spouseA, spouseB] = await Promise.all([
+          getPersonBasicById(spouseAId),
+          getPersonBasicById(spouseBId),
+        ]);
+
+        if (cancelled) return;
+
+        setSelectedPersonDetails({
+          spouseA,
+          spouseB,
+        });
+
+        const createWarning = (person, fallbackName) => {
+          const name =
+            person?.full_name_vn ||
+            [
+              person?.sur_name,
+              person?.last_name,
+              person?.middle_name,
+              person?.first_name,
+            ]
+              .filter(Boolean)
+              .join(" ") ||
+            fallbackName;
+
+          return `⚠️ ${name}: không đủ dữ liệu ngày tháng hoặc đã qua đời. Cần kiểm tra trước khi thêm mối quan hệ hôn nhân.`;
+        };
+
+        setLifeDataWarnings([
+          createWarning(spouseA, "Người chồng"),
+          createWarning(spouseB, "Người vợ"),
+        ]);
+      } catch (err) {
+        if (cancelled) return;
+
+        setSelectedPersonDetails({
+          spouseA: null,
+          spouseB: null,
+        });
+
+        if (handleAuthError(err)) {
+          return;
+        }
+
+        setLifeDataWarnings([
+          "⚠️ Không thể kiểm tra dữ liệu ngày qua đời/ngày giỗ.",
+        ]);
+      }
+    };
+
+    checkLifeData();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    canShowMarriageDetails,
+    formData.spouse_a_id,
+    formData.spouse_b_id,
+  ]);
 
   const loadOldData = async (id) => {
     try {
@@ -130,7 +293,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
         end_date: formatDateVN(data.end_date),
         start_precision: detectPrecision(data.start_date),
         end_precision: detectPrecision(data.end_date),
-        status: data.status ?? "married",
+        status: data.status ?? "",
         priority: data.priority ?? 0,
         ceremony_type: data.ceremony_type ?? "",
         location: data.location ?? "",
@@ -168,7 +331,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
       end_date: "",
       start_precision: "exact",
       end_precision: "exact",
-      status: "married",
+      status: "",
       priority: 0,
       ceremony_type: "",
       location: "",
@@ -176,6 +339,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
       consanguineous: 0,
     });
     setErrorMsg("");
+    setStatusError("");
     setSuccessMsg("");
   };
 
@@ -184,11 +348,11 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
   // ======================================================================
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     setLoading(true);
     setErrorMsg("");
     setSuccessMsg("");
-  
+
     const {
       spouse_a_id,
       spouse_b_id,
@@ -221,17 +385,31 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
       setLoading(false);
       return; // silent block, không popup
     }
+    if (!status) {
+      setStatusError("⚠️ Vui lòng chọn tình trạng hôn nhân.");
+      setLoading(false);
+
+      requestAnimationFrame(() => {
+        statusRef.current?.focus({ preventScroll: true });
+        statusRef.current?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      });
+
+      return;
+    }
 
     const start_iso = parseVNDate(start_date);
     const end_iso = parseVNDate(end_date);
     // ======================================================
     // Dynamic Close Member Check
     // ======================================================
-    
+
     try {
       const accessA = await checkNearAccess(spouse_a_id);
       const accessB = await checkNearAccess(spouse_b_id);
-      
+
       if (!accessA.allowed && !accessB.allowed) {
         setErrorMsg("❌ Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này.");
         setLoading(false);
@@ -282,7 +460,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
         return;
       }
       const data = err.response?.data;
-    
+
       const msg =
         data?.message ||
         data?.detail?.message ||
@@ -290,7 +468,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
         data?.warning ||
         data?.error ||
         "❌ Không thể lưu quan hệ hôn nhân!";
-    
+
       setErrorMsg(msg);
     } finally {
       setLoading(false);
@@ -306,7 +484,7 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
         {editId ? "✏️ Chỉnh Sửa Quan Hệ Hôn Nhân" : "💍 Thêm Quan Hệ Hôn Nhân"}
       </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" noValidate>
 
         <PersonSelectWithAvatarV2
           label="👨 Chồng:"
@@ -353,6 +531,32 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
           </span>
         </div>
 
+        {checkingNearAccess && (
+          <div className="p-2 bg-blue-100 text-blue-700 rounded text-center font-medium">
+            ⏳ Đang kiểm tra quyền quan hệ gần...
+          </div>
+        )}
+
+        {errorMsg && (
+          <div className="p-2 bg-red-100 text-red-700 rounded text-center font-medium">
+            {errorMsg}
+          </div>
+        )}
+
+        {successMsg && (
+          <div className="p-2 bg-green-100 text-green-700 rounded text-center font-medium">
+            {successMsg}
+          </div>
+        )}
+    {canShowMarriageDetails && lifeDataWarnings.length > 0 && (
+      <div className="p-3 bg-yellow-100 text-yellow-800 rounded font-medium space-y-1">
+        {lifeDataWarnings.map((warning, index) => (
+          <p key={index}>{warning}</p>
+        ))}
+      </div>
+    )}
+    {canShowMarriageDetails && (
+      <>
         {/* Ngày cưới */}
         <div>
           <label className="block mb-1 font-medium text-gray-700">📅 Ngày cưới:</label>
@@ -387,17 +591,38 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
             </label>
 
             <select
+              ref={statusRef}
               value={formData.status}
-              onChange={(e) =>
-                handleChange("status", e.target.value)
-              }
-              className="w-full border border-gray-300 rounded p-2"
+              onChange={(e) => {
+                handleChange("status", e.target.value);
+                setStatusError("");
+              }}
+              required
+              aria-invalid={Boolean(statusError)}
+              aria-describedby="status-error"
+              className={`w-full border rounded p-2 ${
+                statusError
+                  ? "border-red-500 ring-1 ring-red-500"
+                  : "border-gray-300"
+              }`}
             >
+              <option value="" disabled>
+                -- Chọn tình trạng hôn nhân --
+              </option>
               <option value="married">Đã kết hôn</option>
               <option value="cohabiting">Sống chung</option>
               <option value="separated">Ly thân</option>
               <option value="divorced">Ly hôn</option>
             </select>
+
+            {statusError && (
+              <p
+                id="status-error"
+                className="mt-1 text-sm font-medium text-red-600"
+              >
+                {statusError}
+              </p>
+            )}
           </div>
 
           {/* Ưu tiên */}
@@ -451,18 +676,6 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
           </label>
         </div>
 
-        {/* Thông báo */}
-        {errorMsg && (
-          <div className="p-2 bg-red-100 text-red-700 rounded text-center font-medium">
-            {errorMsg}
-          </div>
-        )}
-        {successMsg && (
-          <div className="p-2 bg-green-100 text-green-700 rounded text-center font-medium">
-            {successMsg}
-          </div>
-        )}
-
         {/* Nút */}
         <div className="flex justify-between gap-4 pt-2">
         <button
@@ -485,6 +698,8 @@ export default function MarriageForm({ role = "admin", editId = null, onBack }) 
             ⬅️ {editId ? "Quay lại" : "Hủy / Nhập lại"}
           </button>
         </div>
+        </>
+      )}
       </form>
     </div>
   );

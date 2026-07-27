@@ -81,7 +81,11 @@ export default function MarriagePage({ role }) {
             role={role}
           />
         ) : (
-          <MarriageForm editId={editId} onBack={handleBack} />
+          <MarriageForm
+            role={role}
+            editId={editId}
+            onBack={handleBack}
+          />
         )}
       </div>
     </div>
