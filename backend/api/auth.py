@@ -33,6 +33,7 @@ NEAR_RELATION_EDIT = {
     "parent",
     "child",
     "sibling",
+    "uncle_aunt",
 }
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
