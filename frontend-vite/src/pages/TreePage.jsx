@@ -66,13 +66,28 @@ function Person({ person, go, size = 60 }) {
 /* ================= Helpers ================= */
 
 function ensureTwo(list = []) {
+  const people = list.slice(0, 2);
 
-  const fake = { person_id: "fake_unknown", name: "Không rõ", gender: "other" };
+  const male = people.find((p) => p.gender === "male");
+  const female = people.find((p) => p.gender === "female");
 
-  if (list.length === 0) return [fake, fake];
-  if (list.length === 1) return [list[0], fake];
+  const remaining = people.filter(
+    (p) => p !== male && p !== female
+  );
 
-  return list.slice(0, 2);
+  const left = male || remaining.shift() || {
+    person_id: "fake_unknown_left",
+    name: "Không rõ",
+    gender: "other",
+  };
+
+  const right = female || remaining.shift() || {
+    person_id: "fake_unknown_right",
+    name: "Không rõ",
+    gender: "other",
+  };
+
+  return [left, right];
 }
 
 function heartIcon(status) {
