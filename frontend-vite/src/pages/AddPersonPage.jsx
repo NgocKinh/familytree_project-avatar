@@ -11,7 +11,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import PersonBasicForm from "../components/person/PersonBasicForm";
 import PersonDetailForm from "../components/person/PersonDetailForm";
-
+import { checkNearAccess } from "../api/authApi";
 export default function AddPersonPage({ role }) {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -21,31 +21,73 @@ export default function AddPersonPage({ role }) {
   // QUẢN LÝ ID VÀ TRẠNG THÁI FORM DETAIL
   // ==============================================
   const [personId, setPersonId] = useState(id || null);
+  const isFullDetailRole =
+  role === "co_operator" ||
+  role === "admin";
+
+  const [canShowDetail, setCanShowDetail] = useState(isFullDetailRole);
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [hasNavigated, setHasNavigated] = useState(false);
-  
-  // Ai được phép xem Form Chi Tiết?
-  const canShowDetail =
-    role === "co_operator" ||
-    role === "admin";
 
   // ======================================================================
   // Khi mở trang ở chế độ EDIT → tự động hiển thị Form Detail
   // ======================================================================
   useEffect(() => {
-    if (isEditMode && canShowDetail) {
+    let cancelled = false;
+  
+    const resolveDetailAccess = async () => {
+      setHasNavigated(false);
+  
+      if (!isEditMode) {
+        setPersonId(null);
+        setCanShowDetail(isFullDetailRole);
+        setShowDetailForm(false);
+        return;
+      }
+  
       setPersonId(id);
-      setShowDetailForm(true);
-    }
   
-    if (!isEditMode) {
-      setPersonId(null);
+      if (isFullDetailRole) {
+        setCanShowDetail(true);
+        setShowDetailForm(true);
+        return;
+      }
+  
+      if (role !== "member_basic") {
+        setCanShowDetail(false);
+        setShowDetailForm(false);
+        return;
+      }
+  
+      setCanShowDetail(false);
       setShowDetailForm(false);
-    }
   
-    // 🔵 reset guard khi vào trang mới
-    setHasNavigated(false);
-  }, [isEditMode, id, canShowDetail]);
+      try {
+        const access = await checkNearAccess(id);
+  
+        if (cancelled) return;
+  
+        const allowed = Boolean(access?.allowed);
+        setCanShowDetail(allowed);
+        setShowDetailForm(allowed);
+      } catch (error) {
+        if (cancelled) return;
+  
+        console.error(
+          "Không thể kiểm tra quyền xem Form Chi tiết:",
+          error
+        );
+        setCanShowDetail(false);
+        setShowDetailForm(false);
+      }
+    };
+  
+    resolveDetailAccess();
+  
+    return () => {
+      cancelled = true;
+    };
+  }, [isEditMode, id, role, isFullDetailRole]);
 
   // ======================================================================
   // Callback từ PersonBasicForm (khi lưu xong)
