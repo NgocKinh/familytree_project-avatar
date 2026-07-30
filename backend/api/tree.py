@@ -3,9 +3,11 @@
 # GIỮ NGUYÊN LOGIC CŨ (CACHE + SQL + AVATAR)
 # ==========================================================
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import JSONResponse
 from backend.db import get_connection
+from backend.models.user_model import User
+from backend.utils.auth_guard import require_permission, is_near_person
 
 import os
 import time
@@ -76,8 +78,26 @@ def build_person(row):
 # ==========================================================
 
 @router.get("/{pid}")
-def get_family(pid: int):
-    
+def get_family(
+    pid: int,
+    current_user: User = Depends(require_permission("tree:view")),
+):
+    if current_user.role not in ["admin", "co_operator"]:
+        allowed = is_near_person(
+            current_user,
+            pid,
+            "tree:view",
+        )
+
+        if not allowed:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=(
+                    "Bạn không có quyền xem cây gia phả của "
+                    "thành viên không có quan hệ gần."
+                ),
+            )
+
     now = time.time()
 
     # ================= CACHE =================
