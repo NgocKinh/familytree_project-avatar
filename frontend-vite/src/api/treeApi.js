@@ -13,7 +13,13 @@ export async function getFamilyTree(id) {
   }
 
   try {
-    const res = await axios.get(`${API_BASE}/${id}`);
+    const token = localStorage.getItem("token");
+
+    const res = await axios.get(`${API_BASE}/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     const data = res.data || {};
 
     // Chuẩn hoá dữ liệu cho TreePage
