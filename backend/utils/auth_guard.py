@@ -14,6 +14,18 @@ NEAR_RELATION_VIEW = {
     "uncle_aunt",
     "nephew_niece",
 }
+NEAR_RELATION_VIEW_LABELS = {
+    "anh rể",
+    "chị dâu",
+    "em rể",
+    "em dâu",
+    "anh vợ",
+    "chị vợ",
+    "em vợ",
+    "anh chồng",
+    "chị chồng",
+    "em chồng",
+}
 NEAR_RELATION_EDIT = {
     "self",
     "spouse",
@@ -67,16 +79,34 @@ def is_near_person(
     )
 
     relation_basic = None
+    relation_label = None
 
     if result:
+        standard_result = result.get("result") or {}
+
         relation_basic = (
-            result.get("result", {}).get("relation_basic")
+            standard_result.get("relation_basic")
             or result.get("relation_basic")
             or result.get("relationship")
         )
 
-    if permission_key in {"relation:create", "relation:update", "birth_order:update"}:
+        relation_label = (
+            standard_result.get("relation")
+            or result.get("relation")
+        )
+
+    if permission_key in {
+        "relation:create",
+        "relation:update",
+        "birth_order:update",
+    }:
         return relation_basic in NEAR_RELATION_EDIT
+
+    if permission_key == "tree:view":
+        return (
+            relation_basic in NEAR_RELATION_VIEW
+            or relation_label in NEAR_RELATION_VIEW_LABELS
+        )
 
     return relation_basic in NEAR_RELATION_VIEW
 
