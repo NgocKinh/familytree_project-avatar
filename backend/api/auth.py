@@ -27,6 +27,18 @@ NEAR_RELATION_BASICS = {
     "uncle_aunt",
     "nephew_niece",
 }
+NEAR_RELATION_TREE_LABELS = {
+    "anh rể",
+    "chị dâu",
+    "em rể",
+    "em dâu",
+    "anh vợ",
+    "chị vợ",
+    "em vợ",
+    "anh chồng",
+    "chị chồng",
+    "em chồng",
+}
 NEAR_RELATION_EDIT = {
     "self",
     "spouse",
@@ -191,15 +203,32 @@ def check_near_access(
         data.target_person_id
     )
     relation_basic = None
+    relation_label = None
 
     if result:
+        standard_result = result.get("result") or {}
+
         relation_basic = (
-            result.get("result", {}).get("relation_basic")
+            standard_result.get("relation_basic")
             or result.get("relation_basic")
             or result.get("relationship")
         )
 
-    if data.action in ["relation:create", "relation:update", "birth_order:update"]:
+        relation_label = (
+            standard_result.get("relation")
+            or result.get("relation")
+        )
+
+    if data.action == "tree:view":
+        allowed = (
+            relation_basic in NEAR_RELATION_BASICS
+            or relation_label in NEAR_RELATION_TREE_LABELS
+        )
+    elif data.action in [
+        "relation:create",
+        "relation:update",
+        "birth_order:update",
+    ]:
         allowed = relation_basic in NEAR_RELATION_EDIT
     else:
         allowed = relation_basic in NEAR_RELATION_BASICS
