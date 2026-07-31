@@ -26,18 +26,7 @@ NEAR_RELATION_BASICS = {
     "grandchild",
     "uncle_aunt",
     "nephew_niece",
-}
-NEAR_RELATION_TREE_LABELS = {
-    "anh rể",
-    "chị dâu",
-    "em rể",
-    "em dâu",
-    "anh vợ",
-    "chị vợ",
-    "em vợ",
-    "anh chồng",
-    "chị chồng",
-    "em chồng",
+    "sibling_in_law"
 }
 NEAR_RELATION_EDIT = {
     "self",
@@ -220,16 +209,15 @@ def check_near_access(
         )
 
     if data.action == "tree:view":
-        allowed = (
-            relation_basic in NEAR_RELATION_BASICS
-            or relation_label in NEAR_RELATION_TREE_LABELS
-        )
+        allowed = relation_basic in NEAR_RELATION_BASICS
+
     elif data.action in [
         "relation:create",
         "relation:update",
         "birth_order:update",
     ]:
         allowed = relation_basic in NEAR_RELATION_EDIT
+        
     else:
         allowed = relation_basic in NEAR_RELATION_BASICS
 

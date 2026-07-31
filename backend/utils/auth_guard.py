@@ -13,18 +13,7 @@ NEAR_RELATION_VIEW = {
     "grandchild",
     "uncle_aunt",
     "nephew_niece",
-}
-NEAR_RELATION_VIEW_LABELS = {
-    "anh rể",
-    "chị dâu",
-    "em rể",
-    "em dâu",
-    "anh vợ",
-    "chị vợ",
-    "em vợ",
-    "anh chồng",
-    "chị chồng",
-    "em chồng",
+    "sibling_in_law"
 }
 NEAR_RELATION_EDIT = {
     "self",
@@ -101,12 +90,6 @@ def is_near_person(
         "birth_order:update",
     }:
         return relation_basic in NEAR_RELATION_EDIT
-
-    if permission_key == "tree:view":
-        return (
-            relation_basic in NEAR_RELATION_VIEW
-            or relation_label in NEAR_RELATION_VIEW_LABELS
-        )
 
     return relation_basic in NEAR_RELATION_VIEW
 
