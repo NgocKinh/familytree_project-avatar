@@ -28,17 +28,19 @@ def find_relationship_path(start, target):
         # =========================
         # 🔹 PARENT
         # =========================
+
         for parent, role in get_parents(current):
             if parent not in visited:
                 if parent == target:
                     return path + [("parent", parent, role)]
 
-            visited.add(parent)
-            queue.append((parent, path + [("parent", parent, role)]))
+                visited.add(parent)
+                queue.append((parent, path + [("parent", parent, role)]))
 
         # =========================
         # 🔹 CHILD
         # =========================
+
         for child in get_children(current):
             if child not in visited:
                 if child == target:
@@ -50,8 +52,8 @@ def find_relationship_path(start, target):
         # =========================
         # 🔹 SPOUSE
         # =========================
-        spouses = get_spouses(current)
 
+        spouses = get_spouses(current)
         for spouse in spouses:
             if spouse and spouse not in visited:
                 if spouse == target:
@@ -59,4 +61,5 @@ def find_relationship_path(start, target):
 
                 visited.add(spouse)
                 queue.append((spouse, path + [("spouse", spouse, None)]))
+
     return None
