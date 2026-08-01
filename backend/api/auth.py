@@ -192,9 +192,15 @@ def check_near_access(
             "relationship": "self",
         }
 
+    t1 = time.perf_counter()
+
     result = resolver_relationship(
         current_user.person_id,
         data.target_person_id
+    )
+
+    print(
+        f"🔥 resolver_relationship: {time.perf_counter()-t1:.3f}s"
     )
     relation_basic = None
     relation_label = None
