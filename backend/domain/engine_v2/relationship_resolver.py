@@ -32,6 +32,7 @@ from backend.domain.engine_v2.inlaw_resolver import (
     is_sibling_in_law,
     is_sibling_of_spouse,
 )
+import time
 
 # ==========================================================
 # ✅ [STEP 5.3] Convert NEW path → OLD format
@@ -62,7 +63,13 @@ def resolver_relationship(a: int, b: int):
     # 🔁 NEW ENGINE (SAFE MODE)
     # =========================
 
+    t1 = time.perf_counter()
+
     new_path = find_relationship_path(a, b)
+
+    print(
+        f"🔥 find_relationship_path: {time.perf_counter()-t1:.3f}s"
+    )
 
     path = convert_path_format(new_path)
     # =====================================
