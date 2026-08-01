@@ -334,8 +334,11 @@ def update_person(
         user_person_id = current_user.person_id
 
         if role not in ["admin", "co_operator"]:
-            allowed = is_near_person(current_user, person_id, db)
-
+            allowed = is_near_person(
+                current_user,
+                person_id,
+                "relation:update",
+            )
             if not allowed:
                 raise HTTPException(
                     status_code=403,
