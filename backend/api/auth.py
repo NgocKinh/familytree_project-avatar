@@ -163,6 +163,8 @@ def check_near_access(
     data: CheckNearRequest,
     current_user: User = Depends(get_current_user)
 ):
+    print("🔥 ENTER check_near_access")
+
     t0 = time.perf_counter()
     if current_user.role in ["admin", "co_operator"]:
         return {
@@ -227,7 +229,7 @@ def check_near_access(
     print(
         f"🔥 check_near_access total: {time.perf_counter()-t0:.3f}s"
     )
-    
+    print("🔥 EXIT check_near_access")
     return {
     "allowed": allowed,
     "effective_role": "member_close" if allowed else current_user.role,
