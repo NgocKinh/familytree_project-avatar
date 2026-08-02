@@ -99,52 +99,6 @@ def build_blocks(path):
     i = 0
 
     while i < len(path):
-
-        # # ✅ CASE 1: parent → child → child  (cháu)
-        # if (
-        #     i + 2 < len(path)
-        #     and path[i][0] == "parent"
-        #     and path[i+1][0] == "child"
-        #     and path[i+2][0] == "child"
-        # ):
-        #     result.append(("grandchild", None))
-        #     i += 3
-        #     continue
-
-        # # ✅ CASE 2: parent → child  (sibling)
-        # if (
-        #     i + 1 < len(path)
-        #     and path[i][0] == "parent"
-        #     and path[i+1][0] == "child"
-        # ):
-        #     side = path[i][2]
-        #     result.append(("sibling", side))
-        #     i += 2
-        #     continue
-
-        # # ✅ CASE 3: parent -> parent -> child (uncle/aunt)
-        # if (
-        #     i + 2 < len(path)
-        #     and path[i][0] == "parent"
-        #     and path[i+1][0] == "parent"
-        #     and path[i+2][0] == "child"
-        # ):
-        #     result.append(("uncle_aunt", None))
-        #     i += 3
-        #     continue
-
-        # # ✅ CASE 4: parent -> child -> child (nephew/niece)
-        # if (
-        #     i + 2 < len(path)
-        #     and path[i][0] == "parent"
-        #     and path[i+1][0] == "child"
-        #     and path[i+2][0] == "child"
-        # ):
-        #     result.append(("nephew_niece", None))
-        #     i += 3
-        #     continue
-
-        # giữ nguyên bước thường
         result.append((path[i][0], path[i][2]))
         i += 1
     return result
@@ -297,32 +251,6 @@ def resolve_relation(blocks, context):
             px = {pp for pp, _ in get_parents(x)}
             py = {pp for pp, _ in get_parents(y)}
             return None
-
-        # # 👉 bên nội (anh/em của cha)
-        # if father_a and is_sibling(b, father_a):
-
-        #     side = "paternal"
-
-        #     if gender_b == "male":
-
-        #         birth_b = get_birth(b)
-        #         birth_father = get_birth(father_a)
-
-        #         if birth_b and birth_father:
-        #             older = birth_b < birth_father
-        #             return None
-
-        #         return None
-
-        #     else:
-        #         return None
-
-        # # 👉 bên ngoại (anh/em của mẹ)
-        # if mother_a and is_sibling(b, mother_a):
-
-        #     side = "maternal"
-
-        #     return None
         
     # ===== CHỊ DÂU / ANH RỂ =====
     if [x[0] for x in blocks] == ["sibling", "spouse"]:

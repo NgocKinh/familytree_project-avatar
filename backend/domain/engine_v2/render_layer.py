@@ -4,7 +4,6 @@
 from backend.domain.engine_v2.data_layer_db import (
     get_siblings,
     get_spouse,
-    get_spouses,
     get_birth,
     get_gender,
     get_parents,
@@ -129,18 +128,6 @@ def build_grandparent_output(metadata):
             "south": relation
         }
     }
-# def build_grandparent_output(metadata):
-
-#     side = metadata.get("side")
-#     gender = metadata.get("gender")
-
-#     return {
-#         "relation": render_grandparent(metadata),
-#         "relation_basic": "grandparent",
-#         "relation_side": side,
-#         "gender": gender,
-#         "call": None
-#     }
 
 # =====================================
 # 🔥 GRANDCHILD OUTPUT
