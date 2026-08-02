@@ -11,8 +11,6 @@ from backend.db import get_db
 from backend.models.user_model import User
 from backend.domain.engine_v2.relationship_resolver import resolver_relationship
 
-import time
-
 router = APIRouter(tags=["Auth"])
 
 SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME_FAMILYTREE_SECRET_KEY")
@@ -163,9 +161,7 @@ def check_near_access(
     data: CheckNearRequest,
     current_user: User = Depends(get_current_user)
 ):
-    print("🔥 ENTER check_near_access")
 
-    t0 = time.perf_counter()
     if current_user.role in ["admin", "co_operator"]:
         return {
             "allowed": True,
@@ -192,16 +188,11 @@ def check_near_access(
             "relationship": "self",
         }
 
-    t1 = time.perf_counter()
-
     result = resolver_relationship(
         current_user.person_id,
         data.target_person_id
     )
 
-    print(
-        f"🔥 resolver_relationship: {time.perf_counter()-t1:.3f}s"
-    )
     relation_basic = None
     relation_label = None
 
@@ -232,10 +223,6 @@ def check_near_access(
     else:
         allowed = relation_basic in NEAR_RELATION_BASICS
 
-    print(
-        f"🔥 check_near_access total: {time.perf_counter()-t0:.3f}s"
-    )
-    print("🔥 EXIT check_near_access")
     return {
     "allowed": allowed,
     "effective_role": "member_close" if allowed else current_user.role,

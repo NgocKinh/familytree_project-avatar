@@ -4,8 +4,6 @@ from backend.models.user_model import User
 from backend.permissions import ROLE_KEYS
 from backend.domain.engine_v2.relationship_resolver import resolver_relationship
 
-import time
-
 NEAR_RELATION_VIEW = {
     "self",
     "spouse",
@@ -65,15 +63,9 @@ def is_near_person(
     if current_user.person_id == target_person_id:
         return True
 
-    t0 = time.perf_counter()
-
     result = resolver_relationship(
         current_user.person_id,
         target_person_id
-    )
-
-    print(
-        f"🔥 resolver_relationship: {time.perf_counter()-t0:.3f}s"
     )
 
     relation_basic = None
