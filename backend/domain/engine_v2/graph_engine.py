@@ -5,10 +5,8 @@
 
 from collections import deque
 from backend.domain.engine_v2.data_layer_db import (
-    get_parents,
-    get_spouse,
-    get_spouses,
-    get_children
+    load_parent_child_graph,
+    load_marriage_graph,
 )
 
 def find_relationship_path(start, target):
@@ -22,6 +20,9 @@ def find_relationship_path(start, target):
     queue.append((start, [("self", start, None)]))
     visited.add(start)
 
+    parents_map, children_map = load_parent_child_graph()
+    spouses_map = load_marriage_graph()
+
     while queue:
         current, path = queue.popleft()
 
@@ -29,7 +30,7 @@ def find_relationship_path(start, target):
         # 🔹 PARENT
         # =========================
 
-        for parent, role in get_parents(current):
+        for parent, role in parents_map.get(current, []):
             if parent not in visited:
                 if parent == target:
                     return path + [("parent", parent, role)]
@@ -41,7 +42,7 @@ def find_relationship_path(start, target):
         # 🔹 CHILD
         # =========================
 
-        for child in get_children(current):
+        for child in children_map.get(current, []):
             if child not in visited:
                 if child == target:
                     return path + [("child", child, None)]
@@ -53,8 +54,7 @@ def find_relationship_path(start, target):
         # 🔹 SPOUSE
         # =========================
 
-        spouses = get_spouses(current)
-        for spouse in spouses:
+        for spouse in spouses_map.get(current, []):
             if spouse and spouse not in visited:
                 if spouse == target:
                     return path + [("spouse", spouse, None)]

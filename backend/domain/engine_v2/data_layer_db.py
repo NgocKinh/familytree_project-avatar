@@ -1,6 +1,7 @@
 import mysql.connector
 import os
 from dotenv import load_dotenv
+from collections import defaultdict
 
 load_dotenv("backend/.env")
 # =====================================
@@ -168,6 +169,71 @@ def get_children(parent_id):
         children.append(row["child_id"])
 
     return children
+
+# =====================================
+# LOAD ENTIRE GRAPH INTO MEMORY
+# =====================================
+
+def load_parent_child_graph():
+
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+
+    cur.execute("""
+        SELECT parent_id, child_id, type
+        FROM parent_child
+    """)
+
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    parents_map = defaultdict(list)
+    children_map = defaultdict(list)
+
+    for row in rows:
+        parent_id = row["parent_id"]
+        child_id = row["child_id"]
+        role = row["type"]
+
+        parents_map[child_id].append(
+            (parent_id, role)
+        )
+
+        children_map[parent_id].append(
+            child_id
+        )
+
+    return parents_map, children_map
+
+
+def load_marriage_graph():
+
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+
+    cur.execute("""
+        SELECT spouse_a_id, spouse_b_id
+        FROM marriages
+    """)
+
+    rows = cur.fetchall()
+
+    cur.close()
+    conn.close()
+
+    spouses_map = defaultdict(list)
+
+    for row in rows:
+
+        a = row["spouse_a_id"]
+        b = row["spouse_b_id"]
+
+        spouses_map[a].append(b)
+        spouses_map[b].append(a)
+
+    return spouses_map
 
 # =====================================
 # 🔵 GET BIRTH YEAR FROM MYSQL
