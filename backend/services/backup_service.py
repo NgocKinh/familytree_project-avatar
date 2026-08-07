@@ -11,7 +11,7 @@
 
 import os
 from datetime import datetime
-
+import zipfile
 
 # ==========================================================
 # BACKUP DIRECTORY
@@ -58,3 +58,36 @@ def generate_backup_filename(
         f"{family_code}_Backup_"
         f"{now.strftime('%Y-%m-%d_%H%M%S')}.zip"
     )
+
+# ==========================================================
+# CREATE EMPTY BACKUP
+# ==========================================================
+
+def create_backup_file():
+
+    ensure_backup_dir()
+
+    filename = generate_backup_filename()
+
+    filepath = os.path.join(
+        BACKUP_DIR,
+        filename
+    )
+
+    with zipfile.ZipFile(
+        filepath,
+        "w",
+        zipfile.ZIP_DEFLATED
+    ) as zipf:
+
+        zipf.writestr(
+            "README.txt",
+            "FamilyTree Backup\n"
+        )
+
+        zipf.writestr(
+            "version.txt",
+            "FamilyTree Version 1.0\n"
+        )
+
+    return filename

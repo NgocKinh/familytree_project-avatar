@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 from backend.services.backup_service import (
-    ensure_backup_dir,
-    generate_backup_filename
+    create_backup_zip
 )
 
 router = APIRouter(
@@ -9,20 +8,13 @@ router = APIRouter(
     tags=["Backup"]
 )
 
-
-# ==========================================================
-# CREATE BACKUP
-# ==========================================================
-
 @router.post("/create")
 def create_backup():
 
-    ensure_backup_dir()
-
-    filename = generate_backup_filename()
+    filename = create_backup_zip()
 
     return {
         "success": True,
-        "message": "Backup service is ready.",
+        "message": "Backup created successfully.",
         "filename": filename
     }
