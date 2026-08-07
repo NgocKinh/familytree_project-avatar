@@ -10,8 +10,8 @@
 # ==========================================================
 
 import os
-from datetime import datetime
 import zipfile
+from datetime import datetime
 
 # ==========================================================
 # BACKUP DIRECTORY
@@ -63,7 +63,7 @@ def generate_backup_filename(
 # CREATE EMPTY BACKUP
 # ==========================================================
 
-def create_backup_file():
+def create_backup_zip():
 
     ensure_backup_dir()
 
