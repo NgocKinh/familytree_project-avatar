@@ -11,8 +11,6 @@ router = APIRouter(
 @router.post("/create")
 def create_backup():
 
-    export_database_sql("test.sql")
-
     filename = create_backup_zip()
 
     return {
