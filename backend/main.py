@@ -46,6 +46,13 @@ app.include_router(announcement_router, prefix="/api/announcement")
 app.include_router(feedback_router, prefix="/api/feedback")
 app.include_router(backup_router)
 
+print("\n========== ROUTERS ==========")
+
+for route in app.routes:
+    print(route.path)
+
+print("=============================\n")
+
 # ======================================================
 # EXCEPTION HANDLER
 # ======================================================
