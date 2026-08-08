@@ -81,9 +81,14 @@ def export_database_sql(output_path):
 
                 table_name = row[0]
 
-                print(table_name)
+                result_create = db.execute(
+                    text(f"SHOW CREATE TABLE `{table_name}`")
+                )
 
-                f.write(f"-- Table: {table_name}\n")
+                create_sql = result_create.fetchone()[1]
+
+                f.write(create_sql)
+                f.write(";\n\n")
 
     finally:
         db.close()
