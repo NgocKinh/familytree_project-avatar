@@ -86,7 +86,12 @@ def export_database_sql(output_path):
                 )
 
                 create_sql = result_create.fetchone()[1]
+                first_row = db.execute(
+                    text(f"SELECT * FROM `{table_name}` LIMIT 1")
+                ).fetchone()
 
+                print(type(first_row))
+                print(first_row)
                 f.write(create_sql)
                 f.write(";\n\n")
 
