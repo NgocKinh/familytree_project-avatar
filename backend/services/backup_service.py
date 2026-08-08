@@ -14,7 +14,7 @@ import zipfile
 from datetime import datetime
 
 from sqlalchemy import text
-from backend.database import SessionLocal
+from backend.db import SessionLocal
 # ==========================================================
 # BACKUP DIRECTORY
 # ==========================================================
@@ -115,7 +115,9 @@ def create_backup_zip():
         "w",
         zipfile.ZIP_DEFLATED
     ) as zipf:
+
         zipf.write(sql_path, "database.sql")
+
         zipf.writestr(
             "README.txt",
             "FamilyTree Backup\n"
