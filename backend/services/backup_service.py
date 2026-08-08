@@ -100,6 +100,8 @@ def export_database_sql(output_path):
             f.write("-- FamilyTree Database Backup\n")
             f.write("-- Generated automatically\n\n")
 
+            f.write("SET FOREIGN_KEY_CHECKS=0;\n\n")
+
             tables = db.execute(
                 text("SHOW TABLES")
             ).fetchall()
@@ -178,6 +180,8 @@ def export_database_sql(output_path):
                 )
 
                 f.write(";\n\n")
+
+            f.write("SET FOREIGN_KEY_CHECKS=1;\n")
 
     finally:
         db.close()
