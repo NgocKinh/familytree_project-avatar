@@ -129,3 +129,23 @@ def create_backup_zip():
         )
 
     return filename
+
+# ==========================================================
+# LIST BACKUP FILES
+# ==========================================================
+
+def list_backup_files():
+
+    ensure_backup_dir()
+
+    files = []
+
+    for filename in os.listdir(BACKUP_DIR):
+
+        if filename.endswith(".zip"):
+
+            files.append(filename)
+
+    files.sort(reverse=True)
+
+    return files
