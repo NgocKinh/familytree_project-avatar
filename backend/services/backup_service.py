@@ -95,6 +95,19 @@ def export_database_sql(output_path):
                 f.write(create_sql)
                 f.write(";\n\n")
 
+                result_columns = db.execute(
+                    text(f"SHOW COLUMNS FROM `{table_name}`")
+                )
+
+                columns = []
+
+                for col in result_columns:
+
+                    columns.append(col[0])
+
+                print(table_name)
+                print(columns)
+
     finally:
         db.close()
 
