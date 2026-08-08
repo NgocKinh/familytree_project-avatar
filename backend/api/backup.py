@@ -5,7 +5,8 @@ import os
 
 from backend.services.backup_service import (
     BACKUP_DIR,
-    create_backup_zip
+    create_backup_zip,
+    list_backup_files
 )
 
 router = APIRouter(
@@ -24,6 +25,14 @@ def create_backup():
         "filename": filename
     }
 
+@router.get("/list")
+def list_backups():
+
+    return {
+        "success": True,
+        "files": list_backup_files()
+    }
+    
 @router.get("/download/{filename}")
 def download_backup(filename: str):
 
