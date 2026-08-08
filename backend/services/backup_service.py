@@ -62,6 +62,33 @@ def generate_backup_filename(
 # ==========================================================
 # EXPORT DATABASE TO SQL
 # ==========================================================
+def sql_value(value):
+    """
+    Chuyển Python value thành SQL literal
+    """
+
+    import datetime
+
+    if value is None:
+        return "NULL"
+
+    if isinstance(value, bool):
+        return "1" if value else "0"
+
+    if isinstance(value, (int, float)):
+        return str(value)
+
+    if isinstance(value, datetime.datetime):
+        return "'" + value.strftime("%Y-%m-%d %H:%M:%S") + "'"
+
+    if isinstance(value, datetime.date):
+        return "'" + value.strftime("%Y-%m-%d") + "'"
+
+    text_value = str(value)
+    text_value = text_value.replace("\\", "\\\\")
+    text_value = text_value.replace("'", "''")
+
+    return "'" + text_value + "'"
 
 def export_database_sql(output_path):
 
@@ -73,40 +100,84 @@ def export_database_sql(output_path):
             f.write("-- FamilyTree Database Backup\n")
             f.write("-- Generated automatically\n\n")
 
-            result = db.execute(
+            tables = db.execute(
                 text("SHOW TABLES")
-            )
+            ).fetchall()
 
-            for row in result:
+            for row in tables:
 
                 table_name = row[0]
+
+                # --------------------------------------------------
+                # CREATE TABLE
+                # --------------------------------------------------
 
                 result_create = db.execute(
                     text(f"SHOW CREATE TABLE `{table_name}`")
                 )
 
                 create_sql = result_create.fetchone()[1]
-                first_row = db.execute(
-                    text(f"SELECT * FROM `{table_name}` LIMIT 1")
-                ).fetchone()
 
-                print(type(first_row))
-                print(first_row)
                 f.write(create_sql)
                 f.write(";\n\n")
+
+                # --------------------------------------------------
+                # COLUMN LIST
+                # --------------------------------------------------
 
                 result_columns = db.execute(
                     text(f"SHOW COLUMNS FROM `{table_name}`")
                 )
 
-                columns = []
+                columns = [
+                    col[0]
+                    for col in result_columns
+                ]
 
-                for col in result_columns:
+                # --------------------------------------------------
+                # TABLE DATA
+                # --------------------------------------------------
 
-                    columns.append(col[0])
+                rows = db.execute(
+                    text(f"SELECT * FROM `{table_name}`")
+                ).fetchall()
 
-                print(table_name)
-                print(columns)
+                if not rows:
+                    continue
+
+                f.write(
+                    f"INSERT INTO `{table_name}`\n"
+                )
+
+                f.write("(")
+
+                f.write(
+                    ", ".join(
+                        f"`{c}`"
+                        for c in columns
+                    )
+                )
+
+                f.write(")\nVALUES\n")
+
+                values_sql = []
+
+                for data_row in rows:
+
+                    values = [
+                        sql_value(value)
+                        for value in data_row
+                    ]
+
+                    values_sql.append(
+                        "(" + ", ".join(values) + ")"
+                    )
+
+                f.write(
+                    ",\n".join(values_sql)
+                )
+
+                f.write(";\n\n")
 
     finally:
         db.close()
