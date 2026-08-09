@@ -578,6 +578,70 @@ def preflight_database_sql(sql_content):
     }
 
 # ==========================================================
+# PREPARE DATABASE RESTORE PLAN
+# ==========================================================
+
+def prepare_database_restore(sql_content):
+
+    # Bắt buộc Preflight phải PASS trước
+    preflight = preflight_database_sql(sql_content)
+
+    if not preflight.get("valid"):
+        return {
+            "ready": False,
+            "message": "Không thể chuẩn bị Restore vì Preflight không PASS.",
+            "preflight": preflight,
+        }
+
+    analysis = analyze_database_sql(sql_content)
+
+    if not analysis.get("valid"):
+        return {
+            "ready": False,
+            "message": "Không thể phân tích database.sql.",
+            "analysis": analysis,
+        }
+
+    restore_plan = []
+
+    for index, statement in enumerate(
+        analysis["statements"],
+        start=1,
+    ):
+        normalized = statement.lstrip().upper()
+
+        if normalized.startswith("SET "):
+            statement_type = "SET"
+
+        elif normalized.startswith("CREATE TABLE"):
+            statement_type = "CREATE_TABLE"
+
+        elif normalized.startswith("INSERT INTO"):
+            statement_type = "INSERT"
+
+        else:
+            return {
+                "ready": False,
+                "message": "Restore Plan gặp câu lệnh không được phép.",
+                "statement_number": index,
+            }
+
+        restore_plan.append(
+            {
+                "order": index,
+                "type": statement_type,
+                "sql": statement,
+            }
+        )
+
+    return {
+        "ready": True,
+        "message": "Database Restore Plan đã sẵn sàng.",
+        "statement_count": len(restore_plan),
+        "restore_plan": restore_plan,
+    }
+
+# ==========================================================
 # CREATE + VALIDATE SAFETY BACKUP
 # ==========================================================
 

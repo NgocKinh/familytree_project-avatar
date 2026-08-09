@@ -15,6 +15,7 @@ from backend.services.backup_service import (
     check_safety_backup,
     read_database_sql_from_backup,
     preflight_database_sql,
+    prepare_database_restore,
 )
 
 def require_admin(current_user: User):
@@ -145,6 +146,80 @@ async def preflight_restore(
             "message": "Restore preflight PASS.",
             "zip_validation": zip_validation,
             "database_preflight": preflight,
+        }
+
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+@router.post("/restore/prepare")
+async def prepare_restore(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    if not file.filename.lower().endswith(".zip"):
+        raise HTTPException(
+            status_code=400,
+            detail="Chỉ chấp nhận file ZIP",
+        )
+
+    contents = await file.read()
+
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".zip",
+    ) as temp_file:
+        temp_file.write(contents)
+        temp_path = temp_file.name
+
+    try:
+        # Bước 1: Validate ZIP
+        zip_validation = validate_restore_zip(temp_path)
+
+        if not zip_validation.get("valid"):
+            raise HTTPException(
+                status_code=400,
+                detail=zip_validation,
+            )
+
+        # Bước 2: Đọc database.sql
+        sql_content = read_database_sql_from_backup(
+            temp_path
+        )
+
+        # Bước 3: Tạo Restore Plan
+        preparation = prepare_database_restore(
+            sql_content
+        )
+
+        if not preparation.get("ready"):
+            raise HTTPException(
+                status_code=400,
+                detail=preparation,
+            )
+
+        # Chỉ thống kê plan.
+        # Tuyệt đối không trả nội dung SQL ra API.
+        type_counts = {
+            "SET": 0,
+            "CREATE_TABLE": 0,
+            "INSERT": 0,
+        }
+
+        for item in preparation["restore_plan"]:
+            statement_type = item["type"]
+
+            if statement_type in type_counts:
+                type_counts[statement_type] += 1
+
+        return {
+            "success": True,
+            "ready": True,
+            "message": "Database Restore Prepare PASS.",
+            "statement_count": preparation["statement_count"],
+            "type_counts": type_counts,
         }
 
     finally:
