@@ -248,9 +248,27 @@ def create_backup_zip():
                         zip_path
                     )
 
+        readme_content = (
+            "FAMILYTREE BACKUP\n"
+            "=================\n\n"
+            "Đây là file sao lưu dữ liệu của hệ thống FamilyTree.\n\n"
+            "NỘI DUNG BACKUP\n"
+            "---------------\n"
+            "- database.sql : Dữ liệu cơ sở dữ liệu MySQL.\n"
+            "- avatars/     : Ảnh đại diện của các thành viên.\n"
+            "- README.txt   : Hướng dẫn về file backup.\n"
+            "- version.txt  : Thông tin phiên bản backup.\n\n"
+            "LƯU Ý\n"
+            "------\n"
+            "- Không chỉnh sửa trực tiếp database.sql nếu không hiểu rõ cấu trúc dữ liệu.\n"
+            "- Không đổi tên hoặc xóa các file trong thư mục avatars.\n"
+            "- Nên lưu file backup ở nơi an toàn.\n"
+            "- Việc phục hồi dữ liệu nên được thực hiện bởi người quản trị hệ thống.\n"
+        )
+
         zipf.writestr(
             "README.txt",
-            "FamilyTree Backup\n"
+            readme_content
         )
 
         zipf.writestr(
