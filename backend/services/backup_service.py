@@ -534,10 +534,10 @@ def preflight_database_sql(sql_content):
 
     # Kiểm tra dấu hiệu nhận dạng của backup FamilyTree
     required_tables = {
-        "person",
+        "persons",
         "users",
         "parent_child",
-        "marriage",
+        "marriages",
     }
 
     create_statements = [
