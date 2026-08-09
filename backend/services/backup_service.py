@@ -216,6 +216,38 @@ def create_backup_zip():
 
         zipf.write(sql_path, "database.sql")
 
+        avatar_dir = os.path.join(
+            BASE_DIR,
+            "static",
+            "avatars"
+        )
+
+        if os.path.isdir(avatar_dir):
+
+            for root, dirs, files in os.walk(avatar_dir):
+
+                for avatar_file in files:
+
+                    avatar_path = os.path.join(
+                        root,
+                        avatar_file
+                    )
+
+                    relative_path = os.path.relpath(
+                        avatar_path,
+                        avatar_dir
+                    )
+
+                    zip_path = os.path.join(
+                        "avatars",
+                        relative_path
+                    )
+
+                    zipf.write(
+                        avatar_path,
+                        zip_path
+                    )
+
         zipf.writestr(
             "README.txt",
             "FamilyTree Backup\n"
