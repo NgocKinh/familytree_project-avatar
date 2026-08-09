@@ -11,6 +11,7 @@
 
 import os
 import zipfile
+import shutil
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -445,12 +446,46 @@ def create_safety_backup():
         exist_ok=True
     )
 
-    # Chỉ thay Safety Backup cũ SAU KHI
-    # backup mới đã được tạo và validate thành công
-    os.replace(
+    # Copy bản mới vào chính Railway Volume trước.
+    # Không ghi đè Safety Backup cũ khi copy chưa hoàn tất.
+    safety_temp_path = SAFETY_BACKUP_PATH + ".tmp"
+
+    shutil.copy2(
         backup_path,
+        safety_temp_path
+    )
+
+    # Kiểm tra lại bản đã copy trên Volume
+    volume_validation = validate_restore_zip(
+        safety_temp_path
+    )
+
+    if not volume_validation.get("valid"):
+
+        if os.path.exists(safety_temp_path):
+            os.remove(safety_temp_path)
+
+        if os.path.exists(backup_path):
+            os.remove(backup_path)
+
+        return {
+            "success": False,
+            "message": "Safety Backup trên Volume không hợp lệ.",
+            "filename": None,
+            "validation": volume_validation,
+        }
+
+    # Bản .tmp đã PASS.
+    # Hai file này cùng nằm trên Railway Volume,
+    # nên os.replace có thể thay bản cũ an toàn.
+    os.replace(
+        safety_temp_path,
         SAFETY_BACKUP_PATH
     )
+
+    # File backup tạm ở filesystem container không cần giữ lại
+    if os.path.exists(backup_path):
+        os.remove(backup_path)
 
     return {
         "success": True,
