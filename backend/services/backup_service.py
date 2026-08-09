@@ -367,3 +367,72 @@ def validate_restore_zip(zip_path):
             "message": "File không phải ZIP hợp lệ.",
             "missing_files": [],
         }
+            
+# ==========================================================
+# READ DATABASE SQL FROM BACKUP
+# ==========================================================
+
+def read_database_sql_from_backup(zip_path):
+
+    with zipfile.ZipFile(zip_path, "r") as zipf:
+
+        if "database.sql" not in zipf.namelist():
+            raise ValueError(
+                "Backup không có file database.sql"
+            )
+
+        sql_bytes = zipf.read("database.sql")
+
+        return sql_bytes.decode("utf-8")
+
+# ==========================================================
+# CREATE + VALIDATE SAFETY BACKUP
+# ==========================================================
+
+def create_safety_backup():
+
+    # Tạo backup đầy đủ của trạng thái hiện tại
+    backup_filename = create_backup_zip()
+
+    backup_path = os.path.join(
+        BACKUP_DIR,
+        backup_filename
+    )
+
+    # Kiểm tra backup vừa tạo trước khi cho phép Restore
+    validation = validate_restore_zip(backup_path)
+
+    if not validation.get("valid"):
+
+        if os.path.exists(backup_path):
+            os.remove(backup_path)
+
+        return {
+            "success": False,
+            "message": "Không thể tạo Safety Backup hợp lệ.",
+            "filename": None,
+            "validation": validation,
+        }
+
+    # Tên cố định giúp hệ thống chỉ duy trì
+    # một Safety Backup hiện hành
+    safety_filename = "TranAnQuan_SafetyBackup.zip"
+
+    safety_path = os.path.join(
+        BACKUP_DIR,
+        safety_filename
+    )
+
+    # Chỉ thay Safety Backup cũ SAU KHI
+    # backup mới đã được tạo và validate thành công
+    os.replace(
+        backup_path,
+        safety_path
+    )
+
+    return {
+        "success": True,
+        "message": "Safety Backup đã được tạo và kiểm tra thành công.",
+        "filename": safety_filename,
+        "validation": validation,
+    }

@@ -11,6 +11,7 @@ from backend.services.backup_service import (
     create_backup_zip,
     list_backup_files,
     validate_restore_zip,
+    create_safety_backup,
 )
 
 def require_admin(current_user: User):
@@ -87,3 +88,19 @@ async def validate_restore(
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+@router.post("/restore/safety-backup")
+def create_restore_safety_backup(
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    result = create_safety_backup()
+
+    if not result.get("success"):
+        raise HTTPException(
+            status_code=500,
+            detail=result,
+        )
+
+    return result
