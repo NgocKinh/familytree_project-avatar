@@ -12,6 +12,7 @@ from backend.services.backup_service import (
     list_backup_files,
     validate_restore_zip,
     create_safety_backup,
+    check_safety_backup,
 )
 
 def require_admin(current_user: User):
@@ -100,6 +101,22 @@ def create_restore_safety_backup(
     if not result.get("success"):
         raise HTTPException(
             status_code=500,
+            detail=result,
+        )
+
+    return result
+
+@router.get("/restore/safety-backup/check")
+def check_restore_safety_backup(
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    result = check_safety_backup()
+
+    if not result.get("valid"):
+        raise HTTPException(
+            status_code=409,
             detail=result,
         )
 

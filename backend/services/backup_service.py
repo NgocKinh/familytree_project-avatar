@@ -436,3 +436,40 @@ def create_safety_backup():
         "filename": safety_filename,
         "validation": validation,
     }
+
+# ==========================================================
+# CHECK SAFETY BACKUP
+# ==========================================================
+
+def check_safety_backup():
+
+    safety_filename = "TranAnQuan_SafetyBackup.zip"
+
+    safety_path = os.path.join(
+        BACKUP_DIR,
+        safety_filename
+    )
+
+    if not os.path.isfile(safety_path):
+        return {
+            "valid": False,
+            "message": "Không tìm thấy Safety Backup.",
+            "filename": safety_filename,
+        }
+
+    validation = validate_restore_zip(safety_path)
+
+    if not validation.get("valid"):
+        return {
+            "valid": False,
+            "message": "Safety Backup không hợp lệ.",
+            "filename": safety_filename,
+            "validation": validation,
+        }
+
+    return {
+        "valid": True,
+        "message": "Safety Backup tồn tại và hợp lệ.",
+        "filename": safety_filename,
+        "validation": validation,
+    }
