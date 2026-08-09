@@ -271,9 +271,18 @@ def create_backup_zip():
             readme_content
         )
 
+        version_content = (
+            "FAMILYTREE BACKUP VERSION\n"
+            "=========================\n\n"
+            "Backup Format Version: 1.0\n"
+            "Project: FamilyTree\n"
+            "Database: MySQL\n"
+            f"Created: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+        )
+
         zipf.writestr(
             "version.txt",
-            "FamilyTree Version 1.0\n"
+            version_content
         )
 
     return filename
