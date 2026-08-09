@@ -293,8 +293,6 @@ def create_backup_zip():
 
     return filename
 
-    return filename
-
 # ==========================================================
 # LIST BACKUP FILES
 # ==========================================================
@@ -314,3 +312,58 @@ def list_backup_files():
     files.sort(reverse=True)
 
     return files
+
+# ==========================================================
+# VALIDATE RESTORE ZIP
+# ==========================================================
+
+def validate_restore_zip(zip_path):
+
+    required_files = {
+        "database.sql",
+        "README.txt",
+        "version.txt",
+    }
+
+    try:
+        with zipfile.ZipFile(zip_path, "r") as zipf:
+
+            names = zipf.namelist()
+
+            missing_files = [
+                required_file
+                for required_file in required_files
+                if required_file not in names
+            ]
+
+            has_avatars = any(
+                name.startswith("avatars/")
+                for name in names
+            )
+
+            if missing_files:
+                return {
+                    "valid": False,
+                    "message": "Backup thiếu file bắt buộc.",
+                    "missing_files": missing_files,
+                }
+
+            if not has_avatars:
+                return {
+                    "valid": False,
+                    "message": "Backup thiếu thư mục avatars.",
+                    "missing_files": ["avatars/"],
+                }
+
+            return {
+                "valid": True,
+                "message": "File backup hợp lệ.",
+                "missing_files": [],
+            }
+
+    except zipfile.BadZipFile:
+        return {
+            "valid": False,
+            "message": "File không phải ZIP hợp lệ.",
+            "missing_files": [],
+        }
