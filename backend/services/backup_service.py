@@ -411,6 +411,173 @@ def read_database_sql_from_backup(zip_path):
         return sql_bytes.decode("utf-8")
 
 # ==========================================================
+# ANALYZE DATABASE SQL
+# ==========================================================
+
+def analyze_database_sql(sql_content):
+
+    if not sql_content:
+        return {
+            "valid": False,
+            "message": "database.sql rỗng.",
+            "statements": [],
+            "statement_count": 0,
+        }
+
+    statements = []
+    current_statement = []
+
+    for line in sql_content.splitlines():
+
+        stripped = line.strip()
+
+        # Bỏ dòng trống
+        if not stripped:
+            continue
+
+        # Bỏ comment SQL dạng --
+        if stripped.startswith("--"):
+            continue
+
+        current_statement.append(line)
+
+        # File backup do FamilyTree tạo hiện dùng
+        # dấu ; để kết thúc mỗi statement
+        if stripped.endswith(";"):
+
+            statement = "\n".join(
+                current_statement
+            ).strip()
+
+            statements.append(statement)
+            current_statement = []
+
+    # Nếu cuối file còn SQL nhưng không có ;
+    if current_statement:
+        return {
+            "valid": False,
+            "message": "database.sql có câu lệnh SQL chưa kết thúc bằng dấu ;.",
+            "statements": [],
+            "statement_count": 0,
+        }
+
+    if not statements:
+        return {
+            "valid": False,
+            "message": "Không tìm thấy câu lệnh SQL hợp lệ.",
+            "statements": [],
+            "statement_count": 0,
+        }
+
+    create_table_count = 0
+    insert_count = 0
+    set_count = 0
+    other_count = 0
+
+    for statement in statements:
+
+        normalized = statement.lstrip().upper()
+
+        if normalized.startswith("CREATE TABLE"):
+            create_table_count += 1
+
+        elif normalized.startswith("INSERT INTO"):
+            insert_count += 1
+
+        elif normalized.startswith("SET "):
+            set_count += 1
+
+        else:
+            other_count += 1
+
+    return {
+        "valid": True,
+        "message": "database.sql đã được đọc và phân tích thành công.",
+        "statements": statements,
+        "statement_count": len(statements),
+        "create_table_count": create_table_count,
+        "insert_count": insert_count,
+        "set_count": set_count,
+        "other_count": other_count,
+    }
+
+# ==========================================================
+# PREFLIGHT DATABASE SQL
+# ==========================================================
+
+def preflight_database_sql(sql_content):
+
+    analysis = analyze_database_sql(sql_content)
+
+    if not analysis.get("valid"):
+        return analysis
+
+    # Backup FamilyTree hiện chỉ được phép chứa:
+    # SET ...
+    # CREATE TABLE ...
+    # INSERT INTO ...
+    if analysis.get("other_count", 0) != 0:
+        return {
+            "valid": False,
+            "message": "database.sql chứa câu lệnh không được phép.",
+            "statement_count": analysis.get("statement_count", 0),
+            "other_count": analysis.get("other_count", 0),
+        }
+
+    # Một backup database hợp lệ phải có cấu trúc bảng
+    if analysis.get("create_table_count", 0) == 0:
+        return {
+            "valid": False,
+            "message": "database.sql không có câu lệnh CREATE TABLE.",
+            "statement_count": analysis.get("statement_count", 0),
+        }
+
+    # Kiểm tra dấu hiệu nhận dạng của backup FamilyTree
+    required_tables = {
+        "person",
+        "users",
+        "parent_child",
+        "marriage",
+    }
+
+    create_statements = [
+        statement
+        for statement in analysis["statements"]
+        if statement.lstrip().upper().startswith("CREATE TABLE")
+    ]
+
+    missing_tables = []
+
+    for table_name in required_tables:
+
+        expected = f"CREATE TABLE `{table_name}`".upper()
+
+        found = any(
+            statement.lstrip().upper().startswith(expected)
+            for statement in create_statements
+        )
+
+        if not found:
+            missing_tables.append(table_name)
+
+    if missing_tables:
+        return {
+            "valid": False,
+            "message": "database.sql thiếu bảng bắt buộc của FamilyTree.",
+            "missing_tables": missing_tables,
+        }
+
+    return {
+        "valid": True,
+        "message": "Preflight database.sql PASS.",
+        "statement_count": analysis["statement_count"],
+        "create_table_count": analysis["create_table_count"],
+        "insert_count": analysis["insert_count"],
+        "set_count": analysis["set_count"],
+        "other_count": analysis["other_count"],
+    }
+
+# ==========================================================
 # CREATE + VALIDATE SAFETY BACKUP
 # ==========================================================
 

@@ -13,6 +13,8 @@ from backend.services.backup_service import (
     validate_restore_zip,
     create_safety_backup,
     check_safety_backup,
+    read_database_sql_from_backup,
+    preflight_database_sql,
 )
 
 def require_admin(current_user: User):
@@ -85,6 +87,65 @@ async def validate_restore(
     try:
         result = validate_restore_zip(temp_path)
         return result
+
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+@router.post("/restore/preflight")
+async def preflight_restore(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    if not file.filename.lower().endswith(".zip"):
+        raise HTTPException(
+            status_code=400,
+            detail="Chỉ chấp nhận file ZIP",
+        )
+
+    contents = await file.read()
+
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".zip",
+    ) as temp_file:
+        temp_file.write(contents)
+        temp_path = temp_file.name
+
+    try:
+        # Bước 1: kiểm tra cấu trúc ZIP
+        zip_validation = validate_restore_zip(temp_path)
+
+        if not zip_validation.get("valid"):
+            raise HTTPException(
+                status_code=400,
+                detail=zip_validation,
+            )
+
+        # Bước 2: chỉ đọc database.sql
+        sql_content = read_database_sql_from_backup(
+            temp_path
+        )
+
+        # Bước 3: phân tích + preflight
+        preflight = preflight_database_sql(
+            sql_content
+        )
+
+        if not preflight.get("valid"):
+            raise HTTPException(
+                status_code=400,
+                detail=preflight,
+            )
+
+        return {
+            "success": True,
+            "message": "Restore preflight PASS.",
+            "zip_validation": zip_validation,
+            "database_preflight": preflight,
+        }
 
     finally:
         if os.path.exists(temp_path):
