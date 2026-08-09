@@ -30,6 +30,30 @@ BACKUP_DIR = os.path.join(
 )
 
 # ==========================================================
+# PERSISTENT SAFETY BACKUP DIRECTORY
+# Railway Volume is mounted at:
+# /app/backend/static/avatars
+# ==========================================================
+
+AVATAR_DIR = os.path.join(
+    BASE_DIR,
+    "static",
+    "avatars"
+)
+
+SAFETY_BACKUP_DIR = os.path.join(
+    AVATAR_DIR,
+    "_safety_backup"
+)
+
+SAFETY_BACKUP_FILENAME = "TranAnQuan_SafetyBackup.zip"
+
+SAFETY_BACKUP_PATH = os.path.join(
+    SAFETY_BACKUP_DIR,
+    SAFETY_BACKUP_FILENAME
+)
+
+# ==========================================================
 # INITIALIZE
 # ==========================================================
 
@@ -416,24 +440,22 @@ def create_safety_backup():
 
     # Tên cố định giúp hệ thống chỉ duy trì
     # một Safety Backup hiện hành
-    safety_filename = "TranAnQuan_SafetyBackup.zip"
-
-    safety_path = os.path.join(
-        BACKUP_DIR,
-        safety_filename
+    os.makedirs(
+        SAFETY_BACKUP_DIR,
+        exist_ok=True
     )
 
     # Chỉ thay Safety Backup cũ SAU KHI
     # backup mới đã được tạo và validate thành công
     os.replace(
         backup_path,
-        safety_path
+        SAFETY_BACKUP_PATH
     )
 
     return {
         "success": True,
         "message": "Safety Backup đã được tạo và kiểm tra thành công.",
-        "filename": safety_filename,
+        "filename": SAFETY_BACKUP_FILENAME,
         "validation": validation,
     }
 
@@ -443,33 +465,28 @@ def create_safety_backup():
 
 def check_safety_backup():
 
-    safety_filename = "TranAnQuan_SafetyBackup.zip"
-
-    safety_path = os.path.join(
-        BACKUP_DIR,
-        safety_filename
-    )
-
-    if not os.path.isfile(safety_path):
+    if not os.path.isfile(SAFETY_BACKUP_PATH):
         return {
             "valid": False,
             "message": "Không tìm thấy Safety Backup.",
-            "filename": safety_filename,
+            "filename": SAFETY_BACKUP_FILENAME,
         }
 
-    validation = validate_restore_zip(safety_path)
+    validation = validate_restore_zip(
+        SAFETY_BACKUP_PATH
+    )
 
     if not validation.get("valid"):
         return {
             "valid": False,
             "message": "Safety Backup không hợp lệ.",
-            "filename": safety_filename,
+            "filename": SAFETY_BACKUP_FILENAME,
             "validation": validation,
         }
 
     return {
         "valid": True,
         "message": "Safety Backup tồn tại và hợp lệ.",
-        "filename": safety_filename,
+        "filename": SAFETY_BACKUP_FILENAME,
         "validation": validation,
     }
