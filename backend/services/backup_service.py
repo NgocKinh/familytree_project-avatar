@@ -12,6 +12,7 @@
 import os
 import zipfile
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from sqlalchemy import text
 from backend.db import SessionLocal
@@ -271,19 +272,26 @@ def create_backup_zip():
             readme_content
         )
 
+        vietnam_time = datetime.now(
+            ZoneInfo("Asia/Ho_Chi_Minh")
+        )
+
         version_content = (
             "FAMILYTREE BACKUP VERSION\n"
             "=========================\n\n"
             "Backup Format Version: 1.0\n"
             "Project: FamilyTree\n"
             "Database: MySQL\n"
-            f"Created: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n"
+            f"Created: {vietnam_time.strftime('%Y-%m-%d %H:%M:%S')}\n"
+            "Timezone: Asia/Ho_Chi_Minh (UTC+7)\n"
         )
 
         zipf.writestr(
             "version.txt",
             version_content
         )
+
+    return filename
 
     return filename
 
