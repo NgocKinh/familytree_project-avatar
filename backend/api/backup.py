@@ -16,6 +16,8 @@ from backend.services.backup_service import (
     read_database_sql_from_backup,
     preflight_database_sql,
     prepare_database_restore,
+    check_restore_execution_guard,
+    prepare_safety_backup_recovery,
 )
 
 def require_admin(current_user: User):
@@ -225,6 +227,87 @@ async def prepare_restore(
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+@router.post("/restore/execution-guard")
+async def restore_execution_guard(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    if not file.filename.lower().endswith(".zip"):
+        raise HTTPException(
+            status_code=400,
+            detail="Chỉ chấp nhận file ZIP",
+        )
+
+    contents = await file.read()
+
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".zip",
+    ) as temp_file:
+        temp_file.write(contents)
+        temp_path = temp_file.name
+
+    try:
+        zip_validation = validate_restore_zip(temp_path)
+
+        if not zip_validation.get("valid"):
+            raise HTTPException(
+                status_code=400,
+                detail=zip_validation,
+            )
+
+        sql_content = read_database_sql_from_backup(
+            temp_path
+        )
+
+        guard = check_restore_execution_guard(
+            sql_content
+        )
+
+        if not guard.get("allowed"):
+            raise HTTPException(
+                status_code=409,
+                detail=guard,
+            )
+
+        return {
+            "success": True,
+            "allowed": True,
+            "message": "Restore Execution Guard PASS.",
+            "safety_backup": guard["safety_backup"],
+            "statement_count": guard["statement_count"],
+        }
+
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
+
+
+@router.get("/restore/recovery/prepare")
+def prepare_restore_recovery(
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    recovery = prepare_safety_backup_recovery()
+
+    if not recovery.get("ready"):
+        raise HTTPException(
+            status_code=409,
+            detail=recovery,
+        )
+
+    return {
+        "success": True,
+        "ready": True,
+        "message": recovery["message"],
+        "filename": recovery["filename"],
+        "statement_count": recovery["statement_count"],
+        "type_counts": recovery["type_counts"],
+    }
 
 @router.post("/restore/safety-backup")
 def create_restore_safety_backup(

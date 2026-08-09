@@ -642,6 +642,165 @@ def prepare_database_restore(sql_content):
     }
 
 # ==========================================================
+# RESTORE EXECUTION GUARD
+# ==========================================================
+
+def check_restore_execution_guard(sql_content):
+
+    # ------------------------------------------------------
+    # 1. Safety Backup bắt buộc phải tồn tại và hợp lệ
+    # ------------------------------------------------------
+    safety = check_safety_backup()
+
+    if not safety.get("valid"):
+        return {
+            "allowed": False,
+            "message": (
+                "Restore bị chặn vì Safety Backup "
+                "không tồn tại hoặc không hợp lệ."
+            ),
+            "safety_backup": safety,
+        }
+
+    # ------------------------------------------------------
+    # 2. database.sql phải PASS Preflight
+    # ------------------------------------------------------
+    preflight = preflight_database_sql(sql_content)
+
+    if not preflight.get("valid"):
+        return {
+            "allowed": False,
+            "message": (
+                "Restore bị chặn vì database.sql "
+                "không PASS Preflight."
+            ),
+            "preflight": preflight,
+        }
+
+    # ------------------------------------------------------
+    # 3. Restore Plan phải chuẩn bị thành công
+    # ------------------------------------------------------
+    preparation = prepare_database_restore(sql_content)
+
+    if not preparation.get("ready"):
+        return {
+            "allowed": False,
+            "message": (
+                "Restore bị chặn vì Restore Plan "
+                "chưa sẵn sàng."
+            ),
+            "preparation": preparation,
+        }
+
+    # ------------------------------------------------------
+    # 4. Guard PASS
+    # ------------------------------------------------------
+    return {
+        "allowed": True,
+        "message": "Restore Execution Guard PASS.",
+        "safety_backup": {
+            "valid": True,
+            "filename": safety.get("filename"),
+        },
+        "statement_count": preparation["statement_count"],
+    }
+
+# ==========================================================
+# PREPARE SAFETY BACKUP RECOVERY
+# ==========================================================
+
+def prepare_safety_backup_recovery():
+
+    # ------------------------------------------------------
+    # 1. Safety Backup phải tồn tại và hợp lệ
+    # ------------------------------------------------------
+    safety = check_safety_backup()
+
+    if not safety.get("valid"):
+        return {
+            "ready": False,
+            "message": (
+                "Không thể chuẩn bị Recovery vì "
+                "Safety Backup không hợp lệ."
+            ),
+            "safety_backup": safety,
+        }
+
+    # ------------------------------------------------------
+    # 2. Đọc database.sql trực tiếp từ Safety Backup
+    #    persistent trên Railway Volume
+    # ------------------------------------------------------
+    try:
+        sql_content = read_database_sql_from_backup(
+            SAFETY_BACKUP_PATH
+        )
+    except Exception as exc:
+        return {
+            "ready": False,
+            "message": (
+                "Không thể đọc database.sql "
+                "từ Safety Backup."
+            ),
+            "error": str(exc),
+        }
+
+    # ------------------------------------------------------
+    # 3. Safety database.sql cũng phải PASS Preflight
+    # ------------------------------------------------------
+    preflight = preflight_database_sql(sql_content)
+
+    if not preflight.get("valid"):
+        return {
+            "ready": False,
+            "message": (
+                "database.sql trong Safety Backup "
+                "không PASS Preflight."
+            ),
+            "preflight": preflight,
+        }
+
+    # ------------------------------------------------------
+    # 4. Tạo Recovery Plan
+    #    Vẫn chỉ chuẩn bị - chưa execute SQL
+    # ------------------------------------------------------
+    preparation = prepare_database_restore(
+        sql_content
+    )
+
+    if not preparation.get("ready"):
+        return {
+            "ready": False,
+            "message": (
+                "Không thể tạo Recovery Plan "
+                "từ Safety Backup."
+            ),
+            "preparation": preparation,
+        }
+
+    # ------------------------------------------------------
+    # 5. Chỉ tạo thống kê Recovery Plan
+    # ------------------------------------------------------
+    type_counts = {
+        "SET": 0,
+        "CREATE_TABLE": 0,
+        "INSERT": 0,
+    }
+
+    for item in preparation["restore_plan"]:
+        statement_type = item["type"]
+
+        if statement_type in type_counts:
+            type_counts[statement_type] += 1
+
+    return {
+        "ready": True,
+        "message": "Safety Backup Recovery Plan đã sẵn sàng.",
+        "filename": SAFETY_BACKUP_FILENAME,
+        "statement_count": preparation["statement_count"],
+        "type_counts": type_counts,
+    }
+
+# ==========================================================
 # CREATE + VALIDATE SAFETY BACKUP
 # ==========================================================
 
