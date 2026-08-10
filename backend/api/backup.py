@@ -19,6 +19,9 @@ from backend.services.backup_service import (
     check_restore_execution_guard,
     prepare_safety_backup_recovery,
 )
+from backend.services.restore_service import (
+    execute_database_restore,
+)
 
 def require_admin(current_user: User):
     if current_user.role != "admin":
@@ -308,6 +311,57 @@ def prepare_restore_recovery(
         "statement_count": recovery["statement_count"],
         "type_counts": recovery["type_counts"],
     }
+
+@router.post("/restore/execute")
+async def execute_restore(
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    if not file.filename.lower().endswith(".zip"):
+        raise HTTPException(
+            status_code=400,
+            detail="Chỉ chấp nhận file ZIP",
+        )
+
+    contents = await file.read()
+
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=".zip",
+    ) as temp_file:
+        temp_file.write(contents)
+        temp_path = temp_file.name
+
+    try:
+        zip_validation = validate_restore_zip(temp_path)
+
+        if not zip_validation.get("valid"):
+            raise HTTPException(
+                status_code=400,
+                detail=zip_validation,
+            )
+
+        sql_content = read_database_sql_from_backup(
+            temp_path
+        )
+
+        result = execute_database_restore(
+            sql_content
+        )
+
+        if not result.get("success"):
+            raise HTTPException(
+                status_code=409,
+                detail=result,
+            )
+
+        return result
+
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)
 
 @router.post("/restore/safety-backup")
 def create_restore_safety_backup(
