@@ -124,6 +124,7 @@ def _execute_restore_plan(restore_plan):
         db.commit()
 
         db.execute(text("SET FOREIGN_KEY_CHECKS=1"))
+        db.commit()
 
         return {
             "success": True,
@@ -208,7 +209,6 @@ def _recover_from_safety_backup():
             ),
             "error": str(exc),
         }
-
 
 # ==========================================================
 # RESTORE DATABASE ENGINE
