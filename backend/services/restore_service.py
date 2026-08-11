@@ -11,13 +11,17 @@
 # Các chức năng Backup / Safety Backup / Preflight hiện có
 # vẫn nằm trong backup_service.py.
 # ==========================================================
+import os
 import re
+import shutil
+import zipfile
 
 from sqlalchemy import text
 
 from backend.db import SessionLocal
 
 from backend.services.backup_service import (
+    AVATAR_DIR,
     SAFETY_BACKUP_PATH,
     check_restore_execution_guard,
     read_database_sql_from_backup,
@@ -208,6 +212,83 @@ def _recover_from_safety_backup():
                 "từ Safety Backup."
             ),
             "error": str(exc),
+        }
+
+# ==========================================================
+# RESTORE AVATARS FROM BACKUP
+# ==========================================================
+
+def restore_avatars_from_backup(zip_path):
+
+    try:
+        os.makedirs(AVATAR_DIR, exist_ok=True)
+
+        restored_count = 0
+
+        with zipfile.ZipFile(zip_path, "r") as zipf:
+
+            avatar_members = [
+                name
+                for name in zipf.namelist()
+                if name.startswith("avatars/")
+                and not name.endswith("/")
+            ]
+
+            if not avatar_members:
+                return {
+                    "success": False,
+                    "message": "Backup không có file avatar để Restore.",
+                    "restored_count": 0,
+                }
+
+            for member in avatar_members:
+
+                relative_path = member[len("avatars/"):]
+
+                if not relative_path:
+                    continue
+
+                destination = os.path.abspath(
+                    os.path.join(
+                        AVATAR_DIR,
+                        relative_path,
+                    )
+                )
+
+                avatar_root = os.path.abspath(AVATAR_DIR)
+
+                if os.path.commonpath(
+                    [avatar_root, destination]
+                ) != avatar_root:
+                    return {
+                        "success": False,
+                        "message": "Phát hiện đường dẫn avatar không hợp lệ.",
+                        "restored_count": restored_count,
+                    }
+
+                os.makedirs(
+                    os.path.dirname(destination),
+                    exist_ok=True,
+                )
+
+                with zipf.open(member, "r") as source:
+                    with open(destination, "wb") as target:
+                        shutil.copyfileobj(source, target)
+
+                restored_count += 1
+
+        return {
+            "success": True,
+            "message": "Restore avatar thành công.",
+            "restored_count": restored_count,
+        }
+
+    except Exception as exc:
+        return {
+            "success": False,
+            "message": "Restore avatar thất bại.",
+            "error": str(exc),
+            "restored_count": 0,
         }
 
 # ==========================================================

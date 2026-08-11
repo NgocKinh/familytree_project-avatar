@@ -21,6 +21,7 @@ from backend.services.backup_service import (
 )
 from backend.services.restore_service import (
     execute_database_restore,
+    restore_avatars_from_backup,
 )
 
 def require_admin(current_user: User):
@@ -356,6 +357,26 @@ async def execute_restore(
                 status_code=409,
                 detail=result,
             )
+
+        avatar_result = restore_avatars_from_backup(
+            temp_path
+        )
+
+        if not avatar_result.get("success"):
+            raise HTTPException(
+                status_code=409,
+                detail={
+                    "success": False,
+                    "message": (
+                        "Database Restore thành công "
+                        "nhưng Avatar Restore thất bại."
+                    ),
+                    "database_restore": result,
+                    "avatar_restore": avatar_result,
+                },
+            )
+
+        result["avatar_restore"] = avatar_result
 
         return result
 
