@@ -24,16 +24,6 @@ engine = create_engine(
     pool_recycle=280,
 )
 
-from sqlalchemy import text
-
-with engine.connect() as conn:
-
-    result = conn.execute(text("SELECT DATABASE(), @@hostname, @@port"))
-    row = result.fetchone()
-
-    result = conn.execute(text("SELECT COUNT(*) FROM users"))
-    user_count = result.scalar()
-
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
