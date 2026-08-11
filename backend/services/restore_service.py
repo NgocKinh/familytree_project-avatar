@@ -15,6 +15,7 @@ import os
 import re
 import shutil
 import zipfile
+import logging
 
 from sqlalchemy import text
 
@@ -27,6 +28,7 @@ from backend.services.backup_service import (
     read_database_sql_from_backup,
     prepare_database_restore,
 )
+logger = logging.getLogger(__name__)
 
 # ==========================================================
 # EXTRACT RESTORE TABLE NAMES
@@ -106,11 +108,19 @@ def _execute_restore_plan(restore_plan):
     table_names = table_result["table_names"]
     db = SessionLocal()
 
+    logger.warning(
+        "[RESTORE] START: %s tables, %s statements",
+        len(table_names),
+        len(restore_plan),
+    )
+
     try:
         db.execute(text("SET FOREIGN_KEY_CHECKS=0"))
+        logger.warning("[RESTORE] FOREIGN_KEY_CHECKS=0 OK")
 
         # Xóa các bảng hiện hành
         for table_name in reversed(table_names):
+            logger.warning("[RESTORE] DROP TABLE: %s", table_name)
             db.execute(
                 text(f"DROP TABLE IF EXISTS `{table_name}`")
             )
@@ -118,17 +128,31 @@ def _execute_restore_plan(restore_plan):
         # Tạo lại cấu trúc bảng
         for item in restore_plan:
             if item.get("type") == "CREATE_TABLE":
+                logger.warning(
+                    "[RESTORE] CREATE TABLE statement #%s",
+                    item.get("order"),
+                )
                 db.execute(text(item["sql"]))
 
         # Phục hồi dữ liệu
         for item in restore_plan:
             if item.get("type") == "INSERT":
+                logger.warning(
+                    "[RESTORE] INSERT statement #%s, size=%s bytes",
+                    item.get("order"),
+                    len(item["sql"].encode("utf-8")),
+                )
                 db.execute(text(item["sql"]))
 
+        logger.warning("[RESTORE] COMMIT DATA starting")
         db.commit()
+        logger.warning("[RESTORE] COMMIT DATA OK")
 
         db.execute(text("SET FOREIGN_KEY_CHECKS=1"))
+        logger.warning("[RESTORE] FOREIGN_KEY_CHECKS=1 OK")
+
         db.commit()
+        logger.warning("[RESTORE] FINAL COMMIT OK")
 
         return {
             "success": True,
@@ -138,6 +162,8 @@ def _execute_restore_plan(restore_plan):
         }
 
     except Exception as exc:
+
+        logger.exception("[RESTORE] FAILED: %s", exc)
 
         try:
             db.rollback()
@@ -157,7 +183,6 @@ def _execute_restore_plan(restore_plan):
 
     finally:
         db.close()
-
 
 # ==========================================================
 # RECOVER DATABASE FROM SAFETY BACKUP
