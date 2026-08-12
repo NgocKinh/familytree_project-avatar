@@ -1,10 +1,11 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException, status
 from fastapi.responses import FileResponse
+from jose import jwt, JWTError
 
 import os
 import tempfile
 
-from backend.api.auth import get_current_user
+from backend.api.auth import get_current_user, oauth2_scheme, SECRET_KEY, ALGORITHM
 from backend.models.user_model import User
 from backend.services.backup_service import (
     BACKUP_DIR,
@@ -29,6 +30,41 @@ def require_admin(current_user: User):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Chỉ admin mới có quyền phục hồi dữ liệu",
+        )
+
+def get_restore_admin(
+    token: str = Depends(oauth2_scheme),
+):
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+        )
+        user_id = payload.get("sub")
+        role = payload.get("role")
+
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Đăng nhập không hợp lệ. Vui lòng đăng nhập lại.",
+            )
+
+        if role != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Chỉ admin mới có quyền phục hồi dữ liệu",
+            )
+
+        return {
+            "user_id": int(user_id),
+            "role": role,
+        }
+
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
         )
 
 router = APIRouter(
@@ -316,9 +352,8 @@ def prepare_restore_recovery(
 @router.post("/restore/execute")
 async def execute_restore(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+    restore_admin: dict = Depends(get_restore_admin),
 ):
-    require_admin(current_user)
 
     if not file.filename.lower().endswith(".zip"):
         raise HTTPException(
