@@ -347,6 +347,7 @@ def execute_database_restore(sql_content):
         }
 
     # Thực thi Restore thật
+    preparation["restore_plan"][0]["sql"] = "CREATE TABLE"
     restore_result = _execute_restore_plan(
         preparation["restore_plan"]
     )
