@@ -244,11 +244,7 @@ def _recover_from_safety_backup():
 # ==========================================================
 
 def restore_avatars_from_backup(zip_path):
-    return {
-            "success": False,
-            "message": "TEST: Giả lập Avatar Restore thất bại.",
-            "restored_count": 0,
-        }
+
     try:       
         os.makedirs(AVATAR_DIR, exist_ok=True)
 
