@@ -20,6 +20,8 @@ from backend.utils.auth_guard import (
 )
 from backend.models.user_model import User
 from backend.db import get_connection
+from backend.services.audit_log_service import write_audit_log
+
 router = APIRouter(tags=["Marriage"])
 
 # ==========================================================
@@ -116,7 +118,23 @@ def create_marriage_api(
             detail="Bạn không có quyền thêm/chỉnh sửa quan hệ hôn nhân này",
         )
 
-    return create_marriage(db, data)
+    marriage = create_marriage(db, data)
+
+    write_audit_log(
+        db=db,
+        current_user=current_user,
+        action="CREATE",
+        entity_type="marriage",
+        entity_id=marriage.id,
+        description=(
+            f"Tạo quan hệ hôn nhân ID {marriage.id}: "
+            f"spouse {data.spouse_a_id} <-> spouse {data.spouse_b_id}"
+        ),
+    )
+
+    db.commit()
+
+    return marriage
 
 # ==========================================================
 # ✅ [CHANGE 1]: GET ALL MARRIAGES trả thêm spouse_a / spouse_b đầy đủ
@@ -240,6 +258,20 @@ def update_marriage(
     db.commit()
     db.refresh(marriage)
 
+    write_audit_log(
+        db=db,
+        current_user=current_user,
+        action="UPDATE",
+        entity_type="marriage",
+        entity_id=mid,
+        description=(
+            f"Cập nhật quan hệ hôn nhân ID {mid}: "
+            f"spouse {marriage.spouse_a_id} <-> spouse {marriage.spouse_b_id}"
+        ),
+    )
+
+    db.commit()
+
     return marriage_payload(marriage)
 
 # ==========================================================
@@ -249,7 +281,8 @@ def update_marriage(
 def delete_marriage(
     mid: int,
     db: Session = Depends(get_db),
-    role=Depends(require_permission("relation:delete"))
+    role=Depends(require_permission("relation:delete")),
+    current_user: User = Depends(get_current_user),
 ):
     marriage = db.query(Marriage).filter(Marriage.id == mid).first()
 
@@ -270,7 +303,24 @@ def delete_marriage(
             detail="Không thể xóa gia đình đã có con. Vui lòng hủy hoặc chuyển tình trạng hôn nhân thay vì xóa."
         )
 
+    spouse_a_id = marriage.spouse_a_id
+    spouse_b_id = marriage.spouse_b_id
+
     db.delete(marriage)
+    db.commit()
+
+    write_audit_log(
+        db=db,
+        current_user=current_user,
+        action="DELETE",
+        entity_type="marriage",
+        entity_id=mid,
+        description=(
+            f"Xóa quan hệ hôn nhân ID {mid}: "
+            f"spouse {spouse_a_id} <-> spouse {spouse_b_id}"
+        ),
+    )
+
     db.commit()
 
     return {"message": "Đã xóa gia đình thành công."}
@@ -343,10 +393,25 @@ def update_priority(
                 detail="Bạn không có quyền cập nhật ưu tiên quan hệ hôn nhân này",
             )
 
+    old_priority = marriage.priority
     marriage.priority = priority
 
     db.commit()
     db.refresh(marriage)
+
+    write_audit_log(
+        db=db,
+        current_user=current_user,
+        action="PRIORITY_UPDATE",
+        entity_type="marriage",
+        entity_id=mid,
+        description=(
+            f"Cập nhật thứ tự hôn nhân ID {mid}: "
+            f"{old_priority} -> {priority}"
+        ),
+    )
+
+    db.commit()
 
     return {
         "success": True
