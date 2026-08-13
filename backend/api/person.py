@@ -482,7 +482,26 @@ def update_birth_order_bulk(
         if not person:
             continue
 
-        person.birth_order = item.birth_order
+        old_birth_order = person.birth_order
+        new_birth_order = item.birth_order
+
+        # Không cập nhật và không ghi Audit nếu giá trị không đổi
+        if old_birth_order == new_birth_order:
+            continue
+
+        person.birth_order = new_birth_order
+
+        write_audit_log(
+            db=db,
+            current_user=current_user,
+            action="BIRTH_ORDER_UPDATE",
+            entity_type="person",
+            entity_id=person.id,
+            description=(
+                f"Cập nhật thứ tự sinh thành viên ID {person.id}: "
+                f"{old_birth_order} -> {new_birth_order}"
+            ),
+        )
 
     db.commit()
 
