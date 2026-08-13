@@ -209,16 +209,21 @@ export const uploadAvatar = async (personId, file) => {
   formData.append("file", file);
 
   try {
-    const res = await axios.post(`${AVATAR_URL}/${personId}`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
+    const res = await apiClient(`/avatar/upload/${personId}`, {
+      method: "POST",
+      body: formData,
     });
 
-    return res.data;
-  } catch (err) {
-    if (handleAuthError(err)) {
-      return null;
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail || "Không thể upload avatar."
+      );
     }
-    console.error("❌ Lỗi upload avatar:", err);
+
+    return await res.json();
+  } catch (err) {
+    console.error(`❌ Lỗi upload avatar ID=${personId}:`, err);
     throw err;
   }
 };

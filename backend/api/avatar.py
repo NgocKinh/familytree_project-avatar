@@ -7,6 +7,8 @@ from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from sqlalchemy.orm import Session
 from backend.db import get_db
 from backend.models.person_model import Person
+from backend.api.auth import get_current_user
+from backend.services.audit_log_service import write_audit_log
 import os
 from backend.api.tree import TREE_CACHE
 router = APIRouter()
@@ -32,7 +34,8 @@ os.makedirs(AVATAR_DIR, exist_ok=True)
 async def upload_avatar(
     person_id: int,
     file: UploadFile = File(...),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
 ):
 
     # 1️⃣ MIME CHECK
@@ -87,6 +90,15 @@ async def upload_avatar(
 
     person.avatar = filename
     person.updated_at = func.now()
+
+    write_audit_log(
+        db=db,
+        current_user=current_user,
+        action="AVATAR_UPDATE",
+        entity_type="person",
+        entity_id=person_id,
+        description=f"Thay ảnh đại diện thành viên ID {person_id}",
+    )
 
     db.commit()
     db.refresh(person)
