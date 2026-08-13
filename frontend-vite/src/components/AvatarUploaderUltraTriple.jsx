@@ -187,9 +187,17 @@ export default function AvatarUploaderUltraTriple({ personId, onAvatarUpdated })
     const form = new FormData();
     form.append("file", blob, "avatar.jpg");
   
+    const token = localStorage.getItem("token");
+
     const res = await fetch(
       `${API_BASE_URL}/avatar/upload/${personId}`,
-      { method: "POST", body: form }
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: form,
+      }
     );
   
     uploadLock.current = false;
