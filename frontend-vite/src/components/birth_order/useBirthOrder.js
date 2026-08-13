@@ -15,17 +15,26 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
     return String(birthDate).slice(0, 4);
   };
   const sortBirthOrderRows = (rows) => {
+    const allHaveBirthYear = rows.every(
+      (p) => Boolean(getBirthYear(p.birth_date))
+    );
+
     return [...rows].sort((a, b) => {
-      const yearA = getBirthYear(a.birth_date) ?? 9999;
-      const yearB = getBirthYear(b.birth_date) ?? 9999;
-  
-      if (yearA !== yearB) {
-        return yearA - yearB;
-      }
-  
       const boA = a.birth_order ?? 9999;
       const boB = b.birth_order ?? 9999;
-  
+
+      // Chỉ dùng năm sinh khi tất cả anh/chị/em đều có năm sinh
+      if (allHaveBirthYear) {
+        const yearA = Number(getBirthYear(a.birth_date));
+        const yearB = Number(getBirthYear(b.birth_date));
+
+        if (yearA !== yearB) {
+          return yearA - yearB;
+        }
+      }
+
+      // Có ít nhất một người thiếu năm sinh,
+      // hoặc trùng năm sinh: dùng Birth Order
       return boA - boB;
     });
   };

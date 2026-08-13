@@ -321,13 +321,27 @@ def get_family(
 
         rows = cur.fetchall()
 
-        children_common = sorted(
-            [build_person(r) for r in rows],
-            key=lambda x: (
-                x.get("birth_order") or 9999,
-                x.get("birth_year") or 9999
-            )
+        children_common = [build_person(r) for r in rows]
+
+        all_children_have_birth_year = all(
+            child.get("birth_year") is not None
+            for child in children_common
         )
+
+        if all_children_have_birth_year:
+            children_common.sort(
+                key=lambda child: (
+                    child.get("birth_year"),
+                    child.get("birth_order") or 9999,
+                )
+            )
+        else:
+            children_common.sort(
+                key=lambda child: (
+                    child.get("birth_order") or 9999,
+                    child.get("birth_year") or 9999,
+                )
+            )
 
     cur.close()
     conn.close()
