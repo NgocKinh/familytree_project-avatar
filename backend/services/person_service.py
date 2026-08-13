@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 from backend.models.person_model import Person
 from backend.schemas.person_schema import PersonCreate, PersonUpdate
 from backend.core.exceptions import NotFoundException
-
+from backend.services.audit_log_service import write_audit_log
 
 def get_person_or_404(db: Session, person_id: int) -> Person:
     person = db.query(Person).filter(
@@ -25,16 +25,29 @@ def create_person(db: Session, payload: PersonCreate) -> Person:
 
     return person
 
-
-def update_person(db: Session, person_id: int, payload: PersonUpdate) -> Person:
+def update_person(
+    db: Session,
+    person_id: int,
+    payload: PersonUpdate,
+    current_user,
+) -> Person:
     person = get_person_or_404(db, person_id)
 
     payload.pop("created_at", None)
     payload.pop("updated_at", None)
     payload.pop("avatar", None)
-    
+
     for k, v in payload.items():
         setattr(person, k, v)
+
+    write_audit_log(
+        db=db,
+        current_user=current_user,
+        action="UPDATE",
+        entity_type="person",
+        entity_id=person_id,
+        description=f"Cập nhật thông tin thành viên ID {person_id}",
+    )
 
     db.commit()
     db.refresh(person)

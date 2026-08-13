@@ -344,7 +344,12 @@ def update_person(
                     status_code=403,
                     detail="Bạn không có quyền chỉnh sửa người này vì không có quan hệ gần.",
                 )
-        return person_service.update_person(db, person_id, payload)
+        return person_service.update_person(
+            db,
+            person_id,
+            payload,
+            current_user,
+        )
     except NotFoundError as e:
 
         raise HTTPException(status_code=404, detail=e.message)
