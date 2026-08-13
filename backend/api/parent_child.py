@@ -17,6 +17,7 @@ from backend.models.user_model import User
 from backend.models.marriage_model import Marriage
 from backend.models.parent_child_model import ParentChild
 from backend.models.person_model import Person
+from backend.services.audit_log_service import write_audit_log
 # ✅ [CHANGE 1]: Bỏ prefix nội bộ vì main.py đã gắn prefix="/api/parent_child"
 router = APIRouter(tags=["ParentChild"])
 # ==========================================================
@@ -319,6 +320,19 @@ def assign_parent(
         ptype=data.type
     )
 
+    write_audit_log(
+        db=db,
+        current_user=current_user,
+        action="CREATE",
+        entity_type="parent_child",
+        entity_id=pc.id,
+        description=(
+            f"Thêm quan hệ cha-con ID {pc.id}: "
+            f"parent {data.parent_id} -> child {data.child_id}"
+        ),
+    )
+
+    db.commit()
     return {
         "message": "Đã lưu quan hệ cha-con thành công",
         "id": pc.id
@@ -327,7 +341,38 @@ def assign_parent(
 # 🔹 DELETE
 # ==========================================================
 @router.delete("/{rid}")
-def delete_relation(rid: int, db: Session = Depends(get_db)):
+def delete_relation(
+    rid: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    relation = db.query(ParentChild).filter(
+        ParentChild.id == rid
+    ).first()
+
+    if not relation:
+        raise HTTPException(
+            status_code=404,
+            detail="Không tìm thấy quan hệ cha-con",
+        )
+
+    parent_id = relation.parent_id
+    child_id = relation.child_id
+
     delete_parent_child(db, rid)
+
+    write_audit_log(
+        db=db,
+        current_user=current_user,
+        action="DELETE",
+        entity_type="parent_child",
+        entity_id=rid,
+        description=(
+            f"Xóa quan hệ cha-con ID {rid}: "
+            f"parent {parent_id} -> child {child_id}"
+        ),
+    )
+
+    db.commit()
 
     return {"message": "Đã xóa quan hệ cha-con thành công"}
