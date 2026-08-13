@@ -237,7 +237,7 @@ export default function MarriageList({ onEdit, role }) {
           <table className="min-w-full border text-sm text-center">
             <thead className="bg-blue-50 sticky top-[0px] z-30">
               <tr>
-                <th className="border p-2">#</th>
+                <th className="border p-2">ID</th>
                 <th className="border p-2">Người thứ nhất</th>
                 <th className="border p-2">Người thứ hai</th>
                 <th className="border p-2">Ngày bắt đầu</th>
@@ -258,7 +258,7 @@ export default function MarriageList({ onEdit, role }) {
               ) : (
                 filteredMarriages.map((m, idx) => (
                   <tr key={m.id} className="hover:bg-gray-50">
-                    <td className="border p-2">{idx + 1}</td>
+                    <td className="border p-2">{m.id}</td>
   
                     <td className="border p-2">
                       {renderPersonName(m.spouse_a, m.spouse_a_name)}

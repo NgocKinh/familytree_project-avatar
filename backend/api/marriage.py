@@ -393,7 +393,15 @@ def update_priority(
                 detail="Bạn không có quyền cập nhật ưu tiên quan hệ hôn nhân này",
             )
 
-    old_priority = marriage.priority
+    old_priority = int(marriage.priority or 0)
+
+    # Không cập nhật và không ghi Audit nếu giá trị không thay đổi
+    if old_priority == priority:
+        return {
+            "success": True,
+            "changed": False,
+        }
+
     marriage.priority = priority
 
     db.commit()
@@ -414,5 +422,6 @@ def update_priority(
     db.commit()
 
     return {
-        "success": True
+        "success": True,
+        "changed": True,
     }

@@ -189,7 +189,7 @@ function ParentChildList({ role }) {
         <table className="min-w-full border border-gray-300">
           <thead className="sticky top-[96px] z-40 bg-gray-100 text-gray-700">
             <tr>
-              <th className="border px-4 py-2">#</th>
+              <th className="border px-4 py-2">ID</th>
               <th className="border px-4 py-2">Cha/Mẹ</th>
               <th className="border px-4 py-2">Con</th>
               <th className="border px-4 py-2">Loại</th>
@@ -207,7 +207,7 @@ function ParentChildList({ role }) {
                     : ""
                   }`}
               >
-                <td className="border px-4 py-2 text-center">{index + 1}</td>
+                <td className="border px-4 py-2 text-center">{r.id}</td>
 
                 {/* Cột Cha/Mẹ */}
                 <td className="border px-4 py-2">
