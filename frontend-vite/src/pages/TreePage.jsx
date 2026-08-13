@@ -137,7 +137,7 @@ export default function TreePage() {
         return;
       }
   
-      alert("Bạn chỉ được xem cây gia phả của người thân gần.");
+      alert("Chưa có thông tin về người này hoặc bạn chỉ được xem cây gia phả của người thân gần.");
     } catch (err) {
       console.error("❌ Không kiểm tra được quyền xem cây:", err);
       alert("Không kiểm tra được quyền truy cập cây gia phả.");
@@ -186,17 +186,27 @@ export default function TreePage() {
   /* ===== Sort children ===== */
 
   const childrenSorted = useMemo(() => {
+    const birthYears = children_common
+      .map((child) => child.birth_year)
+      .filter((year) => year !== null && year !== undefined);
+
+    const allChildrenHaveBirthYear =
+      birthYears.length === children_common.length;
+
+    const hasDuplicateBirthYear =
+      new Set(birthYears).size !== birthYears.length;
+
+    const useBirthYear =
+      allChildrenHaveBirthYear && !hasDuplicateBirthYear;
+
     return [...children_common].sort((a, b) => {
-      const yearA = a.birth_year ?? 9999;
-      const yearB = b.birth_year ?? 9999;
-  
-      if (yearA !== yearB) {
-        return yearA - yearB;
+      if (useBirthYear) {
+        return a.birth_year - b.birth_year;
       }
-  
+
       const boA = a.birth_order ?? 9999;
       const boB = b.birth_order ?? 9999;
-  
+
       return boA - boB;
     });
   }, [children_common]);

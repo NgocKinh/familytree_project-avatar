@@ -323,24 +323,32 @@ def get_family(
 
         children_common = [build_person(r) for r in rows]
 
-        all_children_have_birth_year = all(
-            child.get("birth_year") is not None
+        birth_years = [
+            child.get("birth_year")
             for child in children_common
+            if child.get("birth_year") is not None
+        ]
+
+        all_children_have_birth_year = (
+            len(birth_years) == len(children_common)
         )
 
-        if all_children_have_birth_year:
+        has_duplicate_birth_year = (
+            len(set(birth_years)) != len(birth_years)
+        )
+
+        use_birth_year = (
+            all_children_have_birth_year
+            and not has_duplicate_birth_year
+        )
+
+        if use_birth_year:
             children_common.sort(
-                key=lambda child: (
-                    child.get("birth_year"),
-                    child.get("birth_order") or 9999,
-                )
+                key=lambda child: child.get("birth_year")
             )
         else:
             children_common.sort(
-                key=lambda child: (
-                    child.get("birth_order") or 9999,
-                    child.get("birth_year") or 9999,
-                )
+                key=lambda child: child.get("birth_order") or 9999
             )
 
     cur.close()

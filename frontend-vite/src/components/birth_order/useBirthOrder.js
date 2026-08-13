@@ -15,29 +15,32 @@ export default function useBirthOrder({ persons, getAuthConfig }) {
     return String(birthDate).slice(0, 4);
   };
   const sortBirthOrderRows = (rows) => {
-    const allHaveBirthYear = rows.every(
-      (p) => Boolean(getBirthYear(p.birth_date))
-    );
+    const birthYears = rows
+      .map((p) => getBirthYear(p.birth_date))
+      .filter((year) => year !== null);
+
+    const allHaveBirthYear = birthYears.length === rows.length;
+    const hasDuplicateBirthYear =
+      new Set(birthYears).size !== birthYears.length;
+
+    const useBirthYear =
+      allHaveBirthYear && !hasDuplicateBirthYear;
 
     return [...rows].sort((a, b) => {
+      if (useBirthYear) {
+        return (
+          Number(getBirthYear(a.birth_date)) -
+          Number(getBirthYear(b.birth_date))
+        );
+      }
+
       const boA = a.birth_order ?? 9999;
       const boB = b.birth_order ?? 9999;
 
-      // Chỉ dùng năm sinh khi tất cả anh/chị/em đều có năm sinh
-      if (allHaveBirthYear) {
-        const yearA = Number(getBirthYear(a.birth_date));
-        const yearB = Number(getBirthYear(b.birth_date));
-
-        if (yearA !== yearB) {
-          return yearA - yearB;
-        }
-      }
-
-      // Có ít nhất một người thiếu năm sinh,
-      // hoặc trùng năm sinh: dùng Birth Order
       return boA - boB;
     });
   };
+  
   const findPerson = (personId) => {
     return persons.find((p) => String(p.id) === String(personId));
   };
