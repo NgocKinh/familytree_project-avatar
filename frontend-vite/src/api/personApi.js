@@ -70,12 +70,22 @@ export const getAllPersons = getPersonList;
 // ============================================
 export const softDeletePerson = async (id) => {
   try {
-    return await axios.put(`${API_URL}/delete_soft/${id}`);
-  } catch (err) {
-    if (handleAuthError(err)) {
-      return null;
+    const res = await apiClient(`/person/delete_soft/${id}`, {
+      method: "PUT",
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail?.message ||
+        errorData.detail ||
+        "Không thể tạm ẩn thành viên."
+      );
     }
 
+    return await res.json();
+  } catch (err) {
+    console.error(`❌ Lỗi tạm ẩn thành viên ID=${id}:`, err);
     throw err;
   }
 };

@@ -3,6 +3,7 @@
 # ==========================================================
 from backend.services import person_service
 from backend.core.exceptions import NotFoundError
+from backend.services.audit_log_service import write_audit_log
 from fastapi import APIRouter, HTTPException, Body
 from fastapi.responses import JSONResponse
 from fastapi import Request
@@ -141,7 +142,11 @@ def get_all_persons(db: Session = Depends(get_db)):
 # SOFT DELETE
 # ===============================
 @router.put("/delete_soft/{person_id}")
-def soft_delete_person(person_id: int, db: Session = Depends(get_db)):
+def soft_delete_person(
+    person_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     person = db.query(Person).filter(Person.id == person_id).first()
 
     if not person:
@@ -179,6 +184,16 @@ def soft_delete_person(person_id: int, db: Session = Depends(get_db)):
         )
         
     person.delete_status = 1
+
+    write_audit_log(
+        db=db,
+        current_user=current_user,
+        action="SOFT_DELETE",
+        entity_type="person",
+        entity_id=person_id,
+        description=f"Tạm ẩn thành viên ID {person_id}",
+    )
+
     db.commit()
 
     return {"success": True}
