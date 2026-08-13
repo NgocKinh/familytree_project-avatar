@@ -232,13 +232,27 @@ def restore_person(
 # HARD DELETE
 # ===============================
 @router.delete("/delete_permanent/{person_id}")
-def hard_delete_person(person_id: int, db: Session = Depends(get_db)):
+def hard_delete_person(
+    person_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
     person = db.query(Person).filter(Person.id == person_id).first()
 
     if not person:
         raise HTTPException(status_code=404, detail="Person not found")
 
     db.delete(person)
+
+    write_audit_log(
+        db=db,
+        current_user=current_user,
+        action="HARD_DELETE",
+        entity_type="person",
+        entity_id=person_id,
+        description=f"Xóa vĩnh viễn thành viên ID {person_id}",
+    )
+
     db.commit()
 
     return {"success": True}

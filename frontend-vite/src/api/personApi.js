@@ -118,12 +118,20 @@ export const restorePerson = async (id) => {
 // ============================================
 export const hardDeletePerson = async (id) => {
   try {
-    return await axios.delete(`${API_URL}/delete_permanent/${id}`);
-  } catch (err) {
-    if (handleAuthError(err)) {
-      return null;
+    const res = await apiClient(`/person/delete_permanent/${id}`, {
+      method: "DELETE",
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail || "Không thể xóa vĩnh viễn thành viên."
+      );
     }
 
+    return await res.json();
+  } catch (err) {
+    console.error(`❌ Lỗi xóa vĩnh viễn thành viên ID=${id}:`, err);
     throw err;
   }
 };
