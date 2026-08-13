@@ -95,12 +95,20 @@ export const softDeletePerson = async (id) => {
 // ============================================
 export const restorePerson = async (id) => {
   try {
-    return await axios.put(`${API_URL}/restore/${id}`);
-  } catch (err) {
-    if (handleAuthError(err)) {
-      return null;
+    const res = await apiClient(`/person/restore/${id}`, {
+      method: "PUT",
+    });
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail || "Không thể khôi phục thành viên."
+      );
     }
 
+    return await res.json();
+  } catch (err) {
+    console.error(`❌ Lỗi khôi phục thành viên ID=${id}:`, err);
     throw err;
   }
 };
