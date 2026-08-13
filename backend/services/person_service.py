@@ -16,10 +16,25 @@ def get_person_or_404(db: Session, person_id: int) -> Person:
     return person
 
 
-def create_person(db: Session, payload: PersonCreate) -> Person:
+def create_person(
+    db: Session,
+    payload: PersonCreate,
+    current_user,
+) -> Person:
     person = Person(**payload.dict())
 
     db.add(person)
+    db.flush()
+
+    write_audit_log(
+        db=db,
+        current_user=current_user,
+        action="CREATE",
+        entity_type="person",
+        entity_id=person.id,
+        description=f"Tạo thành viên mới ID {person.id}",
+    )
+
     db.commit()
     db.refresh(person)
 

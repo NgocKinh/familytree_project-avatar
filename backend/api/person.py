@@ -319,8 +319,16 @@ def get_person_orm(pid: int, db: Session = Depends(get_db)):
 # 🆕 ORM - CREATE PERSON
 # ==========================================================
 @router.post("/", response_model=PersonDetailResponse)
-def create_person(data: PersonCreate, db: Session = Depends(get_db)):
-    return person_service.create_person(db, data)
+def create_person(
+    data: PersonCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    return person_service.create_person(
+        db,
+        data,
+        current_user,
+    )
 
 @router.put("/{person_id}", response_model=PersonDetailResponse)
 def update_person(

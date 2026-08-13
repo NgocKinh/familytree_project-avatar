@@ -131,15 +131,20 @@ export const getPersonById = async (id) => {
 // ============================================
 export const addPerson = async (data) => {
   try {
-    const res = await axios.post(`${API_URL}/`, data, {
-      headers: { "Content-Type": "application/json" },
+    const res = await apiClient("/person/", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
-    return res.data;
-  } catch (err) {
-    if (handleAuthError(err)) {
-      return null;
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.detail || "Không thể thêm thành viên."
+      );
     }
-  
+
+    return await res.json();
+  } catch (err) {
     console.error("❌ Lỗi thêm người mới:", err);
     throw err;
   }
