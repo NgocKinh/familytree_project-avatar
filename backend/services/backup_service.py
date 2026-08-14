@@ -79,7 +79,9 @@ def generate_backup_filename(
     TranAnQuan_Backup_2026-08-07_150501.zip
     """
 
-    now = datetime.now()
+    now = datetime.now(
+        ZoneInfo("Asia/Ho_Chi_Minh")
+    )
 
     return (
         f"{family_code}_Backup_"
@@ -252,6 +254,12 @@ def create_backup_zip():
         if os.path.isdir(avatar_dir):
 
             for root, dirs, files in os.walk(avatar_dir):
+
+                dirs[:] = [
+                    directory
+                    for directory in dirs
+                    if directory != "_safety_backup"
+                ]
 
                 for avatar_file in files:
 
