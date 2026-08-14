@@ -17,6 +17,7 @@ import {
   FaComments,
   FaBars,
   FaTimes,
+  FaClipboardList,
 } from "react-icons/fa";
 
 const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
@@ -111,9 +112,17 @@ const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
                     <FaBell className="text-orange-400" />
                     <span>Thông báo</span>
                   </Link>
-                </>
-              )}
-            </div>
+
+                  {isMember && (
+                    <Link to="/feedback" className={navClass("/feedback")}>
+                      <FaComments className="text-cyan-300" />
+                      <span>Góp ý</span>
+                    </Link>
+                  )}
+                  </>
+                )}
+
+              </div>
 
             {isMember && (
               <div
@@ -151,10 +160,6 @@ const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
                   <span>Nội bộ</span>
                 </Link>
 
-                <Link to="/feedback" className={actionClass("/feedback")}>
-                  <FaComments />
-                  <span>Góp ý</span>
-                </Link>
               </div>
             )}
 
@@ -168,6 +173,13 @@ const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
                   <FaCog />
                   <span>Quản trị</span>
                 </Link>
+
+                {role === "admin" && (
+                  <Link to="/audit-log" className={actionClass("/audit-log")}>
+                    <FaClipboardList />
+                    <span>Audit Log</span>
+                  </Link>
+                )}
               </div>
             )}
           </div>

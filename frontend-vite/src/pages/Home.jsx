@@ -3,64 +3,41 @@ import React from "react";
 function Home() {
   return (
     <div
-      className="min-h-screen w-full bg-cover bg-center bg-no-repeat flex flex-col items-center justify-center text-center px-4"
+      className="min-h-[calc(100vh-64px)] w-full bg-cover bg-center bg-no-repeat flex flex-col items-center justify-center text-center px-4 py-8 sm:px-6 md:py-12"
       style={{ backgroundImage: "url('/trongdong.png')" }}
     >
-      {/* ========================== */}
-      {/* 🔹 TIÊU ĐỀ CHÍNH */}
-      {/* ========================== */}
-      <h1 className="font-sans text-6xl md:text-7xl font-bold text-red-600 drop-shadow-[2px_2px_0_#2563eb] mb-2">
+      <h1 className="font-sans text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-tight font-bold text-red-600 drop-shadow-[2px_2px_0_#2563eb] mb-2">
         GIA PHẢ TỘC TRẦN
       </h1>
 
-      {/* 🔹 Dòng chữ thư pháp */}
-      <div className="mb-6 space-y-3">
-        <h2 className="font-dancing text-5xl md:text-6xl text-red-700 drop-shadow-[2px_2px_0_#fbbf24]">
+      <div className="mb-4 md:mb-6">
+        <h2 className="font-dancing text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-red-700 drop-shadow-[2px_2px_0_#fbbf24]">
           Hào Khí Đông A
         </h2>
       </div>
 
-      {/* 🔹 Slogan */}
-      <p className="text-3xl md:text-4xl text-green-700 font-bold mb-3 drop-shadow-lg">
-        Kết Nối Nghĩa Tình – Đời Đời Bền Vững
-      </p>
-      <p className="text-2xl md:text-4xl text-blue-700 font-semibold mb-10 drop-shadow-lg">
-        Tộc Trần – An Quán - Thu Bồn
+      <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-green-700 font-bold mb-2 md:mb-3 drop-shadow-lg">
+        <span className="block">Kết Nối Nghĩa Tình</span>
+        <span className="block">Đời Đời Bền Vững</span>
       </p>
 
-      {/* ========================== */}
-      {/* 🔹 THÔNG BÁO CHÀO MỪNG / HƯỚNG DẪN */}
-      {/* ========================== */}
-      <div className="bg-black bg-opacity-40 text-yellow-100 text-lg md:text-xl font-medium px-8 py-5 rounded-2xl shadow-lg max-w-3xl leading-relaxed">
-        🌿 <b>Chào mừng bạn đến với hệ thống Gia Phả Tộc Trần</b> —  
+      <p className="whitespace-nowrap text-base sm:text-xl md:text-2xl lg:text-4xl text-blue-700 font-semibold mb-6 md:mb-10 drop-shadow-lg">
+        Tộc Trần – An Quán – Thu Bồn
+      </p>
+
+      <div className="w-full max-w-3xl rounded-2xl bg-black/50 px-4 py-4 sm:px-6 md:px-8 md:py-5 text-base sm:text-lg md:text-xl font-medium leading-relaxed text-yellow-100 shadow-lg">
+        🌿 <b>Chào mừng bạn đến với hệ thống Gia Phả Tộc Trần</b> —
         nơi lưu giữ truyền thống, kết nối các thế hệ và tôn vinh cội nguồn.
         <br />
-        💡 Hãy sử dụng <b>thanh điều hướng phía trên</b> để xem danh sách thành viên,
-        cây gia phả hoặc những thông tin mới.
+        💡 Hãy sử dụng <b>nút Menu</b> để xem danh sách
+        thành viên, cây gia phả hoặc những thông tin mới.
       </div>
-
-      {/* ========================== */}
-      {/* 🔹 Ghi chú / mô tả phụ */}
-      {/* ========================== */}
-      <p className="mt-10 text-gray-200 italic text-sm bg-black bg-opacity-30 px-4 py-2 rounded-lg">
-        Giao diện thử nghiệm – các chức năng đang trong quá trình hoàn thiện
+      <p className="mt-4 w-full max-w-3xl rounded-xl bg-blue-900/75 px-4 py-3 text-sm leading-relaxed text-white shadow-lg xl:hidden">
+        📱 Khi mở bằng Zalo, màn hình có thể không xoay. Hãy mở FamilyTree
+        bằng Chrome và xoay ngang điện thoại để xem cây gia phả rõ hơn.
       </p>
     </div>
   );
 }
 
 export default Home;
-
-
-
-
-
-
-
-
-
-
-
-
-
-

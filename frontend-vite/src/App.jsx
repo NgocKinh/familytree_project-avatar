@@ -36,8 +36,10 @@ import PersonFamilyOverviewPage from "./pages/PersonFamilyOverviewPage";
 import FamilySetupPage from "./pages/FamilySetupPage";
 import LoginPage from "./pages/LoginPage.jsx";
 import AdminUsersPage from "./pages/AdminUsersPage.jsx";
+import AuditLogPage from "./pages/AuditLogPage.jsx";
 import HelpPage from "./pages/HelpPage.jsx";
 import BirthOrderPage from "./pages/BirthOrderPage";
+
 // ======================================================
 // App
 // ======================================================
@@ -279,6 +281,19 @@ function AppContent() {
                 redirectTo="/"
               >
                 <AdminUsersPage currentUser={currentUser} />
+              </ProtectedRouteV6>
+            }
+          />
+          <Route
+            path="/audit-log"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={["admin"]}
+                currentUser={currentUser}
+                redirectTo="/"
+              >
+                <AuditLogPage />
               </ProtectedRouteV6>
             }
           />
