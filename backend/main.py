@@ -21,6 +21,7 @@ from backend.api.tree import router as tree_router
 from backend.api.announcement import router as announcement_router
 from backend.api.feedback import router as feedback_router
 from backend.api.backup import router as backup_router
+from backend.api.audit_log import router as audit_log_router
 
 import os
 
@@ -45,6 +46,7 @@ app.include_router(tree_router, prefix="/api/tree")
 app.include_router(announcement_router, prefix="/api/announcement")
 app.include_router(feedback_router, prefix="/api/feedback")
 app.include_router(backup_router)
+app.include_router(audit_log_router, prefix="/api/audit-logs")
 
 # ======================================================
 # EXCEPTION HANDLER
