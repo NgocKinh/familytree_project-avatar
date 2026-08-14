@@ -2,7 +2,7 @@
 // File: Navbar.jsx (v7.1-Polished-LoginAware)
 // ===============================================================
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FaHome,
@@ -15,11 +15,19 @@ import {
   FaBell,
   FaBookOpen,
   FaComments,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
 
 const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
 
   const isLoggedIn = !!currentUser;
   const isMember = ["member_basic", "co_operator", "admin"].includes(role);
@@ -57,18 +65,31 @@ const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
   return (
     <nav className="sticky top-0 z-50 bg-gray-900 text-white shadow-md">
       <div className="max-w-7xl mx-auto px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
 
           {/* LEFT */}
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex w-full min-w-0 items-center justify-between gap-4 flex-wrap md:flex-1 md:justify-start">
             <Link
               to="/"
               className="text-lg font-bold text-yellow-300 hover:text-yellow-200 whitespace-nowrap"
             >
               📜 Gia Phả Tộc Trần
             </Link>
-
-            <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((open) => !open)}
+              className="md:hidden flex items-center gap-2 rounded-lg bg-gray-700 px-3 py-2 text-sm font-semibold text-white"
+              aria-expanded={menuOpen}
+              aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
+            >
+              {menuOpen ? <FaTimes /> : <FaBars />}
+              <span>Menu</span>
+            </button>
+            <div
+              className={`${
+                menuOpen ? "flex" : "hidden"
+              } w-full flex-col items-stretch gap-2 md:flex md:w-auto md:flex-row md:items-center md:flex-wrap`}
+            >
               <Link to="/" className={navClass("/")}>
                 <FaHome className="text-blue-400" />
                 <span>Trang chủ</span>
@@ -95,7 +116,11 @@ const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
             </div>
 
             {isMember && (
-              <div className="flex items-center gap-2 flex-wrap border-l border-gray-700 pl-4">
+              <div
+                className={`${
+                  menuOpen ? "flex" : "hidden"
+                } w-full flex-col items-stretch gap-2 border-t border-gray-700 pt-3 md:flex md:w-auto md:flex-row md:items-center md:flex-wrap md:border-l md:border-t-0 md:pl-4 md:pt-0`}
+              >
                 <Link to="/person/basic" className={actionClass("/person/basic")}>
                   <FaUserPlus />
                   <span>Thêm thành viên</span>
@@ -134,7 +159,11 @@ const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
             )}
 
             {isAdminArea && (
-              <div className="flex items-center gap-2 flex-wrap border-l border-gray-700 pl-4">
+              <div
+                className={`${
+                  menuOpen ? "flex" : "hidden"
+                } w-full flex-col items-stretch gap-2 border-t border-gray-700 pt-3 md:flex md:w-auto md:flex-row md:items-center md:flex-wrap md:border-l md:border-t-0 md:pl-4 md:pt-0`}
+              >
                 <Link to="/admin" className={actionClass("/admin")}>
                   <FaCog />
                   <span>Quản trị</span>
@@ -144,7 +173,11 @@ const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
           </div>
 
           {/* RIGHT */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div
+            className={`${
+              menuOpen ? "flex" : "hidden"
+            } w-full flex-col gap-2 border-t border-gray-700 pt-3 md:flex md:w-auto md:flex-row md:items-center md:border-t-0 md:pt-0 md:shrink-0`}
+          >
             {!isLoggedIn ? (
               <Link
                 to="/login"
