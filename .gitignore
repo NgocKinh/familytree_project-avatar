@@ -19,3 +19,24 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+# Environment and secrets
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.key
+
+# Runtime backups
+backend/backups/
+backend/static/avatars/_safety_backup/
+*_Backup_*.zip
+*_SafetyBackup.zip
+
+# Uploaded avatars: keep only generic defaults
+backend/static/avatars/*
+!backend/static/avatars/default_male.png
+!backend/static/avatars/default_female.png
+!backend/static/avatars/default_other.png
+
+# Local restore files
+database_restore*.sql

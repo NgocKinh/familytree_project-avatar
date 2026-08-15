@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { makeApiUrl } from "../api/apiConfig";
+import familyConfig from "../config/familyConfig";
 export default function LoginPage({ setRole, setCurrentUser }) {
   const navigate = useNavigate();
 
@@ -60,7 +61,7 @@ export default function LoginPage({ setRole, setCurrentUser }) {
         </h1>
 
         <p className="text-center text-gray-500 mb-6">
-          Gia Phả Tộc Trần
+          {familyConfig.familyName}
         </p>
 
         {error && (

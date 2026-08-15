@@ -7,11 +7,31 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from urllib.parse import quote_plus
 load_dotenv("backend/.env")
 
-DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
-DB_PORT = os.getenv("DB_PORT", "3306")
-DB_USER = os.getenv("DB_USER", "root")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "")
-DB_NAME = os.getenv("DB_NAME", "familytreedb")
+DB_HOST = os.getenv("DB_HOST")
+DB_PORT = os.getenv("DB_PORT")
+DB_USER = os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("DB_NAME")
+
+required_db_config = {
+    "DB_HOST": DB_HOST,
+    "DB_PORT": DB_PORT,
+    "DB_USER": DB_USER,
+    "DB_PASSWORD": DB_PASSWORD,
+    "DB_NAME": DB_NAME,
+}
+
+missing_db_config = [
+    name
+    for name, value in required_db_config.items()
+    if not value
+]
+
+if missing_db_config:
+    raise RuntimeError(
+        "Missing database environment variables: "
+        + ", ".join(missing_db_config)
+    )
 
 DATABASE_URL = (
     f"mysql+mysqlconnector://{DB_USER}:{quote_plus(DB_PASSWORD)}@"

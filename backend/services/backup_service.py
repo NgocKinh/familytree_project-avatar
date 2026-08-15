@@ -30,6 +30,10 @@ BACKUP_DIR = os.path.join(
     BASE_DIR,
     "backups"
 )
+FAMILY_CODE = (
+    os.getenv("FAMILY_CODE", "FamilyTree").strip()
+    or "FamilyTree"
+)
 
 # ==========================================================
 # PERSISTENT SAFETY BACKUP DIRECTORY
@@ -48,7 +52,7 @@ SAFETY_BACKUP_DIR = os.path.join(
     "_safety_backup"
 )
 
-SAFETY_BACKUP_FILENAME = "TranAnQuan_SafetyBackup.zip"
+SAFETY_BACKUP_FILENAME = f"{FAMILY_CODE}_SafetyBackup.zip"
 
 SAFETY_BACKUP_PATH = os.path.join(
     SAFETY_BACKUP_DIR,
@@ -71,12 +75,12 @@ def ensure_backup_dir():
 # ==========================================================
 
 def generate_backup_filename(
-    family_code="TranAnQuan"
+    family_code=FAMILY_CODE
 ):
     """
     Ví dụ:
 
-    TranAnQuan_Backup_2026-08-07_150501.zip
+    FamilyTree_Backup_2026-08-07_150501.zip
     """
 
     now = datetime.now(

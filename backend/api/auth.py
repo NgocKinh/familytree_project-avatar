@@ -13,7 +13,13 @@ from backend.domain.engine_v2.relationship_resolver import resolver_relationship
 
 router = APIRouter(tags=["Auth"])
 
-SECRET_KEY = os.getenv("SECRET_KEY", "CHANGE_ME_FAMILYTREE_SECRET_KEY")
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+if not SECRET_KEY:
+    raise RuntimeError(
+        "Missing SECRET_KEY environment variable."
+    )
+
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 60 * 8))
 NEAR_RELATION_BASICS = {
@@ -109,7 +115,7 @@ def login(
         .filter(User.username == form_data.username)
         .first()
     )
-    
+
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -127,7 +133,7 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Sai tài khoản hoặc mật khẩu",
         )
- 
+
     access_token = create_access_token({
         "sub": str(user.id),
         "username": user.username,
@@ -154,7 +160,7 @@ def me(current_user: User = Depends(get_current_user)):
         "role": current_user.role,
         "is_active": current_user.is_active,
         "person_id": current_user.person_id,
-    }  
+    }
 
 @router.post("/check-near-access")
 def check_near_access(
@@ -219,7 +225,7 @@ def check_near_access(
         "birth_order:update",
     ]:
         allowed = relation_basic in NEAR_RELATION_EDIT
-        
+
     else:
         allowed = relation_basic in NEAR_RELATION_BASICS
 
@@ -231,4 +237,4 @@ def check_near_access(
     "target_person_id": data.target_person_id,
     "relation_basic": relation_basic,
     "relationship": result,
-}  
+}

@@ -8,9 +8,17 @@ export const isDev = import.meta.env.MODE === "development";
 
 // Backend URLs
 
+const configuredApiBaseUrl =
+  import.meta.env.VITE_API_BASE_URL?.trim();
+
+if (!configuredApiBaseUrl && !isDev) {
+  throw new Error(
+    "Missing VITE_API_BASE_URL. Configure the Railway backend URL before deployment."
+  );
+}
+
 export const API_FASTAPI =
-  import.meta.env.VITE_API_BASE_URL ||
-  "https://dynamic-kindness-production-4485.up.railway.app/api";
+  configuredApiBaseUrl || "http://127.0.0.1:8000/api";
 
 export const API_BASE_URL = API_FASTAPI;
 

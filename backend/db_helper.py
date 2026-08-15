@@ -2,34 +2,8 @@
 # db_helper.py
 # Mô-đun quản lý kết nối MySQL trung tâm
 # ============================================
-import mysql.connector
 from mysql.connector import Error
-import os
-from dotenv import load_dotenv
-
-load_dotenv("backend/.env")
-# ============================================
-# 🔸 Hàm tạo kết nối MySQL
-# ============================================
-def get_connection():
-    """
-    Tạo và trả về connection tới MySQL.
-    Tự động commit = False để chủ động kiểm soát giao dịch.
-    """
-    try:
-        conn = mysql.connector.connect(
-            host=os.getenv("DB_HOST", "127.0.0.1"),
-            port=int(os.getenv("DB_PORT", "3306")),
-            user=os.getenv("DB_USER", "root"),
-            password=os.getenv("DB_PASSWORD", ""),
-            database=os.getenv("DB_NAME", "familytreedb"),
-            autocommit=True
-        )
-        return conn
-    except Error as e:
-        print("❌ Lỗi khi kết nối MySQL:", e)
-        raise
-
+from backend.db import get_connection
 
 # ============================================
 # 🔸 Hàm an toàn để đóng connection

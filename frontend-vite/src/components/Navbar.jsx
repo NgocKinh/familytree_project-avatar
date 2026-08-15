@@ -4,6 +4,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import familyConfig from "../config/familyConfig";
 import {
   FaHome,
   FaUsers,
@@ -74,7 +75,8 @@ const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
               to="/"
               className="text-lg font-bold text-yellow-300 hover:text-yellow-200 whitespace-nowrap"
             >
-              📜 Gia Phả Tộc Trần
+              <span aria-hidden="true">{familyConfig.navbarIcon}</span>{" "}
+              {familyConfig.familyName}
             </Link>
             <button
               type="button"
