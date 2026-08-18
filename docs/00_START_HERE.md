@@ -6,6 +6,26 @@ Hãy làm lần lượt từ trên xuống và đánh dấu `[x]` khi hoàn thà
 
 > Ví dụ trong tài liệu sử dụng **Tộc Lê**. Khi triển khai thực tế, thay `TocLe`, `FamilyTree-TocLe` và `familytree-tocle` bằng thông tin của dòng tộc đang triển khai.
 
+## Nguồn mã chính thức
+
+Repository:
+
+```text
+https://github.com/NgocKinh/familytree_project-avatar
+```
+
+Nhánh Clean:
+
+```text
+familytree-clean-v1.0
+```
+
+Mở trực tiếp bản Clean:
+
+[FamilyTree Clean v1.0 trên GitHub](https://github.com/NgocKinh/familytree_project-avatar/tree/familytree-clean-v1.0)
+
+> **Quan trọng:** Khi tải hoặc clone mã nguồn, phải chọn đúng nhánh `familytree-clean-v1.0`. Không tải nhầm nhánh đang vận hành hệ thống của dòng họ khác.
+
 ## 1. Kết quả cuối cùng
 
 Sau khi hoàn thành, hệ thống phải có:

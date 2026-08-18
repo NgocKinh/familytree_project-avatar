@@ -10,12 +10,20 @@ Bắt đầu triển khai tại:
 - [01_INSTALLATION.md](docs/01_INSTALLATION.md) – Chuẩn bị và cài đặt phần mềm.
 - [02_BRANDING.md](docs/02_BRANDING.md) – Thay tên, nội dung và hình ảnh dòng tộc.
 - [03_DEPLOYMENT.md](docs/03_DEPLOYMENT.md) – Triển khai Railway và Cloudflare.
+
+## Nguồn mã chính thức
+
+- Repository: [NgocKinh/familytree_project-avatar](https://github.com/NgocKinh/familytree_project-avatar)
+- Nhánh Clean: [familytree-clean-v1.0](https://github.com/NgocKinh/familytree_project-avatar/tree/familytree-clean-v1.0)
+
+Khi tải hoặc clone bản Clean, phải chọn đúng nhánh `familytree-clean-v1.0`.
+
 ## Công nghệ
 
-* Backend: FastAPI, SQLAlchemy, MySQL 8
-* Frontend: React, Vite, Tailwind CSS
-* Backend hosting: Railway
-* Frontend hosting: Cloudflare Workers
+- Backend: FastAPI, SQLAlchemy, MySQL 8
+- Frontend: React, Vite, Tailwind CSS
+- Backend hosting: Railway
+- Frontend hosting: Cloudflare Workers
 
 ## Nguyên tắc triển khai
 
