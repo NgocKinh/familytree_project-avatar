@@ -1,122 +1,123 @@
-README.md (hoàn chỉnh, có DB setup)
-# Family Tree Project
+# FamilyTree Clean v1.0
 
-Ứng dụng Gia Phả (Backend: Flask + MySQL, Frontend: React + Vite + Tailwind)
+Bộ mã nguồn gia phả dùng chung cho nhiều dòng họ.
 
----
+## Tài liệu hướng dẫn
 
-## 📌 Yêu cầu
-- Python 3.13+
-- PowerShell (Windows)
-- MySQL 8+
-- Node.js 22+
-- npm 10+
+Bắt đầu triển khai tại:
 
----
+- [00_START_HERE.md](docs/00_START_HERE.md) – Lộ trình triển khai từ đầu đến cuối.
+- [01_INSTALLATION.md](docs/01_INSTALLATION.md) – Chuẩn bị và cài đặt phần mềm.
+- [02_BRANDING.md](docs/02_BRANDING.md) – Thay tên, nội dung và hình ảnh dòng tộc.
+- [03_DEPLOYMENT.md](docs/03_DEPLOYMENT.md) – Triển khai Railway và Cloudflare.
+## Công nghệ
 
-## 🗄️ Chuẩn bị Database MySQL
+* Backend: FastAPI, SQLAlchemy, MySQL 8
+* Frontend: React, Vite, Tailwind CSS
+* Backend hosting: Railway
+* Frontend hosting: Cloudflare Workers
 
-Mở MySQL CLI hoặc Workbench và chạy:
+## Nguyên tắc triển khai
 
-```sql
--- 1. Tạo database
-CREATE DATABASE IF NOT EXISTS familytreedb
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
+Mỗi dòng họ phải có riêng:
 
-USE familytreedb;
+* Railway service
+* MySQL database
+* Railway volume lưu avatar
+* Cloudflare Worker
+* URL frontend và backend
+* `SECRET_KEY`
+* Tài khoản Admin đầu tiên
 
--- 2. Tạo bảng person (phiên bản cơ bản)
-CREATE TABLE IF NOT EXISTS person (
-    person_id INT AUTO_INCREMENT PRIMARY KEY,
-    sur_name VARCHAR(100) NULL,
-    last_name VARCHAR(100) NOT NULL,
-    middle_name VARCHAR(100) NULL,
-    first_name VARCHAR(100) NOT NULL,
-    gender ENUM('male','female','other') NOT NULL,
-    birth_date DATE NULL,
-    death_date DATE NULL,
-    birth_place VARCHAR(255) NULL,
-    death_place VARCHAR(255) NULL,
-    grave_info TEXT NULL,
-    nationality VARCHAR(100) NULL,
-    ethnic_group VARCHAR(100) NULL,
-    religion VARCHAR(100) NULL,
-    language_spoken VARCHAR(100) NULL,
-    school_attended VARCHAR(255) NULL,
-    degree_earned VARCHAR(255) NULL,
-    address VARCHAR(255) NULL,
-    phone_number VARCHAR(50) NULL,
-    note TEXT NULL,
-    delete_status TINYINT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NULL,
-    deleted_at TIMESTAMP NULL
-);
+Không dùng chung database, volume, URL hoặc secrets giữa các dòng họ.
 
+## Nội dung bản Clean
 
-👉 Bảng person này đã đồng bộ với các API person_basic.py.
+* Database schema gồm 8 bảng, không có dữ liệu
+* Không có tài khoản mặc định
+* Không có avatar người thật
+* Không có Audit Log hoặc backup cũ
+* Không có URL hay secrets của hệ thống khác
+* Có công cụ tạo Admin đầu tiên
+* Có cấu hình branding tập trung
 
-🚀 Cách chạy Backend
+## Cấu hình branding
 
-Mở PowerShell và gõ từng lệnh sau:
+Chỉnh tại:
 
-# 1. Điều hướng đến thư mục backend
-cd C:\Users\RLappc.com\familytree_project\backend
+`frontend-vite/src/config/familyConfig.js`
 
-# 2. Kích hoạt virtual environment
-.\venv\Scripts\Activate.ps1
+Có thể thay:
 
-# 3. Cài đặt thư viện cần thiết (chỉ cần chạy lần đầu hoặc khi thêm thư viện mới)
+* Tên dòng họ
+* Bảng hiệu
+* Tiêu đề phụ
+* Slogan
+* Quê quán
+* Nội dung chào mừng
+* Hình nền
+
+## Cấu hình môi trường
+
+Backend:
+
+`backend/.env.example`
+
+Frontend:
+
+`frontend-vite/.env.example`
+
+Sao chép thành file `.env` hoặc `.env.production` phù hợp rồi nhập giá trị riêng. Không commit file chứa secrets.
+
+## Database rỗng
+
+Schema cài đặt:
+
+`database/schema.sql`
+
+File này tạo đủ 8 bảng và không chứa câu lệnh `INSERT`.
+
+## Tạo Admin đầu tiên
+
+Sau khi tạo database và cấu hình backend, chạy từ thư mục gốc:
+
+```powershell
+python -m backend.create_first_admin
+```
+
+Công cụ chỉ hoạt động khi bảng `users` còn rỗng.
+
+## Chạy Backend local
+
+Từ thư mục gốc:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
+uvicorn backend.main:app --reload
+```
 
-# 4. Chạy Flask app
-python app.py
+Backend mặc định:
 
+`http://127.0.0.1:8000`
 
-Backend mặc định chạy tại:
-👉 http://localhost:5000
+## Chạy Frontend local
 
-🌐 Cách chạy Frontend (Vite + React + Tailwind)
-
-Mở PowerShell mới và chạy:
-
-# 1. Điều hướng đến thư mục frontend-vite
-cd C:\Users\RLappc.com\familytree_project\frontend-vite
-
-# 2. Cài đặt dependencies (chỉ cần lần đầu)
-npm install
-
-# 3. Chạy dev server
+```powershell
+cd frontend-vite
+npm ci
 npm run dev
+```
 
+Frontend mặc định:
 
-Frontend mặc định chạy tại:
-👉 http://localhost:5173
+`http://localhost:5173`
 
-📂 Cấu trúc thư mục
-familytree_project/
-├── backend/           # Flask backend + API
-│   ├── api/           # Các blueprint API (person, line, relationship...)
-│   ├── venv/          # Virtual environment (Python)
-│   ├── app.py         # Flask app chính
-│   └── requirements.txt
-│
-├── frontend-vite/     # React + Vite + Tailwind frontend
-│   ├── src/           # Source code React
-│   ├── index.html     # Entry point Vite
-│   └── package.json
-│
-└── README.md          # Hướng dẫn dự án
+## Lưu ý bảo mật
 
-⚙️ Ghi chú
-
-Khi chạy dự án, cần mở 2 terminal:
-
-1 terminal cho backend (python app.py)
-
-1 terminal cho frontend (npm run dev)
-
-Nếu MySQL không chạy được, hãy kiểm tra lại service MySQL80 trong Windows Services.
-
-Sau khi có dữ liệu trong bảng person, bạn có thể quản lý qua PersonBasicForm hoặc
+* Không dùng secrets hoặc tài khoản của hệ thống khác.
+* Không commit `.env`.
+* Không đưa avatar thật hoặc database backup vào mã nguồn.
+* Mỗi lần triển khai phải tạo `SECRET_KEY` mới.
+* Không deploy bản Clean đè lên dịch vụ đang hoạt động của dòng họ khác.
