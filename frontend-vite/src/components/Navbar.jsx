@@ -4,7 +4,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import familyConfig from "../config/familyConfig";
+import { useFamilyConfig } from "../context/FamilyConfigContext";
 import {
   FaHome,
   FaUsers,
@@ -22,6 +22,7 @@ import {
 } from "react-icons/fa";
 
 const Navbar = ({ role, currentUser, setRole, setCurrentUser }) => {
+  const familyConfig = useFamilyConfig();
   const location = useLocation();
   const navigate = useNavigate();
 

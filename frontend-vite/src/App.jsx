@@ -39,6 +39,8 @@ import AdminUsersPage from "./pages/AdminUsersPage.jsx";
 import AuditLogPage from "./pages/AuditLogPage.jsx";
 import HelpPage from "./pages/HelpPage.jsx";
 import BirthOrderPage from "./pages/BirthOrderPage";
+import SetupPage from "./pages/SetupPage.jsx";
+import { FamilyConfigProvider } from "./context/FamilyConfigContext.jsx";
 
 // ======================================================
 // App
@@ -46,7 +48,9 @@ import BirthOrderPage from "./pages/BirthOrderPage";
 export default function App() {
   return (
     <Router>
-      <AppContent />
+      <FamilyConfigProvider>
+        <AppContent />
+      </FamilyConfigProvider>
     </Router>
   );
 }
@@ -88,7 +92,23 @@ function AppContent() {
   const [role, setRole] = useState("viewer");
   const [currentUser, setCurrentUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [setupLoading, setSetupLoading] = useState(true);
+  const [setupRequired, setSetupRequired] = useState(false);
   const location = useLocation();
+
+  useEffect(() => {
+    axios
+      .get(`${API_BASE_URL}/setup/status`)
+      .then((response) => {
+        setSetupRequired(Boolean(response.data?.requiresSetup));
+      })
+      .catch((error) => {
+        console.error("L?i ki?m tra tr?ng th?i thi?t l?p:", error);
+      })
+      .finally(() => {
+        setSetupLoading(false);
+      });
+  }, []);
   const logoutByInvalidSession = () => {
     alert("Phiên đăng nhập không hợp lệ. Cần đăng nhập lại.");
   
@@ -160,6 +180,7 @@ function AppContent() {
     "/pending",
     "/help",
     "/family-setup",
+    "/setup",
   ];
   
   const shouldHideNavbar =
@@ -167,13 +188,21 @@ function AppContent() {
     hideNavbarRoutes.some((route) =>
       location.pathname.startsWith(route)
     );
-  if (authLoading) {
+  if (authLoading || setupLoading) {
     return (
       <div className="p-6 text-center text-gray-600">
         ⏳ Đang kiểm tra quyền truy cập...
       </div>
     );
   }
+  if (setupRequired && location.pathname !== "/setup") {
+    return <Navigate to="/setup" replace />;
+  }
+
+  if (!setupRequired && location.pathname === "/setup") {
+    return <Navigate to={currentUser ? "/" : "/login"} replace />;
+  }
+
   return (
     <>
       {!shouldHideNavbar && (
@@ -195,6 +224,15 @@ function AppContent() {
         }
       >
         <Routes>
+
+          <Route
+            path="/setup"
+            element={
+              <SetupPage
+                onCompleted={() => setSetupRequired(false)}
+              />
+            }
+          />
 
           {/* HOME */}
           <Route path="/" element={<Home role={role} />} />

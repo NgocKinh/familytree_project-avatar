@@ -1,7 +1,9 @@
 import React from "react";
-import familyConfig from "../config/familyConfig";
+import { useFamilyConfig } from "../context/FamilyConfigContext";
 
 function Home() {
+  const familyConfig = useFamilyConfig();
+
   return (
     <div
       className="min-h-[calc(100vh-64px)] w-full bg-cover bg-center bg-no-repeat flex flex-col items-center justify-center text-center px-4 py-8 sm:px-6 md:py-12"

@@ -2,8 +2,9 @@ import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { makeApiUrl } from "../api/apiConfig";
-import familyConfig from "../config/familyConfig";
+import { useFamilyConfig } from "../context/FamilyConfigContext";
 export default function LoginPage({ setRole, setCurrentUser }) {
+  const familyConfig = useFamilyConfig();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
