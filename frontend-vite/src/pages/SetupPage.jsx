@@ -237,7 +237,7 @@ export default function SetupPage({ onCompleted }) {
               placeholder="Ch? d?ng ch?, s?, d?u ch?m, g?ch ngang"
             />
             <Field
-              label="M?t kh?u"
+              label="Mật khẩu"
               name="admin_password"
               value={form.admin_password}
               onChange={updateForm}
@@ -245,7 +245,7 @@ export default function SetupPage({ onCompleted }) {
               type="password"
             />
             <Field
-              label="Nh?p l?i m?t kh?u"
+              label="Nhập lại mật khẩu"
               name="confirm_password"
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
