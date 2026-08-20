@@ -6,6 +6,7 @@ import {
     lockUser,
     unlockUser,
     resetPassword,
+    deleteUser,
 } from "../api/userApi";
 import axios from "axios";
 import { API_BASE_URL } from "../api/apiConfig";
@@ -176,6 +177,33 @@ export default function AdminUsersPage({ currentUser }) {
         }
     }
 
+    async function handleDelete(user) {
+        if (currentUser?.id === user.id) {
+            setError("Không thể tự xóa tài khoản đang đăng nhập.");
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `Xóa vĩnh viễn tài khoản "${user.username}"?\n\nThao tác này không thể hoàn tác.`
+        );
+
+        if (!confirmed) return;
+
+        setMessage("");
+        setError("");
+
+        try {
+            await deleteUser(user.id);
+            setMessage(`✅ Đã xóa tài khoản ${user.username}.`);
+            await loadUsers();
+        } catch (err) {
+            if (handleAuthError(err)) {
+                return;
+            }
+            setError(err.message || "❌ Không thể xóa tài khoản.");
+        }
+    }
+
     return (
         <div className="max-w-6xl mx-auto p-4 bg-white rounded shadow">
             <AdminHeader title="👤 Quản Lý User" />
@@ -341,6 +369,18 @@ export default function AdminUsersPage({ currentUser }) {
                                                 className="px-2 py-1 rounded bg-yellow-500 text-white hover:bg-yellow-600"
                                             >
                                                 Đặt lại mật khẩu
+                                            </button>
+
+                                            <button
+                                                type="button"
+                                                disabled={currentUser?.id === user.id}
+                                                onClick={() => handleDelete(user)}
+                                                className={`px-2 py-1 rounded text-white ${currentUser?.id === user.id
+                                                        ? "bg-gray-400 cursor-not-allowed"
+                                                        : "bg-red-800 hover:bg-red-900"
+                                                    }`}
+                                            >
+                                                Xóa
                                             </button>
                                         </div>
                                     </td>

@@ -101,3 +101,17 @@ export async function resetPassword(userId, password) {
 
   return await res.json();
 }
+
+export async function deleteUser(userId) {
+  const res = await fetch(`${API_BASE}/${userId}`, {
+    method: "DELETE",
+    headers: getAuthHeaders(),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.detail || "Không xóa được user");
+  }
+
+  return await res.json();
+}
