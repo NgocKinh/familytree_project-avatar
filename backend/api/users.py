@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from passlib.context import CryptContext
+from backend.password_utils import hash_password
 
 from backend.db import get_db
 from backend.models.user_model import User
@@ -10,7 +10,6 @@ from backend.api.auth import get_current_user
 
 router = APIRouter(tags=["Users"])
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 USER_ROLES = {"viewer", "member_basic", "co_operator", "admin"}
 
 def require_admin(current_user: User):
@@ -82,7 +81,7 @@ def create_user(
     
     user = User(
         username=data.username,
-        password_hash=pwd_context.hash(data.password),
+        password_hash=hash_password(data.password),
         full_name=data.full_name,
         role=data.role,
         person_id=data.person_id,
@@ -119,7 +118,7 @@ def update_user(
         )
 
     if data.password:
-        user.password_hash = pwd_context.hash(data.password)
+        user.password_hash = hash_password(data.password)
 
     if data.full_name is not None:
         user.full_name = data.full_name
@@ -222,7 +221,7 @@ def reset_password(
             detail="Không tìm thấy user",
         )
 
-    user.password_hash = pwd_context.hash(data.password)
+    user.password_hash = hash_password(data.password)
     db.commit()
 
     return {"message": "Reset password thành công", "id": user.id}

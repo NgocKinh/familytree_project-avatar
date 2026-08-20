@@ -1,10 +1,9 @@
-from passlib.context import CryptContext
+from backend.password_utils import hash_password
 
 from backend.db import SessionLocal
 from backend.models.user_model import User
 
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 db = SessionLocal()
@@ -15,7 +14,7 @@ password = "admin123"
 existing = db.query(User).filter(User.username == username).first()
 
 if existing:
-    existing.password_hash = pwd_context.hash(password)
+    existing.password_hash = hash_password(password)
     existing.full_name = "System Admin"
     existing.role = "admin"
     existing.is_active = True
@@ -26,7 +25,7 @@ if existing:
 else:
     admin_user = User(
         username=username,
-        password_hash=pwd_context.hash(password),
+        password_hash=hash_password(password),
         full_name="System Admin",
         role="admin",
         is_active=True,

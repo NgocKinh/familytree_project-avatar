@@ -1,15 +1,10 @@
 from getpass import getpass
 
-from passlib.context import CryptContext
+from backend.password_utils import hash_password
 
 from backend.db import SessionLocal
 from backend.models.user_model import User
 
-
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-)
 
 
 def main():
@@ -44,7 +39,7 @@ def main():
 
         admin = User(
             username=username,
-            password_hash=pwd_context.hash(password),
+            password_hash=hash_password(password),
             full_name=full_name or None,
             role="admin",
             person_id=None,

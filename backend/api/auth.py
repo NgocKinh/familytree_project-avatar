@@ -3,7 +3,7 @@ import os
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+from backend.password_utils import verify_password
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -43,7 +43,6 @@ NEAR_RELATION_EDIT = {
     "uncle_aunt",
 }
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 class LoginRequest(BaseModel):
@@ -53,10 +52,6 @@ class LoginRequest(BaseModel):
 class CheckNearRequest(BaseModel):
     target_person_id: int
     action: str = "relation:create"
-
-def verify_password(plain_password: str, password_hash: str) -> bool:
-    return pwd_context.verify(plain_password, password_hash)
-
 
 def create_access_token(data: dict):
     to_encode = data.copy()
