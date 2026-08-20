@@ -2,7 +2,7 @@
 -- Schema only: no user, person, audit log or clan data
 SET FOREIGN_KEY_CHECKS=0;
 
-CREATE TABLE `announcements` (
+CREATE TABLE IF NOT EXISTS `announcements` (
   `id` int NOT NULL AUTO_INCREMENT,
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
@@ -18,9 +18,9 @@ CREATE TABLE `announcements` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `audit_logs` (
+CREATE TABLE IF NOT EXISTS `audit_logs` (
   `id` int NOT NULL AUTO_INCREMENT,
   `user_id` int NOT NULL,
   `username` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -33,9 +33,9 @@ CREATE TABLE `audit_logs` (
   PRIMARY KEY (`id`),
   KEY `idx_audit_logs_user_id` (`user_id`),
   KEY `idx_audit_logs_created_at` (`created_at`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `feedback` (
+CREATE TABLE IF NOT EXISTS `feedback` (
   `feedback_id` int NOT NULL AUTO_INCREMENT,
   `user_id` int DEFAULT NULL,
   `category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -48,9 +48,9 @@ CREATE TABLE `feedback` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`feedback_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `marriages` (
+CREATE TABLE IF NOT EXISTS `marriages` (
   `id` int NOT NULL AUTO_INCREMENT,
   `spouse_a_id` int NOT NULL,
   `spouse_b_id` int NOT NULL,
@@ -70,9 +70,9 @@ CREATE TABLE `marriages` (
   KEY `spouse_b_id` (`spouse_b_id`),
   CONSTRAINT `marriages_ibfk_1` FOREIGN KEY (`spouse_a_id`) REFERENCES `persons` (`person_id`),
   CONSTRAINT `marriages_ibfk_2` FOREIGN KEY (`spouse_b_id`) REFERENCES `persons` (`person_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `parent_child` (
+CREATE TABLE IF NOT EXISTS `parent_child` (
   `id` int NOT NULL AUTO_INCREMENT,
   `parent_id` int NOT NULL,
   `child_id` int NOT NULL,
@@ -87,9 +87,9 @@ CREATE TABLE `parent_child` (
   CONSTRAINT `parent_child_ibfk_2` FOREIGN KEY (`child_id`) REFERENCES `persons` (`person_id`),
   CONSTRAINT `parent_child_ibfk_3` FOREIGN KEY (`marriage_id`) REFERENCES `marriages` (`id`),
   CONSTRAINT `chk_parent_type` CHECK ((`type` in (_utf8mb4'father',_utf8mb4'mother')))
-) ENGINE=InnoDB AUTO_INCREMENT=185 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `person_marriage_priority` (
+CREATE TABLE IF NOT EXISTS `person_marriage_priority` (
   `id` int NOT NULL AUTO_INCREMENT,
   `person_id` int NOT NULL,
   `marriage_id` int NOT NULL,
@@ -97,9 +97,9 @@ CREATE TABLE `person_marriage_priority` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `unique_person_marriage` (`person_id`,`marriage_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `persons` (
+CREATE TABLE IF NOT EXISTS `persons` (
   `person_id` int NOT NULL AUTO_INCREMENT,
   `lineage_id` int DEFAULT NULL,
   `sur_name` varchar(150) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -141,9 +141,9 @@ CREATE TABLE `persons` (
   `full_name_vn` varchar(350) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `birth_order` int DEFAULT NULL,
   PRIMARY KEY (`person_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=135 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
-CREATE TABLE `users` (
+CREATE TABLE IF NOT EXISTS `users` (
   `id` int NOT NULL AUTO_INCREMENT,
   `username` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
   `password_hash` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -154,6 +154,6 @@ CREATE TABLE `users` (
   `person_id` int DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS=1;

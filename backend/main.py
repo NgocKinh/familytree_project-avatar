@@ -1,11 +1,14 @@
 # ======================================================
 # IMPORT
 # ======================================================
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from backend.core.exceptions import AppError
+from backend.db import initialize_database
 
 # 👉 IMPORT ROUTERS (CHỈ IMPORT 1 LẦN)
 from backend.api.person import router as person_router
@@ -28,7 +31,16 @@ import os
 # ======================================================
 # APP INIT
 # ======================================================
-app = FastAPI(title="FamilyTree API")
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    initialize_database()
+    yield
+
+
+app = FastAPI(
+    title="FamilyTree API",
+    lifespan=lifespan,
+)
 
 # ======================================================
 # REGISTER ROUTERS (CHỈ 1 LẦN – CHUẨN)

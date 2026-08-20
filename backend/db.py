@@ -1,4 +1,6 @@
 import os
+from pathlib import Path
+
 import mysql.connector
 
 from dotenv import load_dotenv
@@ -60,8 +62,6 @@ def get_db():
     finally:
         db.close()
 
-import mysql.connector
-
 def get_connection():
     return mysql.connector.connect(
         host=DB_HOST,
@@ -70,3 +70,35 @@ def get_connection():
         password=DB_PASSWORD,
         database=DB_NAME
     )
+
+
+SCHEMA_PATH = Path(__file__).resolve().parent.parent / "database" / "schema.sql"
+
+
+def _read_schema_statements():
+    schema_text = SCHEMA_PATH.read_text(encoding="utf-8-sig")
+    executable_lines = [
+        line
+        for line in schema_text.splitlines()
+        if not line.lstrip().startswith("--")
+    ]
+    return [
+        statement.strip()
+        for statement in "\n".join(executable_lines).split(";")
+        if statement.strip()
+    ]
+
+
+def initialize_database():
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    try:
+        for statement in _read_schema_statements():
+            cursor.execute(statement)
+
+        connection.commit()
+        print("DATABASE_SCHEMA_INIT=PASS")
+    finally:
+        cursor.close()
+        connection.close()
