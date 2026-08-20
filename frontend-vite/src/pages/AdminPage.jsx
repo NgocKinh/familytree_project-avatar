@@ -6,6 +6,13 @@ export default function AdminPage() {
 
   const cards = [
     {
+      icon: "🏠",
+      title: "Cấu Hình Dòng Họ",
+      desc: "Sửa nội dung trang chủ và thay hình nền.",
+      path: "/admin/family-settings",
+      color: "bg-cyan-600 hover:bg-cyan-700",
+    },
+    {
       icon: "📢",
       title: "Quản Lý Thông Báo",
       desc: "Tạo, sửa, xoá thông báo nội bộ.",

@@ -35,7 +35,7 @@ export function FamilyConfigProvider({ children }) {
         }
       })
       .catch((error) => {
-        console.error("L?i t?i c?u h?nh d?ng h?:", error);
+        console.error("Lỗi tải cấu hình dòng họ:", error);
       });
 
     return () => {

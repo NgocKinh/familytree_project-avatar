@@ -40,6 +40,7 @@ import AuditLogPage from "./pages/AuditLogPage.jsx";
 import HelpPage from "./pages/HelpPage.jsx";
 import BirthOrderPage from "./pages/BirthOrderPage";
 import SetupPage from "./pages/SetupPage.jsx";
+import AdminFamilySettingsPage from "./pages/AdminFamilySettingsPage.jsx";
 import { FamilyConfigProvider } from "./context/FamilyConfigContext.jsx";
 
 // ======================================================
@@ -103,7 +104,7 @@ function AppContent() {
         setSetupRequired(Boolean(response.data?.requiresSetup));
       })
       .catch((error) => {
-        console.error("L?i ki?m tra tr?ng th?i thi?t l?p:", error);
+        console.error("Lỗi kiểm tra trạng thái thiết lập:", error);
       })
       .finally(() => {
         setSetupLoading(false);
@@ -227,11 +228,7 @@ function AppContent() {
 
           <Route
             path="/setup"
-            element={
-              <SetupPage
-                onCompleted={() => setSetupRequired(false)}
-              />
-            }
+            element={<SetupPage />}
           />
 
           {/* HOME */}
@@ -319,6 +316,19 @@ function AppContent() {
                 redirectTo="/"
               >
                 <AdminUsersPage currentUser={currentUser} />
+              </ProtectedRouteV6>
+            }
+          />
+          <Route
+            path="/admin/family-settings"
+            element={
+              <ProtectedRouteV6
+                role={role}
+                allowRoles={["admin"]}
+                currentUser={currentUser}
+                redirectTo="/"
+              >
+                <AdminFamilySettingsPage />
               </ProtectedRouteV6>
             }
           />

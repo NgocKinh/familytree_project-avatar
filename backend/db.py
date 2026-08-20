@@ -97,6 +97,31 @@ def initialize_database():
         for statement in _read_schema_statements():
             cursor.execute(statement)
 
+        cursor.execute(
+            """
+            SELECT DATA_TYPE
+            FROM information_schema.COLUMNS
+            WHERE TABLE_SCHEMA = %s
+              AND TABLE_NAME = 'family_settings'
+              AND COLUMN_NAME = 'background_image'
+            """,
+            (DB_NAME,),
+        )
+        background_column = cursor.fetchone()
+
+        if (
+            background_column
+            and str(background_column[0]).lower() != "mediumtext"
+        ):
+            cursor.execute(
+                """
+                ALTER TABLE family_settings
+                MODIFY COLUMN background_image MEDIUMTEXT
+                CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci
+                DEFAULT NULL
+                """
+            )
+
         connection.commit()
         print("DATABASE_SCHEMA_INIT=PASS")
     finally:

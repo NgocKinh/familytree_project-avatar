@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import axios from "axios";
 
 import { makeApiUrl } from "../api/apiConfig";
+import BackgroundImagePicker from "../components/BackgroundImagePicker";
 
 
 const initialForm = {
@@ -15,6 +16,7 @@ const initialForm = {
   welcome_title: "Chào mừng bạn đến với hệ thống gia phả",
   welcome_text:
     "Nơi lưu giữ truyền thống, kết nối các thế hệ và tôn vinh cội nguồn.",
+  background_image: "/trongdong.png",
   admin_full_name: "",
   admin_username: "",
   admin_password: "",
@@ -50,7 +52,7 @@ function Field({
 }
 
 
-export default function SetupPage({ onCompleted }) {
+export default function SetupPage() {
   const [form, setForm] = useState(initialForm);
   const [setupToken, setSetupToken] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -78,7 +80,7 @@ export default function SetupPage({ onCompleted }) {
     setLoading(true);
 
     try {
-      await axios.post(
+      const response = await axios.post(
         makeApiUrl("/setup/complete"),
         form,
         {
@@ -88,11 +90,12 @@ export default function SetupPage({ onCompleted }) {
         }
       );
 
-      if (onCompleted) {
-        onCompleted();
-      }
-
-      window.location.replace("/login");
+      localStorage.setItem("token", response.data.access_token);
+      localStorage.setItem(
+        "currentUser",
+        JSON.stringify(response.data.user)
+      );
+      window.location.replace("/");
     } catch (requestError) {
       const detail = requestError?.response?.data?.detail;
 
@@ -212,6 +215,18 @@ export default function SetupPage({ onCompleted }) {
                 className="w-full rounded-lg border border-gray-300 px-3 py-2 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
               />
             </label>
+            <div className="md:col-span-2">
+              <BackgroundImagePicker
+                value={form.background_image}
+                onChange={(backgroundImage) =>
+                  setForm((current) => ({
+                    ...current,
+                    background_image: backgroundImage,
+                  }))
+                }
+                onError={setError}
+              />
+            </div>
           </div>
         </section>
 

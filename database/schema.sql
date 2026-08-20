@@ -154,7 +154,7 @@ CREATE TABLE IF NOT EXISTS `family_settings` (
   `origin_line` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `welcome_title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `welcome_text` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
-  `background_image` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '/trongdong.png',
+  `background_image` mediumtext CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
   `navbar_icon` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
