@@ -253,9 +253,12 @@ def complete_setup(
                 full_name,
                 role,
                 is_active,
-                person_id
+                person_id,
+                created_at
             )
-            VALUES (%s, %s, %s, 'admin', 1, NULL)
+            VALUES (
+                %s, %s, %s, 'admin', 1, NULL, CURRENT_TIMESTAMP
+            )
             """,
             (
                 cleaned["admin_username"],
