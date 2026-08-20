@@ -8,13 +8,13 @@ const initialForm = {
   family_code: "FamilyTree",
   family_name: "",
   signboard: "",
-  subtitle: "G?n Gi? C?i Ngu?n",
-  slogan_line_1: "K?t N?i C?c Th? H?",
-  slogan_line_2: "G?n Gi? Truy?n Th?ng",
+  subtitle: "Gìn Giữ Cội Nguồn",
+  slogan_line_1: "Kết Nối Các Thế Hệ",
+  slogan_line_2: "Gìn Giữ Truyền Thống",
   origin_line: "",
-  welcome_title: "Ch?o m?ng b?n ??n v?i h? th?ng gia ph?",
+  welcome_title: "Chào mừng bạn đến với hệ thống gia phả",
   welcome_text:
-    "N?i l?u gi? truy?n th?ng, k?t n?i c?c th? h? v? t?n vinh c?i ngu?n.",
+    "Nơi lưu giữ truyền thống, kết nối các thế hệ và tôn vinh cội nguồn.",
   admin_full_name: "",
   admin_username: "",
   admin_password: "",
@@ -71,7 +71,7 @@ export default function SetupPage({ onCompleted }) {
     setError("");
 
     if (form.admin_password !== confirmPassword) {
-      setError("Hai l?n nh?p m?t kh?u ch?a gi?ng nhau.");
+      setError("Hai lần nhập mật khẩu chưa giống nhau.");
       return;
     }
 
@@ -106,7 +106,7 @@ export default function SetupPage({ onCompleted }) {
       } else {
         setError(
           detail ||
-            "Kh?ng th? ho?n t?t thi?t l?p. Vui l?ng ki?m tra l?i th?ng tin."
+            "Không thể hoàn tất thiết lập. Vui lòng kiểm tra lại thông tin."
         );
       }
     } finally {
@@ -122,10 +122,10 @@ export default function SetupPage({ onCompleted }) {
       >
         <div className="mb-7 text-center">
           <h1 className="text-3xl font-bold text-blue-800">
-            Thi?t l?p Gia Ph? l?n ??u
+            Thiết lập Gia Phả lần đầu
           </h1>
           <p className="mt-2 text-gray-600">
-            Nh?p th?ng tin d?ng h? v? t?o t?i kho?n Admin ??u ti?n.
+            Nhập thông tin dòng họ và tạo tài khoản Admin đầu tiên.
           </p>
         </div>
 
@@ -137,64 +137,64 @@ export default function SetupPage({ onCompleted }) {
 
         <section className="mb-8">
           <h2 className="mb-4 border-b pb-2 text-xl font-bold text-gray-800">
-            1. Th?ng tin d?ng h?
+            1. Thông tin dòng họ
           </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
             <Field
-              label="M? d?ng h?"
+              label="Mã dòng họ"
               name="family_code"
               value={form.family_code}
               onChange={updateForm}
               required
-              placeholder="V? d?: TocLe"
+              placeholder="Ví dụ: TocLe"
             />
             <Field
-              label="T?n hi?n th?"
+              label="Tên hiển thị"
               name="family_name"
               value={form.family_name}
               onChange={updateForm}
               required
-              placeholder="V? d?: Gia Ph? T?c L?"
+              placeholder="Ví dụ: Gia Phả Tộc Lê"
             />
             <Field
-              label="T?n b?ng hi?u"
+              label="Tên bảng hiệu"
               name="signboard"
               value={form.signboard}
               onChange={updateForm}
               required
-              placeholder="V? d?: GIA PH? T?C L?"
+              placeholder="Ví dụ: GIA PHẢ TỘC LÊ"
             />
             <Field
-              label="D?ng ph?"
+              label="Dòng phụ"
               name="subtitle"
               value={form.subtitle}
               onChange={updateForm}
             />
             <Field
-              label="C?u gi?i thi?u 1"
+              label="Câu giới thiệu 1"
               name="slogan_line_1"
               value={form.slogan_line_1}
               onChange={updateForm}
             />
             <Field
-              label="C?u gi?i thi?u 2"
+              label="Câu giới thiệu 2"
               name="slogan_line_2"
               value={form.slogan_line_2}
               onChange={updateForm}
             />
             <div className="md:col-span-2">
               <Field
-                label="T?n d?ng h? ? Qu? qu?n"
+                label="Tên dòng họ - Quê quán"
                 name="origin_line"
                 value={form.origin_line}
                 onChange={updateForm}
-                placeholder="V? d?: T?c L? ? Qu?ng Nam"
+                placeholder="Ví dụ: Tộc Lê - Quảng Nam"
               />
             </div>
             <div className="md:col-span-2">
               <Field
-                label="Ti?u ?? l?i ch?o"
+                label="Tiêu đề lời chào"
                 name="welcome_title"
                 value={form.welcome_title}
                 onChange={updateForm}
@@ -202,7 +202,7 @@ export default function SetupPage({ onCompleted }) {
             </div>
             <label className="block md:col-span-2">
               <span className="mb-1 block text-sm font-semibold text-gray-700">
-                N?i dung l?i ch?o
+                Nội dung lời chào
               </span>
               <textarea
                 name="welcome_text"
@@ -217,24 +217,24 @@ export default function SetupPage({ onCompleted }) {
 
         <section className="mb-8">
           <h2 className="mb-4 border-b pb-2 text-xl font-bold text-gray-800">
-            2. T?i kho?n Admin ??u ti?n
+            2. Tài khoản Admin đầu tiên
           </h2>
 
           <div className="grid gap-4 md:grid-cols-2">
             <Field
-              label="H? t?n Admin"
+              label="Họ tên Admin"
               name="admin_full_name"
               value={form.admin_full_name}
               onChange={updateForm}
               required
             />
             <Field
-              label="T?n ??ng nh?p"
+              label="Tên đăng nhập"
               name="admin_username"
               value={form.admin_username}
               onChange={updateForm}
               required
-              placeholder="Ch? d?ng ch?, s?, d?u ch?m, g?ch ngang"
+              placeholder="Chỉ dùng chữ, số, dấu chấm, gạch ngang"
             />
             <Field
               label="Mật khẩu"
@@ -257,21 +257,21 @@ export default function SetupPage({ onCompleted }) {
 
         <section className="mb-8">
           <h2 className="mb-4 border-b pb-2 text-xl font-bold text-gray-800">
-            3. X?c nh?n thi?t l?p
+            3. Xác nhận thiết lập
           </h2>
 
           <Field
-            label="M? thi?t l?p m?t l?n"
+            label="Mã thiết lập một lần"
             name="setup_token"
             value={setupToken}
             onChange={(event) => setSetupToken(event.target.value)}
             required
             type="password"
-            placeholder="M? n?y ???c c?p khi tri?n khai h? th?ng"
+            placeholder="Mã này được cấp khi triển khai hệ thống"
           />
 
           <p className="mt-2 text-sm text-gray-500">
-            M? thi?t l?p kh?ng ph?i m?t kh?u Admin v? ch? ???c d?ng m?t l?n.
+            Mã thiết lập không phải mật khẩu Admin và chỉ được dùng một lần.
           </p>
         </section>
 
@@ -280,7 +280,7 @@ export default function SetupPage({ onCompleted }) {
           disabled={loading}
           className="w-full rounded-xl bg-blue-700 px-5 py-3 text-lg font-bold text-white transition hover:bg-blue-800 disabled:bg-blue-300"
         >
-          {loading ? "?ang thi?t l?p..." : "Ho?n t?t thi?t l?p"}
+          {loading ? "Đang thiết lập..." : "Hoàn tất thiết lập"}
         </button>
       </form>
     </main>
