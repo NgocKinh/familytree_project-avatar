@@ -9,11 +9,11 @@ from sqlalchemy.orm import sessionmaker, declarative_base
 from urllib.parse import quote_plus
 load_dotenv("backend/.env")
 
-DB_HOST = os.getenv("DB_HOST")
-DB_PORT = os.getenv("DB_PORT")
-DB_USER = os.getenv("DB_USER")
-DB_PASSWORD = os.getenv("DB_PASSWORD")
-DB_NAME = os.getenv("DB_NAME")
+DB_HOST = os.getenv("MYSQLHOST") or os.getenv("DB_HOST")
+DB_PORT = os.getenv("MYSQLPORT") or os.getenv("DB_PORT")
+DB_USER = os.getenv("MYSQLUSER") or os.getenv("DB_USER")
+DB_PASSWORD = os.getenv("MYSQLPASSWORD") or os.getenv("DB_PASSWORD")
+DB_NAME = os.getenv("MYSQLDATABASE") or os.getenv("DB_NAME")
 
 required_db_config = {
     "DB_HOST": DB_HOST,
