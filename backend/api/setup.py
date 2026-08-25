@@ -10,7 +10,6 @@ from backend.db import get_connection
 from backend.models.user_model import User
 from backend.password_utils import hash_password
 
-
 router = APIRouter(tags=["Setup"])
 
 DEFAULT_BACKGROUND_IMAGE = "/trongdong.png"
@@ -18,7 +17,6 @@ MAX_BACKGROUND_DATA_LENGTH = 3_000_000
 BACKGROUND_DATA_PATTERN = re.compile(
     r"^data:image/(?:png|jpeg|webp);base64,[A-Za-z0-9+/=]+$"
 )
-
 
 class FamilyConfigRequest(BaseModel):
     family_code: str = Field(min_length=2, max_length=50)
@@ -139,7 +137,10 @@ def setup_status():
 
     try:
         configured = _system_is_configured(cursor)
-        setup_enabled = bool(os.getenv("SETUP_TOKEN", "").strip())
+        setup_enabled = (
+            not configured
+            and bool(os.getenv("SETUP_TOKEN", "").strip())
+        )
 
         return {
             "configured": configured,
