@@ -54,7 +54,6 @@ function Field({
 
 export default function SetupPage() {
   const [form, setForm] = useState(initialForm);
-  const [setupToken, setSetupToken] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -82,12 +81,7 @@ export default function SetupPage() {
     try {
       const response = await axios.post(
         makeApiUrl("/setup/complete"),
-        form,
-        {
-          headers: {
-            "X-Setup-Token": setupToken,
-          },
-        }
+        form
       );
 
       localStorage.setItem("token", response.data.access_token);
@@ -275,19 +269,6 @@ export default function SetupPage() {
             3. Xác nhận thiết lập
           </h2>
 
-          <Field
-            label="Mã thiết lập một lần"
-            name="setup_token"
-            value={setupToken}
-            onChange={(event) => setSetupToken(event.target.value)}
-            required
-            type="password"
-            placeholder="Mã này được cấp khi triển khai hệ thống"
-          />
-
-          <p className="mt-2 text-sm text-gray-500">
-            Mã thiết lập không phải mật khẩu Admin và chỉ được dùng một lần.
-          </p>
         </section>
 
         <button

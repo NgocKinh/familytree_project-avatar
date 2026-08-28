@@ -1,8 +1,6 @@
-import os
 import re
-import secrets
 
-from fastapi import APIRouter, Depends, Header, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from backend.api.auth import create_access_token, get_current_user
@@ -137,15 +135,11 @@ def setup_status():
 
     try:
         configured = _system_is_configured(cursor)
-        setup_enabled = (
-            not configured
-            and bool(os.getenv("SETUP_TOKEN", "").strip())
-        )
 
         return {
             "configured": configured,
             "requiresSetup": not configured,
-            "setupEnabled": setup_enabled,
+            "setupEnabled": not configured,
         }
     finally:
         cursor.close()
@@ -207,25 +201,7 @@ def public_family_config():
 @router.post("/complete", status_code=status.HTTP_201_CREATED)
 def complete_setup(
     payload: SetupCompleteRequest,
-    x_setup_token: str | None = Header(default=None, alias="X-Setup-Token"),
 ):
-    expected_token = os.getenv("SETUP_TOKEN", "").strip()
-
-    if not expected_token:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="SETUP_TOKEN is not configured.",
-        )
-
-    if not x_setup_token or not secrets.compare_digest(
-        x_setup_token,
-        expected_token,
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Invalid setup token.",
-        )
-
     cleaned = _validate_family_config(_clean_payload(payload))
 
     required_values = (
